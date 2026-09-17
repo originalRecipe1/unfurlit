@@ -1,5 +1,9 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 
+import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
+import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
+import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoExtractor
+import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoParser
 import android.content.Context
 import android.util.Log
 import com.yausername.youtubedl_android.YoutubeDL
@@ -35,6 +39,12 @@ class YtDlpMediaExtractor(
 
         return try {
             val extractionUrl = urlPreflight.resolve(secureInputUrl)
+            TikTokPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
+                return TikTokPhotoExtractor().extract(url, pageUrl)
+            }
+            InstagramPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
+                InstagramPhotoExtractor().extract(url, pageUrl)?.let { return it }
+            }
             val processId = "unfurlit-${UUID.randomUUID()}"
             val request = YoutubeDLRequest(extractionUrl).apply {
                 addOption("--ignore-config")

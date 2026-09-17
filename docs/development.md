@@ -171,9 +171,10 @@ The application is licensed under [GPL-3.0-only](../LICENSE). Keep the
 
 The **Live social links** workflow runs weekly and on manual dispatch. It exercises
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled engine and
-JSON normalization. The 16 cases in
+JSON normalization, with native page-data adapters for TikTok and Instagram photo posts. The 19 cases in
 `app/src/androidTest/assets/social-links.json` cover YouTube, Vimeo, Reddit, X,
-Instagram and TikTok (two public links each), plus a non-media page, missing page,
+Instagram and TikTok (two public links each), a TikTok photo post with a soundtrack and two Instagram photo carousels,
+plus a non-media page, missing page,
 invalid scheme and private address. Public positive examples are seeded from
 upstream extractor fixtures and YouTube sample videos; they are expectations,
 not a claim that each site currently permits anonymous access from CI.
@@ -202,3 +203,28 @@ social sites. To extend live coverage, add a public URL, unique descriptive ID a
 
 See the [initial live baseline](social-link-baseline.md) for observed passes and
 compatibility failures.
+
+TikTok `/photo/` links use the public post's page data to retain ordered images
+and an optional shared soundtrack. The adapter requests TikTok's `/video/` page
+for the same post ID, which exposes the photo data, through the existing public-only
+HTTP client. Responses are limited to 4 MiB and 50 photos; parsed media URLs must
+use public HTTPS targets. A soundtrack stays outside the gallery pager, loops,
+and pauses when the app leaves the foreground. History counts photos, not the
+soundtrack, and does not persist its playback URL.
+
+To run just the photo-post live case, add
+`-Pandroid.testInstrumentationRunnerArguments.linkId=tiktok-photos-with-audio`
+to the live-test command above. This case requires three photos and a soundtrack,
+so an audio-only extraction cannot pass.
+
+Instagram `/p/` links first check the public post data for photos. The adapter
+matches the requested shortcode, preserves all carousel items in order, and uses
+safe image candidates rather than page thumbnails. Pure video posts fall through
+to yt-dlp. Mixed carousels can retain direct video formats alongside photos.
+Both native adapters share a cancellable, bounded page loader with public-only
+DNS and safe redirect handling. Instagram photo-post soundtracks are not supported;
+the adapter makes no additional media-info request for audio. Instagram videos
+retain their audio. TikTok photo soundtracks remain supported.
+
+The Instagram photo case is `instagram-photo-carousel` and requires 11 photos.
+`linkId` also accepts comma-separated IDs for focused regression runs.
