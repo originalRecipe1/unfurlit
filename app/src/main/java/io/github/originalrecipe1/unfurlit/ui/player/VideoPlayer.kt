@@ -1,6 +1,7 @@
 package io.github.originalrecipe1.unfurlit.ui.player
 
 import android.graphics.Color
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.foundation.background
@@ -68,6 +69,7 @@ fun VideoPlayer(
             prepare()
         }
     }
+    var controlsVisible by remember(video) { mutableStateOf(true) }
     var playbackFailed by remember(video) { mutableStateOf(false) }
     var viewReported by remember(video) { mutableStateOf(false) }
     var displayAspectRatio by remember(video) { mutableStateOf<Float?>(null) }
@@ -134,15 +136,23 @@ fun VideoPlayer(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                     )
                     useController = true
+                    controllerShowTimeoutMs = 3_000
+                    controllerHideOnTouch = true
+                    setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
+                        controlsVisible = visibility == View.VISIBLE
+                    })
                     keepScreenOn = true
                     this.player = player
                 }
             },
             update = { it.player = player },
-            onRelease = { it.player = null },
+            onRelease = {
+                it.setControllerVisibilityListener(null as PlayerView.ControllerVisibilityListener?)
+                it.player = null
+            },
         )
 
-        Surface(
+        if (controlsVisible) Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(8.dp),
