@@ -15,9 +15,26 @@ class ExtractionException(
 
 val ExtractionError.userMessage: String
     get() = when (this) {
-        ExtractionError.UnsupportedUrl -> "This URL is not supported."
-        ExtractionError.MediaUnavailable -> "This media is unavailable."
-        ExtractionError.AuthenticationRequired -> "This media requires an account or cookies."
-        ExtractionError.NetworkFailure -> "The media service could not be reached."
-        ExtractionError.ExtractionFailed -> "Could not open this media."
+        ExtractionError.UnsupportedUrl -> "No viewable media found"
+        ExtractionError.MediaUnavailable -> "Media unavailable"
+        ExtractionError.AuthenticationRequired -> "Sign-in may be needed"
+        ExtractionError.NetworkFailure -> "Couldn’t reach this site"
+        ExtractionError.ExtractionFailed -> "Couldn’t open this media"
+    }
+
+val ExtractionError.canRetry: Boolean
+    get() = this == ExtractionError.NetworkFailure || this == ExtractionError.ExtractionFailed
+
+val ExtractionError.recoveryMessage: String
+    get() = when (this) {
+        ExtractionError.UnsupportedUrl ->
+            "This link may be a page without media, or a site Unfurlit doesn’t support. Try a direct link to a post, video, or audio track."
+        ExtractionError.MediaUnavailable ->
+            "This post may have been removed or may no longer be available. Open the original to check, or try another link."
+        ExtractionError.AuthenticationRequired ->
+            "This site may require sign-in or restrict access to this post. Open the original in your browser to check."
+        ExtractionError.NetworkFailure ->
+            "Check your connection and try again. The site may also be temporarily unavailable."
+        ExtractionError.ExtractionFailed ->
+            "Unfurlit couldn’t read the media in this link. Try again, or open the original to view it on the site."
     }

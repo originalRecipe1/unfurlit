@@ -71,9 +71,12 @@ analytics, or advertising. Opening media contacts the source platform and its
 media hosts, so those services can still see your IP address and request data.
 See the [privacy policy](../PRIVACY.md).
 
-If a link fails, retry it and check whether the original page is still publicly
-accessible. For persistent issues, include a public example link and the app
-and yt-dlp versions shown by the viewer in a
+If a link fails, the viewer explains whether media could not be found, is
+unavailable, may need sign-in, or could not be reached. Use **Try again** for a
+connection or extraction failure, **Open original** to check the source in your
+browser, or **Try another link** to return home. Engine version details are no
+longer shown on the error screen. For persistent issues, include a public example
+link and the app version from Android’s app settings in a
 [bug report](https://github.com/originalRecipe1/unfurlit/issues). Do not post private
 links, login cookies, or credentials. Report security concerns through the
 [security policy](../SECURITY.md).

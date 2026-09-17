@@ -34,7 +34,7 @@ on an AOSP API 30 Gradle-managed device. Normal debug builds contain only
 
 The same option works with `assembleDebug` or `connectedDebugAndroidTest` for
 local x86_64 emulator testing. Release APKs always contain only `arm64-v8a`,
-even when this option is set. Live extraction tests remain manual so
+even when this option is set. Live extraction tests run in a separate weekly/manual workflow so
 platform rate limits and datacenter blocking cannot make pull requests flaky.
 
 On this Fedora host, the API 36 emulator's SwiftShader renderer crashed before
@@ -166,3 +166,39 @@ The application is licensed under [GPL-3.0-only](../LICENSE). Keep the
 [third-party notices](../THIRD_PARTY_NOTICES.md) current when changing dependencies.
 
 [All documentation](README.md)
+
+## Social-link regression pipeline
+
+The **Live social links** workflow runs weekly and on manual dispatch. It exercises
+`YtDlpMediaExtractor` on Android, including URL preflight, the bundled engine and
+JSON normalization. The 16 cases in
+`app/src/androidTest/assets/social-links.json` cover YouTube, Vimeo, Reddit, X,
+Instagram and TikTok (two public links each), plus a non-media page, missing page,
+invalid scheme and private address. Public positive examples are seeded from
+upstream extractor fixtures and YouTube sample videos; they are expectations,
+not a claim that each site currently permits anonymous access from CI.
+
+Each link gets its own named JUnit result. Positive cases require nonempty parsed
+media; negative cases require the specified error category. Login challenges,
+network failures and unexpected extraction errors fail positive cases and do not
+count as successful negative tests. Reports are uploaded even on failure. Review
+failures for site changes, deleted fixtures and CI blocking before changing an
+expectation. No cookies or accounts are used. Reports omit extracted media URLs
+and credentials. This checks extraction; playback, seeking and image rendering
+still need the manual viewer checks above.
+
+Run against a connected x86_64 emulator:
+
+```bash
+./gradlew connectedDebugAndroidTest -Punfurlit.ci.x86_64=true \
+  -Pandroid.testInstrumentationRunnerArguments.liveLinks=true \
+  -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest
+```
+
+Without `liveLinks=true`, these cases are skipped. The normal CI suite covers
+error classification and the failure screen's recovery actions without contacting
+social sites. To extend live coverage, add a public URL, unique descriptive ID and
+`success` or an exact `ExtractionError` category to the JSON fixture.
+
+See the [initial live baseline](social-link-baseline.md) for observed passes and
+compatibility failures.

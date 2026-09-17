@@ -5,9 +5,10 @@ import android.util.Log
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
-import io.github.originalrecipe1.unfurlit.data.network.UnsafeNetworkTargetException
 import io.github.originalrecipe1.unfurlit.data.network.UrlPreflight
 import io.github.originalrecipe1.unfurlit.domain.extractor.MediaExtractor
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
@@ -15,7 +16,6 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.util.SafeLog
 import io.github.originalrecipe1.unfurlit.util.UrlValidator
-import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.Executors
 import kotlin.coroutines.resumeWithException
@@ -68,6 +68,10 @@ class YtDlpMediaExtractor(
         } catch (error: ExtractionException) {
             logFailure(error)
             throw error
+        } catch (error: TimeoutCancellationException) {
+            throw ExtractionException(ExtractionError.NetworkFailure, error)
+        } catch (error: CancellationException) {
+            throw error
         } catch (error: Throwable) {
             logFailure(error)
             throw ExtractionException(error.toDomainError(), error)
@@ -102,28 +106,6 @@ class YtDlpMediaExtractor(
                 YoutubeDL.getInstance().init(appContext)
                 initialized = true
             }
-        }
-    }
-
-    private fun Throwable.toDomainError(): ExtractionError {
-        val detail = generateSequence(this) { it.cause }
-            .mapNotNull(Throwable::message)
-            .joinToString(" ")
-            .lowercase()
-
-        val causes = generateSequence(this) { it.cause }.toList()
-        return when {
-            causes.any { it is UnsafeNetworkTargetException } -> ExtractionError.UnsupportedUrl
-            this is IOException || listOf("network", "timed out", "connection", "dns").any(detail::contains) ->
-                ExtractionError.NetworkFailure
-            listOf("sign in", "login", "cookies", "private video", "authentication").any(detail::contains) ->
-                ExtractionError.AuthenticationRequired
-            listOf("unsupported url", "no suitable extractor").any(detail::contains) ->
-                ExtractionError.UnsupportedUrl
-            listOf("unavailable", "removed", "deleted", "not available").any(detail::contains) ->
-                ExtractionError.MediaUnavailable
-            this is YoutubeDLException -> ExtractionError.ExtractionFailed
-            else -> ExtractionError.ExtractionFailed
         }
     }
 
