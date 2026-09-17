@@ -12,14 +12,12 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -29,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,11 +41,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
-import io.github.originalrecipe1.unfurlit.BuildConfig
+import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
+import io.github.originalrecipe1.unfurlit.domain.model.canRetry
+import io.github.originalrecipe1.unfurlit.domain.model.recoveryMessage
 import io.github.originalrecipe1.unfurlit.domain.model.userMessage
 import io.github.originalrecipe1.unfurlit.ui.components.UnfurlitTopAppBar
 
@@ -111,8 +113,8 @@ private fun ViewerScreen(
             )
 
             is ViewerState.Failed -> FailureContent(
-                message = state.error.userMessage,
-                engineVersion = BuildConfig.YT_DLP_ENGINE_VERSION,
+                error = state.error,
+                onTryAnother = onBack,
                 onRetry = onRetry,
                 onOpenOriginal = {
                     context.openOriginal(state.sourceUrl)
@@ -281,46 +283,58 @@ private fun LoadingContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun FailureContent(
-    message: String,
-    engineVersion: String,
+internal fun FailureContent(
+    error: ExtractionError,
     onRetry: () -> Unit,
     onOpenOriginal: () -> Unit,
+    onTryAnother: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
-        contentAlignment = Alignment.Center,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.headlineSmall,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "yt-dlp $engineVersion",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(Modifier.height(24.dp))
-            Row(horizontalArrangement = Arrangement.Center) {
-                Button(
-                    onClick = onRetry,
-                    modifier = Modifier.sizeIn(minHeight = 48.dp),
-                ) {
-                    Text("Retry")
-                }
-                Spacer(Modifier.width(12.dp))
+        Text(
+            text = error.userMessage,
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = error.recoveryMessage,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(24.dp))
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Button(
+                onClick = if (error.canRetry) onRetry else onOpenOriginal,
+                modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
+            ) {
+                Text(if (error.canRetry) "Try again" else "Open original")
+            }
+            if (error.canRetry) {
                 OutlinedButton(
                     onClick = onOpenOriginal,
-                    modifier = Modifier.sizeIn(minHeight = 48.dp),
+                    modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
                 ) {
                     Text("Open original")
                 }
+            }
+            TextButton(
+                onClick = onTryAnother,
+                modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
+            ) {
+                Text("Try another link")
             }
         }
     }
