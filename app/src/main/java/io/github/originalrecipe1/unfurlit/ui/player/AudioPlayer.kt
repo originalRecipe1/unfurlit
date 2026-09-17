@@ -57,12 +57,15 @@ fun AudioPlayer(
     onRetry: () -> Unit,
     onViewed: () -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
+    loop: Boolean = false,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val player = remember(audio, extraction.title, extraction.author) {
+    val player = remember(audio, extraction.title, extraction.author, loop) {
         ExoPlayer.Builder(context).build().apply {
             setMediaSource(Media3PlaybackMapper(context).map(extraction, audio))
+            repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
             playWhenReady = active
             prepare()
         }
@@ -118,7 +121,7 @@ fun AudioPlayer(
         modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(
+            if (!compact) Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
@@ -142,7 +145,7 @@ fun AudioPlayer(
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(112.dp),
+                    .height(if (compact) 160.dp else 112.dp),
                 factory = { viewContext ->
                     PlayerView(viewContext).apply {
                         setBackgroundColor(Color.BLACK)

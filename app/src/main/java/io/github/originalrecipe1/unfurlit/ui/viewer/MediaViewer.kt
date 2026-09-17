@@ -37,6 +37,39 @@ fun MediaViewer(
     fullscreen: Boolean = false,
     onFullscreenChange: (Boolean) -> Unit = {},
 ) {
+    Column(modifier = modifier) {
+        MediaContent(
+            extraction, onRetry, onViewed,
+            modifier = if (fullscreen) Modifier.weight(1f) else Modifier.fillMaxWidth(),
+            fullscreen = fullscreen,
+            onFullscreenChange = onFullscreenChange,
+        )
+        extraction.backgroundAudio?.let { audio ->
+            AudioPlayer(
+                extraction = extraction,
+                audio = audio,
+                active = true,
+                onRetry = onRetry,
+                onViewed = onViewed,
+                modifier = Modifier.fillMaxWidth().height(160.dp),
+                compact = true,
+                loop = true,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@androidx.annotation.OptIn(UnstableApi::class)
+@Composable
+private fun MediaContent(
+    extraction: ExtractionResult,
+    onRetry: () -> Unit,
+    onViewed: () -> Unit,
+    modifier: Modifier,
+    fullscreen: Boolean,
+    onFullscreenChange: (Boolean) -> Unit,
+) {
     if (extraction.media.size == 1) {
         SingleMediaViewer(
             extraction = extraction,
@@ -66,7 +99,7 @@ fun MediaViewer(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
-            key = { page -> extraction.media[page].stableKey() },
+            key = { page -> "$page:${extraction.media[page].stableKey()}" },
         ) { page ->
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -171,6 +204,7 @@ private fun MediaPage(
                 extraction = extraction,
                 video = media,
                 active = active,
+                autoShowControls = false,
                 onRetry = onRetry,
                 onViewed = onViewed,
                 modifier = Modifier.fillMaxWidth(),

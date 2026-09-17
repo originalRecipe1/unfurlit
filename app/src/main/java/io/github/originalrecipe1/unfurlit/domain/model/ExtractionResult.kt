@@ -8,6 +8,8 @@ data class ExtractionResult(
     val description: String?,
     val thumbnailUrl: String?,
     val media: List<ExtractedMedia>,
+    /** Optional soundtrack shared by the photos; not a separate gallery page. */
+    val backgroundAudio: ExtractedMedia.Audio? = null,
 )
 
 sealed interface ExtractedMedia {

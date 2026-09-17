@@ -119,6 +119,7 @@
                 <data android:host="www.tiktok.com" />
                 <data android:host="m.tiktok.com" />
                 <data android:pathPattern="/.*/video/.*" />
+                <data android:pathPattern="/.*/photo/.*" />
                 <data android:pathPrefix="/t/" />
             </intent-filter>
             <intent-filter android:autoVerify="false">

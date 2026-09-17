@@ -20,16 +20,19 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 
 ## Site compatibility
 
-**Last checked: 2026-09-17** · Two public links per site, without signing in.
+**Last checked: 2026-09-17** · Two initial public links per site, plus additional Instagram and TikTok photo posts; without signing in.
 
 | Results for tested links | Sites | Notes |
 | --- | --- | --- |
-| Working | Reddit, Instagram | Both links extracted successfully on each site. |
-| Sometimes troublesome | YouTube, X/Twitter, TikTok | One of two links worked on each site. The other YouTube video was unavailable; X and TikTok had extraction failures. |
+| Working | Reddit, Instagram videos/reels | Both links extracted successfully on each site. |
+| Working | Instagram photos | The 11-photo and eight-photo examples opened successfully. Photo-post soundtracks are not supported. |
+| Working | TikTok photos with audio | One post checked: three swipeable photos and a playing soundtrack. |
+| Sometimes troublesome | YouTube, X/Twitter, TikTok videos | One of two links worked on each site. The other YouTube video was unavailable; X and TikTok had extraction failures. |
 | Troublesome | Vimeo | Neither link worked: one required sign-in, the other was blocked by the site. |
 
-These are extraction checks on an Android emulator, not full playback tests or
-site-wide guarantees. Other sites, including PeerTube, were not checked in this
+These are checks on an Android emulator, not site-wide guarantees. The initial
+cases check extraction; the photo posts had image display and swiping checked, and the TikTok post
+also had audio playback checked. Other sites, including PeerTube, were not checked in this
 run. See the [detailed results](docs/social-link-baseline.md) and
 [live test pipeline](docs/development.md#social-link-regression-pipeline).
 

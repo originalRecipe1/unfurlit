@@ -34,8 +34,11 @@ region, and platform changes; see the [compatibility results](experiment-results
 
 Private, login-gated, age-restricted, or region-restricted posts may not open.
 Importing login cookies, choosing quality manually, and saving media are not
-currently available. Image and gallery support depends on what each site's
-extractor provides. Unfurlit focuses on the media; comments and threads are
+currently available. TikTok photo posts support swiping and zooming through pictures while their
+soundtrack plays, with audio controls below the gallery. The soundtrack loops and
+pauses when you leave the app. Instagram photo posts and carousels also support swiping and zooming, but
+separate photo-post soundtracks are not supported. Instagram videos retain their audio. Other image and gallery support
+depends on what each site’s extractor provides. Unfurlit focuses on the media; comments and threads are
 intentionally outside its scope.
 
 ## Appearance
