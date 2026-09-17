@@ -6,6 +6,8 @@ Videos and audio stream without creating a permanent user-visible download.
 Images support zoom and pan, galleries support swiping, and videos support
 portrait-aware sizing and immersive fullscreen playback.
 
+Images support is currently limited to TikTok and Instagram.
+
 Unfurlit has no ads, analytics, mandatory account, or project-operated backend. The
 device still contacts the original platform and its media hosts, so viewing is
 not anonymous. Some private, age-restricted, regional, or login-gated media may
