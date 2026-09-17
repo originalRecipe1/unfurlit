@@ -204,6 +204,7 @@ private fun MediaPage(
                 extraction = extraction,
                 video = media,
                 active = active,
+                autoShowControls = false,
                 onRetry = onRetry,
                 onViewed = onViewed,
                 modifier = Modifier.fillMaxWidth(),

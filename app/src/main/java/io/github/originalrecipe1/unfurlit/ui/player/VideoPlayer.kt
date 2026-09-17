@@ -57,6 +57,7 @@ fun VideoPlayer(
     onViewed: () -> Unit,
     modifier: Modifier = Modifier,
     active: Boolean = true,
+    autoShowControls: Boolean = true,
     fullscreen: Boolean = false,
     onFullscreenChange: (Boolean) -> Unit = {},
 ) {
@@ -69,7 +70,7 @@ fun VideoPlayer(
             prepare()
         }
     }
-    var controlsVisible by remember(video) { mutableStateOf(true) }
+    var controlsVisible by remember(video, autoShowControls) { mutableStateOf(autoShowControls) }
     var playbackFailed by remember(video) { mutableStateOf(false) }
     var viewReported by remember(video) { mutableStateOf(false) }
     var displayAspectRatio by remember(video) { mutableStateOf<Float?>(null) }
@@ -136,6 +137,7 @@ fun VideoPlayer(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                     )
                     useController = true
+                    controllerAutoShow = autoShowControls
                     controllerShowTimeoutMs = 3_000
                     controllerHideOnTouch = true
                     setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
@@ -143,9 +145,15 @@ fun VideoPlayer(
                     })
                     keepScreenOn = true
                     this.player = player
+                    if (!autoShowControls) hideController()
                 }
             },
-            update = { it.player = player },
+            update = {
+                it.controllerAutoShow = autoShowControls
+                it.player = player
+                // Clear controls on the outgoing page so swiping back stays unobstructed.
+                if (!active && !autoShowControls) it.hideController()
+            },
             onRelease = {
                 it.setControllerVisibilityListener(null as PlayerView.ControllerVisibilityListener?)
                 it.player = null
