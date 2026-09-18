@@ -2,6 +2,7 @@ package io.github.originalrecipe1.unfurlit.ui.player
 
 import android.graphics.Color
 import android.view.View
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.foundation.background
@@ -130,7 +131,9 @@ fun VideoPlayer(
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { viewContext ->
-                PlayerView(viewContext).apply {
+                (LayoutInflater.from(viewContext).inflate(
+                    R.layout.video_player, FrameLayout(viewContext), false,
+                ) as PlayerView).apply {
                     setBackgroundColor(Color.BLACK)
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -155,6 +158,8 @@ fun VideoPlayer(
                 if (!active && !autoShowControls) it.hideController()
             },
             onRelease = {
+                it.visibility = View.INVISIBLE
+                it.keepScreenOn = false
                 it.setControllerVisibilityListener(null as PlayerView.ControllerVisibilityListener?)
                 it.player = null
             },
