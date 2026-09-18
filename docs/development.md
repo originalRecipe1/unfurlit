@@ -56,6 +56,37 @@ the optimized code. Keep `app/build/outputs/mapping/release/mapping.txt` with
 each release to decode obfuscated crash traces. The release workflow attaches
 this mapping file alongside the signed APK and checksum.
 
+For daily testing on a development phone and for judging scrolling performance,
+use `localRelease`. It has release optimizations and no debugger/tooling overhead,
+but uses the local debug signing key so it can update a debug installation without
+clearing history:
+
+```bash
+./gradlew :app:assembleLocalRelease
+adb install -r app/build/outputs/apk/localRelease/app-localRelease.apk
+```
+
+Use `debug` for debugging and instrumentation tests. Do not distribute
+`localRelease`; public releases use the release signing process. Compare frame
+timings on the same phone, with the same history and scrolling sequence, after
+force-stopping and relaunching the app. Debug timings are not representative of
+release performance.
+
+A local Pixel 7 sanity check (2026-09-18), using the same saved history,
+process restart, History navigation, and eight alternating 450 ms vertical swipes,
+reported the following through `adb shell dumpsys gfxinfo
+io.github.originalrecipe1.unfurlit framestats`:
+
+| Build | Janky frames | 95th percentile frame time |
+| --- | --- | --- |
+| Debug | 26 / 344 (7.56%) | 34 ms |
+| Local release, first run | 2 / 412 (0.49%) | 13 ms |
+| Local release, repeat | 3 / 413 (0.73%) | 13 ms |
+
+These are on-device diagnostic samples, not controlled benchmark results. Both
+release runs finished with History visible; the database and thumbnails were
+preserved across the build update. No forced ahead-of-time compilation was used.
+
 The cached AAR transform in `buildSrc` trims the bundled Python runtime for all
 builds, including x86_64 CI tests. Its exact removal list contains only the
 static QuickJS build archive and seven CPython test extension modules. Retained
@@ -104,6 +135,38 @@ differs. This makes APK upgrades activate their newly pinned yt-dlp version
 without clearing app data or viewing history.
 
 The first extraction can take noticeably longer while the bundled Python runtime initializes. Network behavior is limited to the submitted source platform/CDN; there is no Unfurlit backend.
+
+## History pagination and storage
+
+History renders rows lazily, reads image blobs only for requested thumbnails, and
+caches decoded artwork. Once the return transition fully hides History, it prepares
+the list at the top for the next visit. A rapid reopen also requests the top before
+layout instead of waiting for a scrolling coroutine after the first frame.
+Data updates within the same visit and cancelled Back gestures keep its position.
+
+History uses Paging 3 with 100 metadata rows initially, 50-row pages, a 15-row
+prefetch distance, and a 250-row target window. Paging may temporarily exceed that
+window while keeping pages needed by the viewport. Older pages are discarded and
+queried again when scrolling back. Each database read uses LIMIT and indexed
+(timestamp, ID) boundaries rather than OFFSET or a full-table materialization;
+separate seeks for matching and older/newer timestamps support Android 7's SQLite
+and timestamp ties. Thumbnail blobs remain outside page queries.
+
+Date headers are inserted incrementally across page boundaries. Writes invalidate
+the active source and refresh around the visible visit. Reopening reuses the cached
+newest pages; only when those pages have been evicted does it request a fresh batch,
+starting while offscreen when possible.
+The same list presenter retains existing rows during that load, avoiding a blank
+loading-screen flash. Errors expose Retry without discarding already shown rows. Tests traverse 10,000 synthetic visits in both directions, including
+timestamp ties, and exercise page eviction/reloading, deletion, clear, insertion,
+and reopening History. This bounds metadata work and retention; it is not a claim
+of constant disk use or a measured maximum history capacity.
+
+Each saved thumbnail is at most 48 KiB. Ten thousand thumbnails could therefore
+occupy about 469 MiB before SQLite overhead; actual artwork is often smaller.
+There is no automatic retention limit. SQLite reuses deleted pages, so clearing
+history does not necessarily shrink the database file immediately. Any future
+retention policy should be user-controlled rather than silently deleting visits.
 
 ## Tests and manual checks
 

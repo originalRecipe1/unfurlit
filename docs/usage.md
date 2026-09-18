@@ -28,9 +28,19 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 
 ## Sites and access
 
-Unfurlit opens public links from YouTube, Instagram, TikTok, Reddit, X/Twitter,
-PeerTube, and other sites supported by its extractor. Support varies by post,
-region, and platform changes; see the [compatibility results](experiment-results.md).
+- YouTube: videos and Shorts.
+- Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
+- TikTok: videos and photo posts, including available photo soundtracks.
+- Reddit and X/Twitter: videos.
+- PeerTube: videos.
+
+Other sites may work too. Photo support is currently limited to Instagram and
+TikTok; audio and galleries depend on the source. Availability varies by post,
+region and platform changes. Private, login-gated or restricted posts may not
+open; signing in is not available.
+
+Tap **Supported links and media** on Home for this list in the app. See the
+[compatibility results](experiment-results.md) for tested links.
 
 Private, login-gated, age-restricted, or region-restricted posts may not open.
 Importing login cookies, choosing quality manually, and saving media are not
@@ -76,7 +86,7 @@ See the [privacy policy](../PRIVACY.md).
 
 If a link fails, the viewer explains whether media could not be found, is
 unavailable, may need sign-in, or could not be reached. Use **Try again** for a
-connection or extraction failure, **Open original** to check the source in your
+connection or extraction failure, **Open link** to check the source in your
 browser, or **Try another link** to return home. Engine version details are no
 longer shown on the error screen. For persistent issues, include a public example
 link and the app version from Android’s app settings in a

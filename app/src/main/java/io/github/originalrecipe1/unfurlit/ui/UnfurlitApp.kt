@@ -31,9 +31,11 @@ fun UnfurlitApp(
                 if (visible && destination != UnfurlitDestination.History) unfurlitViewModel.showHistory()
                 if (!visible && destination == UnfurlitDestination.History) unfurlitViewModel.leaveHistory()
             },
-            history = {
+            history = { fullyHidden ->
                 HistoryRoute(
                     viewModel = historyViewModel,
+                    prepareForNextVisit = fullyHidden,
+                    visible = destination == UnfurlitDestination.History,
                     onBack = unfurlitViewModel::leaveHistory,
                     onOpen = { entry ->
                         viewerViewModel.open(entry.sourceUrl)
@@ -58,6 +60,10 @@ fun UnfurlitApp(
                         unfurlitViewModel.showHome()
                     },
                     onShowHistory = unfurlitViewModel::showHistory,
+                    backEnabled = destination == UnfurlitDestination.Viewer,
+                    backPreview = {
+                        HomeScreen(onOpen = {}, onShowHistory = {})
+                    },
                 )
 
                 UnfurlitDestination.History -> Unit

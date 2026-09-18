@@ -5,10 +5,18 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.Flow
+import androidx.paging.InvalidatingPagingSourceFactory
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -17,17 +25,33 @@ import io.github.originalrecipe1.unfurlit.domain.model.HistoryEntry
 import io.github.originalrecipe1.unfurlit.domain.model.HistoryMediaKind
 import io.github.originalrecipe1.unfurlit.domain.repository.HistoryRepository
 
-class SqliteHistoryRepository(
+class SqliteHistoryRepository internal constructor(
     context: Context,
+    private val database: HistoryDatabase,
 ) : HistoryRepository {
-    private val database = HistoryDatabase(context.applicationContext)
+    constructor(context: Context) : this(context, HistoryDatabase(context.applicationContext))
     private val thumbnails = HistoryThumbnailLoader(context.applicationContext)
     private val changes = MutableStateFlow(0L)
     private val writeMutex = Mutex()
 
-    override fun observeHistory(): Flow<List<HistoryEntry>> = changes
-        .map { database.readHistory() }
-        .flowOn(Dispatchers.IO)
+    override fun observeHistory(): Flow<PagingData<HistoryEntry>> = flow {
+        coroutineScope {
+            val sources = InvalidatingPagingSourceFactory { HistoryPagingSource(database) }
+            val observer = launch(start = CoroutineStart.UNDISPATCHED) {
+                changes.drop(1).collect { sources.invalidate() }
+            }
+            try {
+                emitAll(Pager(HISTORY_PAGING_CONFIG, pagingSourceFactory = sources).flow)
+            } finally {
+                observer.cancel()
+                sources.invalidate()
+            }
+        }
+    }
+
+    override suspend fun loadThumbnail(id: Long): ByteArray? = withContext(Dispatchers.IO) {
+        database.readThumbnail(id)
+    }
 
     override suspend fun recordView(result: ExtractionResult) {
         val entry = HistoryEntryMapper.fromExtraction(
@@ -66,6 +90,14 @@ class SqliteHistoryRepository(
         }
     }
 }
+
+internal val HISTORY_PAGING_CONFIG = PagingConfig(
+    pageSize = 50,
+    initialLoadSize = 100,
+    prefetchDistance = 15,
+    maxSize = 250,
+    enablePlaceholders = false,
+)
 
 internal class HistoryDatabase(
     context: Context,
@@ -135,14 +167,45 @@ internal class HistoryDatabase(
         writableDatabase.delete(TABLE_HISTORY, null, null)
     }
 
-    fun readHistory(): List<HistoryEntry> = readableDatabase.query(
-        TABLE_HISTORY,
-        HISTORY_COLUMNS,
-        null,
-        null,
-        null,
-        null,
-        "$COLUMN_VIEWED_AT DESC, $COLUMN_ID DESC",
+    fun readThumbnail(id: Long): ByteArray? = readableDatabase.query(
+        TABLE_HISTORY, arrayOf(COLUMN_THUMBNAIL), "$COLUMN_ID = ?", arrayOf(id.toString()),
+        null, null, null,
+    ).use { cursor ->
+        if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getBlob(0) else null
+    }
+
+    // Two index seeks also handle large groups with identical timestamps efficiently,
+    // without row-value comparisons (unavailable on Android 7's SQLite).
+    fun readPage(limit: Int, key: HistoryKey? = null, newer: Boolean = false, inclusive: Boolean = false): List<HistoryEntry> {
+        require(limit > 0)
+        val direction = if (newer) "ASC" else "DESC"
+        val order = "$COLUMN_VIEWED_AT $direction, $COLUMN_ID $direction"
+        if (key == null) return queryPage(null, null, order, limit)
+        val comparison = if (newer) ">" else "<"
+        val idComparison = comparison + if (inclusive) "=" else ""
+        val sameTime = queryPage(
+            "$COLUMN_VIEWED_AT = ? AND $COLUMN_ID $idComparison ?",
+            arrayOf(key.viewedAt.toString(), key.id.toString()), order, limit,
+        )
+        if (sameTime.size == limit) return sameTime
+        return sameTime + queryPage(
+            "$COLUMN_VIEWED_AT $comparison ?", arrayOf(key.viewedAt.toString()),
+            order, limit - sameTime.size,
+        )
+    }
+
+    fun <T> readSnapshot(block: () -> T): T {
+        val database = readableDatabase
+        database.beginTransactionNonExclusive()
+        try {
+            return block().also { database.setTransactionSuccessful() }
+        } finally {
+            database.endTransaction()
+        }
+    }
+
+    private fun queryPage(selection: String?, args: Array<String>?, order: String, limit: Int): List<HistoryEntry> = readableDatabase.query(
+        TABLE_HISTORY, HISTORY_COLUMNS, selection, args, null, null, order, limit.toString(),
     ).use { cursor ->
         buildList {
             val idIndex = cursor.getColumnIndexOrThrow(COLUMN_ID)
@@ -154,7 +217,7 @@ internal class HistoryDatabase(
             val mediaCountIndex = cursor.getColumnIndexOrThrow(COLUMN_MEDIA_COUNT)
             val durationIndex = cursor.getColumnIndexOrThrow(COLUMN_DURATION_SECONDS)
             val viewedAtIndex = cursor.getColumnIndexOrThrow(COLUMN_VIEWED_AT)
-            val thumbnailIndex = cursor.getColumnIndexOrThrow(COLUMN_THUMBNAIL)
+            val thumbnailIndex = cursor.getColumnIndexOrThrow("has_thumbnail")
 
             while (cursor.moveToNext()) {
                 add(
@@ -168,7 +231,7 @@ internal class HistoryDatabase(
                         mediaCount = cursor.getInt(mediaCountIndex),
                         durationSeconds = cursor.nullableLong(durationIndex),
                         viewedAtEpochMillis = cursor.getLong(viewedAtIndex),
-                        thumbnail = if (cursor.isNull(thumbnailIndex)) null else cursor.getBlob(thumbnailIndex),
+                        hasThumbnail = cursor.getInt(thumbnailIndex) != 0,
                     ),
                 )
             }
@@ -208,7 +271,7 @@ internal class HistoryDatabase(
             COLUMN_MEDIA_COUNT,
             COLUMN_DURATION_SECONDS,
             COLUMN_VIEWED_AT,
-            COLUMN_THUMBNAIL,
+            "($COLUMN_THUMBNAIL IS NOT NULL) AS has_thumbnail",
         )
     }
 }

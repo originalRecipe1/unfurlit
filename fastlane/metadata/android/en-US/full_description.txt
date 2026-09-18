@@ -6,7 +6,18 @@ Videos and audio stream without creating a permanent user-visible download.
 Images support zoom and pan, galleries support swiping, and videos support
 portrait-aware sizing and immersive fullscreen playback.
 
-Images support is currently limited to TikTok and Instagram.
+Supported links and media:
+
+- YouTube: videos and Shorts.
+- Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
+- TikTok: videos and photo posts, including available photo soundtracks.
+- Reddit and X/Twitter: videos.
+- PeerTube: videos.
+
+Other sites may work too. Photo support is currently limited to Instagram and
+TikTok; audio and galleries depend on the source. Availability varies by post,
+region and platform changes. Private, login-gated or restricted posts may not
+open; signing in is not available.
 
 Unfurlit has no ads, analytics, mandatory account, or project-operated backend. The
 device still contacts the original platform and its media hosts, so viewing is

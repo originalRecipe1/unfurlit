@@ -4,30 +4,32 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import io.github.originalrecipe1.unfurlit.data.repository.RepositoryFactory
-import io.github.originalrecipe1.unfurlit.domain.model.HistoryEntry
+import io.github.originalrecipe1.unfurlit.domain.repository.HistoryRepository
 
-class HistoryViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = RepositoryFactory.historyRepository(application)
-    private val _state = MutableStateFlow<HistoryState>(HistoryState.Loading)
-    val state: StateFlow<HistoryState> = _state.asStateFlow()
+class HistoryViewModel internal constructor(
+    application: Application,
+    private val repository: HistoryRepository,
+) : AndroidViewModel(application) {
+    constructor(application: Application) : this(application, RepositoryFactory.historyRepository(application))
 
-    init {
-        viewModelScope.launch {
-            repository.observeHistory()
-                .catch { error ->
-                    Log.e(TAG, "Could not read local history", error)
-                    _state.value = HistoryState.Failed
-                }
-                .collect { entries ->
-                    _state.value = HistoryState.Ready(entries)
-                }
-        }
+    private val generation = MutableStateFlow(0L)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    internal val history = generation.flatMapLatest { repository.observeHistory() }
+        .map { it.withDateHeaders() }
+        .cachedIn(viewModelScope)
+
+    // Only needed when scrolling has evicted the newest pages. Keep the same
+    // presenter so its existing rows remain visible until the new batch is ready.
+    internal fun loadNewest() {
+        generation.value += 1
     }
 
     fun remove(id: Long) {
@@ -47,12 +49,4 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     private companion object {
         const val TAG = "HistoryViewModel"
     }
-}
-
-sealed interface HistoryState {
-    data object Loading : HistoryState
-
-    data class Ready(val entries: List<HistoryEntry>) : HistoryState
-
-    data object Failed : HistoryState
 }

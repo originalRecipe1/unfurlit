@@ -24,7 +24,7 @@ class FailureContentTest {
         compose.onNodeWithText("No viewable media found").assertIsDisplayed()
         compose.onNodeWithText("yt-dlp", substring = true).assertDoesNotExist()
         compose.onNodeWithText("Try again").assertDoesNotExist()
-        compose.onNodeWithText("Open original").performClick()
+        compose.onNodeWithText("Open link").performClick()
         compose.runOnIdle { assertEquals("original", action) }
         compose.onNodeWithText("Try another link").performClick()
         compose.runOnIdle { assertEquals("home", action) }

@@ -6,6 +6,7 @@ import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhot
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoParser
 import android.content.Context
 import android.util.Log
+import io.github.originalrecipe1.unfurlit.BuildConfig
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
@@ -70,10 +71,12 @@ class YtDlpMediaExtractor(
                 executeCancellable(request, processId)
             }
             YtDlpJsonParser.parse(url, output).also { result ->
-                Log.d(
-                    TAG,
-                    "Extracted platform=${result.platform}, mediaCount=${result.media.size}",
-                )
+                if (BuildConfig.DEBUG) {
+                    Log.d(
+                        TAG,
+                        "Extracted platform=${result.platform}, mediaCount=${result.media.size}",
+                    )
+                }
             }
         } catch (error: ExtractionException) {
             logFailure(error)

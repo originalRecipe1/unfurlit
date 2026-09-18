@@ -51,6 +51,7 @@ class HistoryEntryMapperTest {
                 "durationSeconds",
                 "viewedAtEpochMillis",
                 "thumbnail",
+                "hasThumbnail",
             ),
             entry::class.java.declaredFields
                 .map { it.name }
