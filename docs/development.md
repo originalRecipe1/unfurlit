@@ -136,6 +136,38 @@ without clearing app data or viewing history.
 
 The first extraction can take noticeably longer while the bundled Python runtime initializes. Network behavior is limited to the submitted source platform/CDN; there is no Unfurlit backend.
 
+## History pagination and storage
+
+History renders rows lazily, reads image blobs only for requested thumbnails, and
+caches decoded artwork. Once the return transition fully hides History, it prepares
+the list at the top for the next visit. A rapid reopen also requests the top before
+layout instead of waiting for a scrolling coroutine after the first frame.
+Data updates within the same visit and cancelled Back gestures keep its position.
+
+History uses Paging 3 with 100 metadata rows initially, 50-row pages, a 15-row
+prefetch distance, and a 250-row target window. Paging may temporarily exceed that
+window while keeping pages needed by the viewport. Older pages are discarded and
+queried again when scrolling back. Each database read uses LIMIT and indexed
+(timestamp, ID) boundaries rather than OFFSET or a full-table materialization;
+separate seeks for matching and older/newer timestamps support Android 7's SQLite
+and timestamp ties. Thumbnail blobs remain outside page queries.
+
+Date headers are inserted incrementally across page boundaries. Writes invalidate
+the active source and refresh around the visible visit. Reopening reuses the cached
+newest pages; only when those pages have been evicted does it request a fresh batch,
+starting while offscreen when possible.
+The same list presenter retains existing rows during that load, avoiding a blank
+loading-screen flash. Errors expose Retry without discarding already shown rows. Tests traverse 10,000 synthetic visits in both directions, including
+timestamp ties, and exercise page eviction/reloading, deletion, clear, insertion,
+and reopening History. This bounds metadata work and retention; it is not a claim
+of constant disk use or a measured maximum history capacity.
+
+Each saved thumbnail is at most 48 KiB. Ten thousand thumbnails could therefore
+occupy about 469 MiB before SQLite overhead; actual artwork is often smaller.
+There is no automatic retention limit. SQLite reuses deleted pages, so clearing
+history does not necessarily shrink the database file immediately. Any future
+retention policy should be user-controlled rather than silently deleting visits.
+
 ## Tests and manual checks
 
 The build command above runs Android unit tests and lint. Release-version tests

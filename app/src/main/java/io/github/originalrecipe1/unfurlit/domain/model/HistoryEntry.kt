@@ -11,6 +11,7 @@ data class HistoryEntry(
     val durationSeconds: Long?,
     val viewedAtEpochMillis: Long,
     val thumbnail: ByteArray? = null,
+    val hasThumbnail: Boolean = thumbnail != null,
 )
 
 enum class HistoryMediaKind {

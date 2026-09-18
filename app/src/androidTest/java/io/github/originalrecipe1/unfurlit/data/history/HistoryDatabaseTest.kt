@@ -25,24 +25,28 @@ class HistoryDatabaseTest {
             }
             val bytes = byteArrayOf(1, 2, 3)
             HistoryDatabase(context, name).use { database ->
-                val oldEntry = database.readHistory().single()
+                val oldEntry = database.readPage(50).single()
                 assertEquals("Saved visit", oldEntry.title)
                 assertEquals(1234L, oldEntry.viewedAtEpochMillis)
                 assertNull(oldEntry.thumbnail)
                 database.updateThumbnail(oldEntry.id, bytes)
             }
             HistoryDatabase(context, name).use { database ->
-                assertArrayEquals(bytes, database.readHistory().single().thumbnail)
+                val entry = database.readPage(50).single()
+                assertTrue(entry.hasThumbnail)
+                assertNull("List queries must not load thumbnail blobs", entry.thumbnail)
+                assertArrayEquals(bytes, database.readThumbnail(entry.id))
                 database.delete(1)
                 database.updateThumbnail(1, bytes)
-                assertTrue(database.readHistory().isEmpty())
+                assertNull(database.readThumbnail(1))
+                assertTrue(database.readPage(50).isEmpty())
                 val newId = database.insert(io.github.originalrecipe1.unfurlit.domain.model.HistoryEntry(
                     0, "https://example.com/new", null, null, null,
                     io.github.originalrecipe1.unfurlit.domain.model.HistoryMediaKind.Image, 1, null, 4567,
                 ))
                 database.updateThumbnail(newId, bytes)
                 database.clear()
-                assertTrue(database.readHistory().isEmpty())
+                assertTrue(database.readPage(50).isEmpty())
             }
         } finally {
             context.deleteDatabase(name)

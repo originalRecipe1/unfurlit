@@ -1,6 +1,14 @@
 package io.github.originalrecipe1.unfurlit.ui.history
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
+import kotlinx.coroutines.flow.flowOf
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import org.junit.Assert.assertEquals
@@ -14,11 +22,33 @@ class HistoryScreenTest {
     private val entry = HistoryEntry(7, "https://example.com/watch", "Example", "An afternoon outside", "A creator", HistoryMediaKind.Video, 1, 62, System.currentTimeMillis())
 
     @Test
+    fun newVisitStartsAtTopButDataRefreshDoesNotResetCurrentScroll() {
+        val visible = mutableStateOf(true)
+        val entries = mutableStateOf((0L until 100L).map {
+            entry.copy(id = it, title = "Visit $it")
+        })
+        composeRule.setContent {
+            MaterialTheme {
+                HistoryScreen(paged(entries.value), {}, {}, {}, {}, visible.value)
+            }
+        }
+        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Visit 70"))
+        composeRule.onNodeWithText("Visit 70").assertIsDisplayed()
+        composeRule.runOnIdle { entries.value = entries.value.map { it.copy(author = "Updated") } }
+        composeRule.onNodeWithText("Visit 70").assertIsDisplayed()
+        composeRule.runOnIdle { visible.value = false }
+        composeRule.waitForIdle()
+        composeRule.runOnIdle { visible.value = true }
+        composeRule.onNodeWithText("Visit 0").assertIsDisplayed()
+        composeRule.onNodeWithText("Visit 70").assertDoesNotExist()
+    }
+
+    @Test
     fun rowOpensMediaAndRemoveIconDeletesOnlyTheSelectedVisit() {
         var opened: Long? = null
         var removed: Long? = null
         composeRule.setContent {
-            MaterialTheme { HistoryScreen(HistoryState.Ready(listOf(entry)), {}, { opened = it.id }, { removed = it }, {}) }
+            MaterialTheme { HistoryScreen(paged(listOf(entry)), {}, { opened = it.id }, { removed = it }, {}) }
         }
         composeRule.onNodeWithText("Today").assertIsDisplayed()
         composeRule.onNodeWithText(entry.title!!).performClick()
@@ -33,7 +63,7 @@ class HistoryScreenTest {
     fun clearRequiresConfirmationAndCancelPreservesHistory() {
         var cleared = 0
         composeRule.setContent {
-            MaterialTheme { HistoryScreen(HistoryState.Ready(listOf(entry)), {}, {}, {}, { cleared++ }) }
+            MaterialTheme { HistoryScreen(paged(listOf(entry)), {}, {}, {}, { cleared++ }) }
         }
         composeRule.onNodeWithText("Clear all").performClick()
         composeRule.onNodeWithText("Cancel").performClick()
@@ -47,7 +77,7 @@ class HistoryScreenTest {
     fun emptyHistoryOffersBackWithoutDestructiveActions() {
         var wentBack = false
         composeRule.setContent {
-            MaterialTheme { HistoryScreen(HistoryState.Ready(emptyList()), { wentBack = true }, {}, {}, {}) }
+            MaterialTheme { HistoryScreen(paged(emptyList()), { wentBack = true }, {}, {}, {}) }
         }
         composeRule.onNodeWithText("A little rewind").assertIsDisplayed()
         composeRule.onNodeWithText("Clear all").assertDoesNotExist()
@@ -55,3 +85,13 @@ class HistoryScreenTest {
         composeRule.runOnIdle { assertEquals(true, wentBack) }
     }
 }
+
+@Composable
+private fun paged(entries: List<HistoryEntry>) = remember(entries) {
+    flowOf(PagingData.from(
+        entries,
+        sourceLoadStates = LoadStates(
+            LoadState.NotLoading(true), LoadState.NotLoading(true), LoadState.NotLoading(true),
+        ),
+    ).withDateHeaders())
+}.collectAsLazyPagingItems()

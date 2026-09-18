@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -37,13 +38,19 @@ fun HistoryPager(
     historyVisible: Boolean,
     allowOpenSwipe: Boolean,
     onHistoryVisibilityChange: (Boolean) -> Unit,
-    history: @Composable () -> Unit,
+    history: @Composable (fullyHidden: Boolean) -> Unit,
     content: @Composable (visible: Boolean) -> Unit,
 ) {
     val pager = rememberPagerState(initialPage = if (historyVisible) 0 else 1) { 2 }
     val visibilityChanged by rememberUpdatedState(onHistoryVisibilityChange)
     val backMotion = remember { PredictiveBackMotion() }
     val predictingBack = backMotion.active
+    val historyFullyHidden by remember {
+        derivedStateOf {
+            !backMotion.active && !pager.isScrollInProgress &&
+                pager.currentPage == 1 && pager.currentPageOffsetFraction == 0f
+        }
+    }
     val rightToLeftLayout = LocalLayoutDirection.current == LayoutDirection.Rtl
 
     LaunchedEffect(historyVisible) {
@@ -90,7 +97,7 @@ fun HistoryPager(
             }.predictiveBackMotion(backMotion, outgoing = page == 0),
         ) {
             if (page == 0) {
-                history()
+                history(!historyVisible && historyFullyHidden)
             } else {
                 // Offscreen media must release its player, even though Home stays composed.
                 content(predictingBack || pager.currentPage + pager.currentPageOffsetFraction > 0f)

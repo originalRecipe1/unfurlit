@@ -31,9 +31,11 @@ fun UnfurlitApp(
                 if (visible && destination != UnfurlitDestination.History) unfurlitViewModel.showHistory()
                 if (!visible && destination == UnfurlitDestination.History) unfurlitViewModel.leaveHistory()
             },
-            history = {
+            history = { fullyHidden ->
                 HistoryRoute(
                     viewModel = historyViewModel,
+                    prepareForNextVisit = fullyHidden,
+                    visible = destination == UnfurlitDestination.History,
                     onBack = unfurlitViewModel::leaveHistory,
                     onOpen = { entry ->
                         viewerViewModel.open(entry.sourceUrl)
