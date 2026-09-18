@@ -1,0 +1,5 @@
+- Predictive Back animations for the viewer and History.
+- Faster, paginated History with cached thumbnails and smoother reopening.
+- Fixed a brief video-frame flash when returning home.
+- Softer charcoal and warm off-white backgrounds.
+- Clearer “Open link” actions and a compact supported-sites list.
