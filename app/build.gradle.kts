@@ -187,6 +187,13 @@ android {
                 "proguard-rules.pro",
             )
         }
+        create("localRelease") {
+            initWith(getByName("release"))
+            // Release performance, signed with the development key so installing over
+            // debug preserves local history. Never use this variant for distribution.
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+        }
     }
 
     buildFeatures {

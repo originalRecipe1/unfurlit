@@ -56,6 +56,37 @@ the optimized code. Keep `app/build/outputs/mapping/release/mapping.txt` with
 each release to decode obfuscated crash traces. The release workflow attaches
 this mapping file alongside the signed APK and checksum.
 
+For daily testing on a development phone and for judging scrolling performance,
+use `localRelease`. It has release optimizations and no debugger/tooling overhead,
+but uses the local debug signing key so it can update a debug installation without
+clearing history:
+
+```bash
+./gradlew :app:assembleLocalRelease
+adb install -r app/build/outputs/apk/localRelease/app-localRelease.apk
+```
+
+Use `debug` for debugging and instrumentation tests. Do not distribute
+`localRelease`; public releases use the release signing process. Compare frame
+timings on the same phone, with the same history and scrolling sequence, after
+force-stopping and relaunching the app. Debug timings are not representative of
+release performance.
+
+A local Pixel 7 sanity check (2026-09-18), using the same saved history,
+process restart, History navigation, and eight alternating 450 ms vertical swipes,
+reported the following through `adb shell dumpsys gfxinfo
+io.github.originalrecipe1.unfurlit framestats`:
+
+| Build | Janky frames | 95th percentile frame time |
+| --- | --- | --- |
+| Debug | 26 / 344 (7.56%) | 34 ms |
+| Local release, first run | 2 / 412 (0.49%) | 13 ms |
+| Local release, repeat | 3 / 413 (0.73%) | 13 ms |
+
+These are on-device diagnostic samples, not controlled benchmark results. Both
+release runs finished with History visible; the database and thumbnails were
+preserved across the build update. No forced ahead-of-time compilation was used.
+
 The cached AAR transform in `buildSrc` trims the bundled Python runtime for all
 builds, including x86_64 CI tests. Its exact removal list contains only the
 static QuickJS build archive and seven CPython test extension modules. Retained
