@@ -187,7 +187,7 @@ private fun ViewerScreen(
                             },
                             modifier = Modifier.sizeIn(minHeight = 48.dp),
                         ) {
-                            Text("Open original")
+                            Text("Open link")
                         }
                     }
                 }
@@ -325,14 +325,14 @@ internal fun FailureContent(
                 onClick = if (error.canRetry) onRetry else onOpenOriginal,
                 modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
             ) {
-                Text(if (error.canRetry) "Try again" else "Open original")
+                Text(if (error.canRetry) "Try again" else "Open link")
             }
             if (error.canRetry) {
                 OutlinedButton(
                     onClick = onOpenOriginal,
                     modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
                 ) {
-                    Text("Open original")
+                    Text("Open link")
                 }
             }
             TextButton(

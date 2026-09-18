@@ -24,7 +24,7 @@ class MainActivityTest {
     fun coldLaunchStaysOnTheIdleHomeScreen() {
         composeRule.onNodeWithText("Ready when\nyou are.").assertIsDisplayed()
         composeRule.onNodeWithText("Extracting stream information…").assertDoesNotExist()
-        composeRule.onNodeWithText("Open original").assertDoesNotExist()
+        composeRule.onNodeWithText("Open link").assertDoesNotExist()
     }
 
     @Test

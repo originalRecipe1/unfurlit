@@ -18,6 +18,19 @@ Paste a link or share it to Unfurlit to open its media.
 Media extraction runs **on your device**, with no account, backend or ads.
 Site availability varies; [supported content and limitations](docs/usage.md#sites-and-access) explain what to expect.
 
+## Supported links and media
+
+- YouTube: videos and Shorts.
+- Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
+- TikTok: videos and photo posts, including available photo soundtracks.
+- Reddit and X/Twitter: videos.
+- PeerTube: videos.
+
+Other sites may work too. Photo support is currently limited to Instagram and
+TikTok; audio and galleries depend on the source. Availability varies by post,
+region and platform changes. Private, login-gated or restricted posts may not
+open; signing in is not available.
+
 ## Site compatibility
 
 **Last checked: 2026-09-17** · Two initial public links per site, plus additional Instagram and TikTok photo posts; without signing in.

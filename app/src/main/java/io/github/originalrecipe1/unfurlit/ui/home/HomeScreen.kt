@@ -17,6 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -53,6 +55,7 @@ fun HomeScreen(
     var input by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     val scrollState = rememberScrollState()
+    var showSupportedMedia by rememberSaveable { mutableStateOf(false) }
 
     fun submit() {
         val url = UrlTextParser.firstSupportedUrl(input)
@@ -62,6 +65,24 @@ fun HomeScreen(
             error = null
             onOpen(url)
         }
+    }
+
+    if (showSupportedMedia) {
+        AlertDialog(
+            onDismissRequest = { showSupportedMedia = false },
+            title = { Text(stringResource(R.string.supported_media_title)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.supported_media_description),
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showSupportedMedia = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            },
+        )
     }
 
     Scaffold(
@@ -164,11 +185,9 @@ fun HomeScreen(
                     }
                 }
                 Spacer(Modifier.height(32.dp))
-                Text(
-                    text = "YouTube · Reddit · X/Twitter · Instagram · TikTok",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelMedium,
-                )
+                TextButton(onClick = { showSupportedMedia = true }) {
+                    Text(stringResource(R.string.supported_media_title))
+                }
             }
         }
     }
