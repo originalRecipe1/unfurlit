@@ -58,6 +58,10 @@ fun UnfurlitApp(
                         unfurlitViewModel.showHome()
                     },
                     onShowHistory = unfurlitViewModel::showHistory,
+                    backEnabled = destination == UnfurlitDestination.Viewer,
+                    backPreview = {
+                        HomeScreen(onOpen = {}, onShowHistory = {})
+                    },
                 )
 
                 UnfurlitDestination.History -> Unit

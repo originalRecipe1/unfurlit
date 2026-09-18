@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import androidx.activity.compose.BackHandler
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -50,6 +49,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.canRetry
 import io.github.originalrecipe1.unfurlit.domain.model.recoveryMessage
 import io.github.originalrecipe1.unfurlit.domain.model.userMessage
+import io.github.originalrecipe1.unfurlit.ui.components.PredictiveBackSurface
 import io.github.originalrecipe1.unfurlit.ui.components.UnfurlitTopAppBar
 
 @Composable
@@ -57,6 +57,8 @@ fun ViewerRoute(
     viewModel: ViewerViewModel,
     onBack: () -> Unit,
     onShowHistory: () -> Unit,
+    backPreview: @Composable () -> Unit = {},
+    backEnabled: Boolean = true,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var fullscreen by rememberSaveable { mutableStateOf(false) }
@@ -64,22 +66,25 @@ fun ViewerRoute(
     LaunchedEffect(sourceUrl) {
         fullscreen = false
     }
-    BackHandler {
-        if (fullscreen) {
-            fullscreen = false
-        } else {
-            onBack()
-        }
+    PredictiveBackSurface(
+        dismissOnBack = !fullscreen,
+        enabled = backEnabled,
+        onBack = {
+            if (fullscreen) fullscreen = false else onBack()
+        },
+        // Fullscreen Back stays in the viewer; it must not preview Home.
+        preview = { if (!fullscreen) backPreview() },
+    ) {
+        ViewerScreen(
+            state = state,
+            onRetry = viewModel::retry,
+            onViewed = viewModel::recordView,
+            onBack = onBack,
+            onShowHistory = onShowHistory,
+            fullscreen = fullscreen,
+            onFullscreenChange = { fullscreen = it },
+        )
     }
-    ViewerScreen(
-        state = state,
-        onRetry = viewModel::retry,
-        onViewed = viewModel::recordView,
-        onBack = onBack,
-        onShowHistory = onShowHistory,
-        fullscreen = fullscreen,
-        onFullscreenChange = { fullscreen = it },
-    )
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
