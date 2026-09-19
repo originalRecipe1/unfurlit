@@ -1,7 +1,7 @@
 # Unfurlit
 
 Watch videos, view photos, and play audio from social links in a native Android viewer.
-Paste a link or share it to Unfurlit to open its media.
+Paste a link or share it to Unfurlit to open its media without using the official app or the limited online website.
 
 **Android 7.0+** · [Installation](docs/usage.md#installation) · [Privacy](PRIVACY.md) · [Documentation](docs/README.md)
 
@@ -12,16 +12,16 @@ Paste a link or share it to Unfurlit to open its media.
 ## Features
 
 - Open public links from **YouTube, Instagram, TikTok, Reddit, X/Twitter, PeerTube**, and more.
-- Watch fullscreen, seek through videos and audio, zoom into photos, and swipe through galleries.
-- Revisit media in **local history**, with thumbnails and swipe navigation.
+- Watch fullscreen videos and audio, zoom into photos, with gallery/carousel support.
+- Revisit media in **local history**.
 
 Media extraction runs **on your device**, with no account, backend or ads.
 Site availability varies; [supported content and limitations](docs/usage.md#sites-and-access) explain what to expect.
 
 ## Supported links and media
 
-- YouTube: videos and Shorts.
-- Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
+- YouTube: videos.
+- Instagram: Reels, photos and carousels (no photo-post soundtracks).
 - TikTok: videos and photo posts, including available photo soundtracks.
 - Reddit and X/Twitter: videos.
 - PeerTube: videos.
