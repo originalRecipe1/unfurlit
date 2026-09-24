@@ -60,7 +60,7 @@ fun HomeScreen(
     fun submit() {
         val url = UrlTextParser.firstSupportedUrl(input)
         if (url == null) {
-            error = "Enter a valid public HTTP or HTTPS URL."
+            error = context.getString(R.string.home_invalid_url)
         } else {
             error = null
             onOpen(url)
@@ -127,9 +127,9 @@ fun HomeScreen(
                         error = null
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Social-media URL") },
+                    label = { Text(stringResource(R.string.home_url_label)) },
                     shape = RoundedCornerShape(16.dp),
-                    placeholder = { Text("https://…") },
+                    placeholder = { Text(stringResource(R.string.home_url_placeholder)) },
                     supportingText = error?.let { message ->
                         {
                             Text(
@@ -159,7 +159,7 @@ fun HomeScreen(
                             .weight(1f)
                             .sizeIn(minHeight = 48.dp),
                     ) {
-                        Text("Open")
+                        Text(stringResource(R.string.action_open))
                     }
                     OutlinedButton(
                         onClick = {
@@ -171,7 +171,7 @@ fun HomeScreen(
                                 ?.toString()
                             val url = UrlTextParser.firstSupportedUrl(clipboardText)
                             if (url == null) {
-                                error = "The clipboard does not contain a supported URL."
+                                error = context.getString(R.string.home_clipboard_no_url)
                             } else {
                                 input = url
                                 error = null
@@ -181,7 +181,7 @@ fun HomeScreen(
                             .weight(1f)
                             .sizeIn(minHeight = 48.dp),
                     ) {
-                        Text("Paste")
+                        Text(stringResource(R.string.action_paste))
                     }
                 }
                 Spacer(Modifier.height(32.dp))

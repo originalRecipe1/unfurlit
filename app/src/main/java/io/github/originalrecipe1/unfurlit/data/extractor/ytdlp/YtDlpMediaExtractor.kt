@@ -82,7 +82,7 @@ class YtDlpMediaExtractor(
             logFailure(error)
             throw error
         } catch (error: TimeoutCancellationException) {
-            throw ExtractionException(ExtractionError.NetworkFailure, error)
+            throw ExtractionException(ExtractionError.Timeout, error)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Throwable) {

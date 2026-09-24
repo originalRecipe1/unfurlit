@@ -52,7 +52,7 @@ fun UnfurlitTopAppBar(
             IconButton(onClick = onShowHistory) {
                 Icon(
                     painter = painterResource(R.drawable.ic_history),
-                    contentDescription = "Open history",
+                    contentDescription = stringResource(R.string.open_history),
                 )
             }
         },
