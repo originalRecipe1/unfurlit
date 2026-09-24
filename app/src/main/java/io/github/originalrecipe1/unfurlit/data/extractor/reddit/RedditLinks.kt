@@ -37,6 +37,18 @@ internal object RedditLinks {
         return url
     }
 
+    /**
+     * The title Reddit puts in a post URL's slug, e.g. `…/comments/1wop7o6/what_happened_to_orlando_bloom/`
+     * gives "What happened to orlando bloom". Null for other URLs or an empty slug.
+     */
+    fun titleFromPostUrl(url: String): String? {
+        val path = runCatching { URI(url).path }.getOrNull() ?: return null
+        val slug = POST_SLUG.matchEntire(path)?.groupValues?.get(1) ?: return null
+        return slug.replace('_', ' ').trim().takeIf(String::isNotEmpty)
+            ?.replaceFirstChar { it.uppercaseChar() }
+            ?.take(MAX_TITLE_LENGTH)
+    }
+
     private fun String.isReddit() = this == "reddit.com" || endsWith(".reddit.com")
 
     private fun String.queryParameter(name: String): String? = split('&')
@@ -47,5 +59,7 @@ internal object RedditLinks {
     private const val TITLE_SEPARATOR = "-v0-"
     private val REDDIT_IMAGE_HOSTS = setOf("i.redd.it", "preview.redd.it")
     private val IMAGE_NAME = Regex("[A-Za-z0-9]+\\.(?:png|jpe?g|gif|webp)", RegexOption.IGNORE_CASE)
+    private const val MAX_TITLE_LENGTH = 512
+    private val POST_SLUG = Regex("/r/[A-Za-z0-9_]{2,21}/comments/[a-z0-9]+/([^/]+)/?")
     private val POST_PATH = Regex("/r/[A-Za-z0-9_]{2,21}/comments/[a-z0-9]+(?:/[^?#]*)?")
 }
