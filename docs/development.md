@@ -129,6 +129,25 @@ the supplied archive's checksum and embedded version before packaging it. The
 source-built variant has also completed the YouTube streaming proof of concept
 on the emulator.
 
+The build also assembles a second engine for photos and galleries: gallery-dl
+`1.32.13` and the pure-Python requests stack it needs (requests, urllib3, idna,
+certifi, charset-normalizer). `preparePinnedGalleryDl` downloads the six pinned
+wheels from PyPI, verifies each SHA-256, and combines them with
+`app/gallery-dl/__main__.py` into a reproducible zip application (the
+`PythonZipApp` build logic sorts entries, fixes timestamps and drops install-time
+metadata). For offline builds, put the same wheel files in a directory and pass
+`-Punfurlit.gallerydl.wheels=/path/to/wheels`; their checksums are still verified.
+
+The engine runs as `libpython.so -S gallerydl.zip URL` on the Python runtime
+youtubedl-android installs, with the same environment it uses for yt-dlp. Its
+entry point runs gallery-dl's extractors without configuration files, cache, or
+downloads and prints one JSON object with the media URLs, the request headers
+their hosts expect (such as a Referer), and basic metadata. It is tried only when
+yt-dlp reports no video or fails to extract, is limited to 60 seconds and 50
+items, and its output is validated like yt-dlp's. Its pure Python logic is tested
+by `scripts/tests/test_gallery_dl_entry.py`; `PythonRuntimeTest` also runs it on
+the device runtime without network access.
+
 Before the first extraction in each app process, Unfurlit verifies the app-private
 extractor copy against the bundled checksum and atomically refreshes it when it
 differs. This makes APK upgrades activate their newly pinned yt-dlp version
@@ -216,8 +235,10 @@ Extraction is cancellable and limited to 120 seconds. yt-dlp prints only the
 metadata and selected-format fields Unfurlit consumes; short metadata is capped at
 512 characters, descriptions at 16 KiB, the normalized output at 2 MiB, and
 posts at 50 media entries. These controls reduce the attack surface, but they do
-not turn arbitrary extraction into a sandbox: yt-dlp and the bundled Python
-runtime remain security-sensitive code that must be kept current.
+not turn arbitrary extraction into a sandbox: yt-dlp, gallery-dl and the bundled
+Python runtime remain security-sensitive code that must be kept current. Like
+yt-dlp, gallery-dl makes its own requests to the submitted site; the media URLs
+it returns are loaded through the app's public-only HTTP stack.
 
 ## Release and licensing
 
