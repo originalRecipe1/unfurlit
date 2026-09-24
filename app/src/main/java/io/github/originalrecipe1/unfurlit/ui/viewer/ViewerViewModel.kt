@@ -3,6 +3,7 @@ package io.github.originalrecipe1.unfurlit.ui.viewer
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,13 +15,21 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 
-class ViewerViewModel(application: Application) : AndroidViewModel(application) {
+class ViewerViewModel(
+    application: Application,
+    private val savedState: SavedStateHandle,
+) : AndroidViewModel(application) {
     private val repository = RepositoryFactory.mediaRepository(application)
     private val historyRepository = RepositoryFactory.historyRepository(application)
     private val _state = MutableStateFlow<ViewerState>(ViewerState.Idle)
     val state: StateFlow<ViewerState> = _state.asStateFlow()
     private var extractionJob: Job? = null
     private var recordedResult: ExtractionResult? = null
+
+    init {
+        // Stream URLs expire, so a link restored after process death is extracted again.
+        savedState.get<String>(KEY_SOURCE_URL)?.let(::open)
+    }
 
     fun retry() {
         state.value.sourceUrl.takeIf(String::isNotBlank)?.let(::open)
@@ -29,6 +38,7 @@ class ViewerViewModel(application: Application) : AndroidViewModel(application) 
     fun open(url: String) {
         extractionJob?.cancel()
         recordedResult = null
+        savedState[KEY_SOURCE_URL] = url
         extractionJob = viewModelScope.launch {
             _state.value = ViewerState.Loading(url)
             _state.value = try {
@@ -60,11 +70,13 @@ class ViewerViewModel(application: Application) : AndroidViewModel(application) 
         extractionJob?.cancel()
         extractionJob = null
         recordedResult = null
+        savedState.remove<String>(KEY_SOURCE_URL)
         _state.value = ViewerState.Idle
     }
 
     companion object {
         private const val TAG = "ViewerViewModel"
+        private const val KEY_SOURCE_URL = "sourceUrl"
     }
 }
 
