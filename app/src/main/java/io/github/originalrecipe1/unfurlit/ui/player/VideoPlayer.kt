@@ -48,6 +48,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.C
 import androidx.media3.ui.PlayerView
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
+import io.github.originalrecipe1.unfurlit.playback.ActivePlayback
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.R
 
@@ -86,7 +87,9 @@ fun VideoPlayer(
         if (!active) player.pause()
     }
 
-    DisposableEffect(player, lifecycleOwner) {
+    // Playback continues in the background; closing the picture-in-picture window
+    // pauses it (see PictureInPictureController).
+    DisposableEffect(player) {
         val playerListener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
                 playbackFailed = true
@@ -107,22 +110,37 @@ fun VideoPlayer(
                 )
             }
         }
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) player.pause()
-        }
         player.addListener(playerListener)
-        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             player.removeListener(playerListener)
-            lifecycleOwner.lifecycle.removeObserver(observer)
             player.release()
         }
     }
 
+    // In the background only the sound is heard, so stop decoding video (and, for
+    // separate streams, downloading it) until the app is visible again.
+    DisposableEffect(player, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> player.setVideoTrackDisabled(true)
+                Lifecycle.Event.ON_START -> player.setVideoTrackDisabled(false)
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     // Declared after the effect above so the player is detached before it is released.
     DisposableEffect(pictureInPicture, player, active) {
-        if (active) pictureInPicture?.attach(player)
-        onDispose { pictureInPicture?.detach(player) }
+        if (active) {
+            pictureInPicture?.attach(player)
+            ActivePlayback.attach(context, player)
+        }
+        onDispose {
+            pictureInPicture?.detach(player)
+            ActivePlayback.detach(player)
+        }
     }
 
     Box(
@@ -240,6 +258,13 @@ fun VideoPlayer(
             }
         }
     }
+}
+
+private fun Player.setVideoTrackDisabled(disabled: Boolean) {
+    if (trackSelectionParameters.disabledTrackTypes.contains(C.TRACK_TYPE_VIDEO) == disabled) return
+    trackSelectionParameters = trackSelectionParameters.buildUpon()
+        .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, disabled)
+        .build()
 }
 
 internal fun calculateDisplayAspectRatio(

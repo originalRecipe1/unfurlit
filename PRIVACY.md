@@ -23,6 +23,12 @@ descriptions, and raw extractor output. Removing a visit also removes its
 saved thumbnail. History is excluded from Android backup and device transfer
 and can be deleted per item or cleared in full.
 
+While media plays, Unfurlit publishes its title and creator to Android's media
+controls so they can appear in the notification, on the lock screen, and on
+connected headsets or car systems. Other apps can connect to these controls only
+if Android trusts them with media control, such as the system UI. No artwork is
+fetched for them.
+
 Unfurlit reads the clipboard only after the user presses the Paste button. Release
 logging redacts URLs and common secret fields and does not deliberately log
 cookies, authorization headers, direct media URLs, or raw extractor output.
