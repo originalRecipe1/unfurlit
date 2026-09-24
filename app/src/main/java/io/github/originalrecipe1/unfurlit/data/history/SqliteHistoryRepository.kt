@@ -60,7 +60,7 @@ class SqliteHistoryRepository internal constructor(
         )
         withContext(Dispatchers.IO) {
             val id = writeMutex.withLock {
-                database.insert(entry).also { changes.value += 1 }
+                database.record(entry).also { changes.value += 1 }
             }
             // Record immediately; a slow or unavailable preview must not delay history.
             val thumbnail = thumbnails.load(result) ?: return@withContext
@@ -144,6 +144,36 @@ internal class HistoryDatabase(
             put(COLUMN_VIEWED_AT, entry.viewedAtEpochMillis)
         }
         return writableDatabase.insertOrThrow(TABLE_HISTORY, null, values)
+    }
+
+    /**
+     * Records a visit as the newest entry. An earlier visit to the same link is replaced,
+     * keeping its thumbnail until a fresh one loads, and the oldest visits beyond
+     * [maxEntries] are dropped so history and its thumbnails cannot grow without bound.
+     */
+    fun record(entry: HistoryEntry, maxEntries: Int = MAX_ENTRIES): Long {
+        require(maxEntries > 0)
+        val database = writableDatabase
+        database.beginTransaction()
+        try {
+            val previousThumbnail = database.query(
+                TABLE_HISTORY, arrayOf(COLUMN_THUMBNAIL),
+                "$COLUMN_SOURCE_URL = ? AND $COLUMN_THUMBNAIL IS NOT NULL", arrayOf(entry.sourceUrl),
+                null, null, "$COLUMN_VIEWED_AT DESC, $COLUMN_ID DESC", "1",
+            ).use { cursor -> if (cursor.moveToFirst()) cursor.getBlob(0) else null }
+            database.delete(TABLE_HISTORY, "$COLUMN_SOURCE_URL = ?", arrayOf(entry.sourceUrl))
+            val id = insert(entry)
+            previousThumbnail?.let { updateThumbnail(id, it) }
+            database.execSQL(
+                "DELETE FROM $TABLE_HISTORY WHERE $COLUMN_ID NOT IN (" +
+                    "SELECT $COLUMN_ID FROM $TABLE_HISTORY " +
+                    "ORDER BY $COLUMN_VIEWED_AT DESC, $COLUMN_ID DESC LIMIT $maxEntries)",
+            )
+            database.setTransactionSuccessful()
+            return id
+        } finally {
+            database.endTransaction()
+        }
     }
 
     fun updateThumbnail(id: Long, thumbnail: ByteArray) {
@@ -250,6 +280,7 @@ internal class HistoryDatabase(
     private companion object {
         const val DATABASE_NAME = "unfurlit-history.db"
         const val DATABASE_VERSION = 2
+        const val MAX_ENTRIES = 1_000
         const val TABLE_HISTORY = "history"
         const val COLUMN_ID = "id"
         const val COLUMN_SOURCE_URL = "source_url"

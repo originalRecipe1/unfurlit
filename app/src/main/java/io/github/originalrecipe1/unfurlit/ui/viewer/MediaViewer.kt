@@ -20,11 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.media3.common.util.UnstableApi
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.ui.player.AudioPlayer
 import io.github.originalrecipe1.unfurlit.ui.player.VideoPlayer
+import io.github.originalrecipe1.unfurlit.R
 
 @OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -161,7 +163,7 @@ private fun SingleMediaViewer(
 
         is ExtractedMedia.Image -> ZoomableImage(
             source = media.source,
-            contentDescription = extraction.title ?: "Image",
+            contentDescription = extraction.title ?: stringResource(R.string.media_image),
             active = true,
             onRetry = onRetry,
             onViewed = onViewed,
@@ -215,7 +217,7 @@ private fun MediaPage(
 
         is ExtractedMedia.Image -> ZoomableImage(
             source = media.source,
-            contentDescription = extraction.title ?: "Image",
+            contentDescription = extraction.title ?: stringResource(R.string.media_image),
             active = active,
             onRetry = onRetry,
             onViewed = onViewed,

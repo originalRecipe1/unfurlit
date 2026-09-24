@@ -32,13 +32,14 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.C
 import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
@@ -47,6 +48,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
+import io.github.originalrecipe1.unfurlit.R
 
 @UnstableApi
 @Composable
@@ -63,7 +65,7 @@ fun AudioPlayer(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val player = remember(audio, extraction.title, extraction.author, loop) {
-        ExoPlayer.Builder(context).build().apply {
+        buildMediaPlayer(context, C.AUDIO_CONTENT_TYPE_MUSIC).apply {
             setMediaSource(Media3PlaybackMapper(context).map(extraction, audio))
             repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
             playWhenReady = active
@@ -136,7 +138,7 @@ fun AudioPlayer(
                     )
                 } else {
                     Text(
-                        text = extraction.title ?: "Audio",
+                        text = extraction.title ?: stringResource(R.string.media_audio),
                         modifier = Modifier.padding(24.dp),
                         style = MaterialTheme.typography.headlineSmall,
                     )
@@ -182,7 +184,7 @@ fun AudioPlayer(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Could not play this audio.",
+                    text = stringResource(R.string.playback_audio_failed),
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -190,7 +192,7 @@ fun AudioPlayer(
                     onClick = onRetry,
                     modifier = Modifier.sizeIn(minHeight = 48.dp),
                 ) {
-                    Text("Extract again")
+                    Text(stringResource(R.string.action_extract_again))
                 }
             }
         }

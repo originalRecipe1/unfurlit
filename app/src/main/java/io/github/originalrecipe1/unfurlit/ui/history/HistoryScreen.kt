@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -99,16 +100,16 @@ internal fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("History", fontWeight = FontWeight.SemiBold) },
+                title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(painterResource(R.drawable.ic_arrow_back), "Back")
+                        Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
                     }
                 },
                 actions = {
                     if (entries.itemCount > 0) {
                         TextButton(onClick = { showClearConfirmation = true }) {
-                            Text("Clear all")
+                            Text(stringResource(R.string.history_clear_all))
                         }
                     }
                 },
@@ -117,12 +118,12 @@ internal fun HistoryScreen(
     ) { contentPadding ->
         Box(Modifier.padding(contentPadding).fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             when {
-                entries.itemCount == 0 && refresh is LoadState.Loading -> HistoryMessage("Loading history…", showProgress = true)
+                entries.itemCount == 0 && refresh is LoadState.Loading -> HistoryMessage(stringResource(R.string.history_loading), showProgress = true)
                 entries.itemCount == 0 && refresh is LoadState.Error -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(Modifier.weight(1f)) { HistoryMessage("History is unavailable", "Your history could not be loaded.") }
-                    TextButton(onClick = entries::retry) { Text("Retry") }
+                    Box(Modifier.weight(1f)) { HistoryMessage(stringResource(R.string.history_unavailable), stringResource(R.string.history_unavailable_description)) }
+                    TextButton(onClick = entries::retry) { Text(stringResource(R.string.action_retry)) }
                 }
-                entries.itemCount == 0 -> HistoryMessage("A little rewind", "Media you watch will appear here.\nOpen a link to start your collection.")
+                entries.itemCount == 0 -> HistoryMessage(stringResource(R.string.history_empty_title), stringResource(R.string.history_empty_description))
                 else -> LazyColumn(
                     state = listState,
                     modifier = Modifier.widthIn(max = 680.dp).fillMaxSize(),
@@ -163,13 +164,13 @@ internal fun HistoryScreen(
         AlertDialog(
             onDismissRequest = { showClearConfirmation = false },
             icon = { Icon(painterResource(R.drawable.ic_delete), null) },
-            title = { Text("Clear viewing history?") },
-            text = { Text("This removes all visits and their saved thumbnails from this device.") },
+            title = { Text(stringResource(R.string.history_clear_title)) },
+            text = { Text(stringResource(R.string.history_clear_description)) },
             confirmButton = {
-                TextButton(onClick = { showClearConfirmation = false; onClear() }) { Text("Clear history") }
+                TextButton(onClick = { showClearConfirmation = false; onClear() }) { Text(stringResource(R.string.history_clear_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearConfirmation = false }) { Text("Cancel") }
+                TextButton(onClick = { showClearConfirmation = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }
@@ -204,7 +205,7 @@ private fun HistoryLoadStatus(state: LoadState, retry: () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(12.dp), contentAlignment = Alignment.Center) {
         when (state) {
             is LoadState.Loading -> CircularProgressIndicator(Modifier.size(24.dp))
-            is LoadState.Error -> TextButton(onClick = retry) { Text("Couldn’t load history. Retry") }
+            is LoadState.Error -> TextButton(onClick = retry) { Text(stringResource(R.string.history_load_failed_retry)) }
             else -> Unit
         }
     }
@@ -215,11 +216,11 @@ private fun HistoryDay(day: Long) {
     val context = LocalContext.current
     val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
     val label = when {
-        DateUtils.isToday(day) -> "Today"
+        DateUtils.isToday(day) -> stringResource(R.string.history_today)
         Calendar.getInstance().apply { timeInMillis = day }.let {
             it.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
                 it.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR)
-        } -> "Yesterday"
+        } -> stringResource(R.string.history_yesterday)
         else -> DateUtils.formatDateTime(context, day, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH)
     }
     Text(
@@ -239,7 +240,7 @@ private fun HistoryRow(
 ) {
     val context = LocalContext.current
     val host = remember(entry.sourceUrl) { entry.sourceHost() }
-    val title = entry.title ?: host ?: "Untitled media"
+    val title = entry.title ?: host ?: stringResource(R.string.media_untitled)
     val time = remember(context, entry.viewedAtEpochMillis) {
         DateUtils.formatDateTime(context, entry.viewedAtEpochMillis, DateUtils.FORMAT_SHOW_TIME)
     }
@@ -253,7 +254,7 @@ private fun HistoryRow(
             HistoryThumbnail(entry)
             Column(Modifier.weight(1f).padding(start = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    entry.platform ?: host ?: "Media",
+                    entry.platform ?: host ?: stringResource(R.string.media_generic),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
@@ -272,7 +273,7 @@ private fun HistoryRow(
             IconButton(onClick = onRemove) {
                 Icon(
                     painterResource(R.drawable.ic_delete),
-                    "Remove $title from history",
+                    stringResource(R.string.history_remove, title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -342,14 +343,15 @@ private fun HistoryMessage(title: String, description: String? = null, showProgr
     }
 }
 
+@Composable
 private fun HistoryEntry.mediaDescription(): String {
     val media = when {
-        mediaCount > 1 -> "$mediaCount items"
-        mediaKind == HistoryMediaKind.Video -> "Video"
-        mediaKind == HistoryMediaKind.Image -> "Image"
-        mediaKind == HistoryMediaKind.Audio -> "Audio"
-        mediaKind == HistoryMediaKind.Gallery -> "Gallery"
-        else -> "Media"
+        mediaCount > 1 -> LocalContext.current.resources.getQuantityString(R.plurals.media_item_count, mediaCount, mediaCount)
+        mediaKind == HistoryMediaKind.Video -> stringResource(R.string.media_video)
+        mediaKind == HistoryMediaKind.Image -> stringResource(R.string.media_image)
+        mediaKind == HistoryMediaKind.Audio -> stringResource(R.string.media_audio)
+        mediaKind == HistoryMediaKind.Gallery -> stringResource(R.string.media_gallery)
+        else -> stringResource(R.string.media_generic)
     }
     return durationSeconds?.let { "$media · ${it.formattedDuration()}" } ?: media
 }

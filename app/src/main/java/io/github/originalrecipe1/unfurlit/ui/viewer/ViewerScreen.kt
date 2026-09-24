@@ -1,9 +1,12 @@
 package io.github.originalrecipe1.unfurlit.ui.viewer
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -37,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -46,9 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
+import io.github.originalrecipe1.unfurlit.R
 import io.github.originalrecipe1.unfurlit.domain.model.canRetry
-import io.github.originalrecipe1.unfurlit.domain.model.recoveryMessage
-import io.github.originalrecipe1.unfurlit.domain.model.userMessage
 import io.github.originalrecipe1.unfurlit.ui.components.PredictiveBackSurface
 import io.github.originalrecipe1.unfurlit.ui.components.UnfurlitTopAppBar
 
@@ -157,12 +160,12 @@ private fun ViewerScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
-                            text = state.extraction.platform ?: "Media",
+                            text = state.extraction.platform ?: stringResource(R.string.media_generic),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = state.extraction.title ?: "Untitled media",
+                            text = state.extraction.title ?: stringResource(R.string.media_untitled),
                             style = MaterialTheme.typography.headlineSmall,
                         )
                         state.extraction.author?.let { author ->
@@ -187,7 +190,7 @@ private fun ViewerScreen(
                             },
                             modifier = Modifier.sizeIn(minHeight = 48.dp),
                         ) {
-                            Text("Open link")
+                            Text(stringResource(R.string.action_open_link))
                         }
                     }
                 }
@@ -225,15 +228,41 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
+// Unfurlit handles these links itself, so a browser is selected explicitly. The selector
+// only picks the browser app; the VIEW intent it receives still carries the URL.
 private fun Context.openOriginal(url: String) {
-    val browserIntent = Intent.makeMainSelectorActivity(
-        Intent.ACTION_MAIN,
-        Intent.CATEGORY_APP_BROWSER,
-    ).apply {
-        data = url.toUri()
+    val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
+        addCategory(Intent.CATEGORY_BROWSABLE)
+        selector = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_BROWSER)
     }
-    runCatching { startActivity(browserIntent) }
+    try {
+        startActivity(browserIntent)
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(this, R.string.open_link_failed, Toast.LENGTH_SHORT).show()
+    }
 }
+
+@get:StringRes
+private val ExtractionError.titleRes: Int
+    get() = when (this) {
+        ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url
+        ExtractionError.MediaUnavailable -> R.string.error_media_unavailable
+        ExtractionError.AuthenticationRequired -> R.string.error_authentication_required
+        ExtractionError.NetworkFailure -> R.string.error_network_failure
+        ExtractionError.Timeout -> R.string.error_timeout
+        ExtractionError.ExtractionFailed -> R.string.error_extraction_failed
+    }
+
+@get:StringRes
+private val ExtractionError.recoveryRes: Int
+    get() = when (this) {
+        ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url_recovery
+        ExtractionError.MediaUnavailable -> R.string.error_media_unavailable_recovery
+        ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
+        ExtractionError.NetworkFailure -> R.string.error_network_failure_recovery
+        ExtractionError.Timeout -> R.string.error_timeout_recovery
+        ExtractionError.ExtractionFailed -> R.string.error_extraction_failed_recovery
+    }
 
 @Composable
 private fun IdleContent(
@@ -248,7 +277,7 @@ private fun IdleContent(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Choose a link from Home to open media.",
+                text = stringResource(R.string.viewer_idle),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Spacer(Modifier.height(24.dp))
@@ -256,7 +285,7 @@ private fun IdleContent(
                 onClick = onBack,
                 modifier = Modifier.sizeIn(minHeight = 48.dp),
             ) {
-                Text("Go home")
+                Text(stringResource(R.string.action_go_home))
             }
         }
     }
@@ -274,12 +303,12 @@ private fun LoadingContent(modifier: Modifier = Modifier) {
             CircularProgressIndicator()
             Spacer(Modifier.height(20.dp))
             Text(
-                text = "Extracting stream information…",
+                text = stringResource(R.string.viewer_loading),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "No media file is being saved",
+                text = stringResource(R.string.viewer_loading_note),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -305,13 +334,13 @@ internal fun FailureContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = error.userMessage,
+            text = stringResource(error.titleRes),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = error.recoveryMessage,
+            text = stringResource(error.recoveryRes),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
@@ -325,21 +354,21 @@ internal fun FailureContent(
                 onClick = if (error.canRetry) onRetry else onOpenOriginal,
                 modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
             ) {
-                Text(if (error.canRetry) "Try again" else "Open link")
+                Text(stringResource(if (error.canRetry) R.string.action_try_again else R.string.action_open_link))
             }
             if (error.canRetry) {
                 OutlinedButton(
                     onClick = onOpenOriginal,
                     modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
                 ) {
-                    Text("Open link")
+                    Text(stringResource(R.string.action_open_link))
                 }
             }
             TextButton(
                 onClick = onTryAnother,
                 modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
             ) {
-                Text("Try another link")
+                Text(stringResource(R.string.action_try_another_link))
             }
         }
     }

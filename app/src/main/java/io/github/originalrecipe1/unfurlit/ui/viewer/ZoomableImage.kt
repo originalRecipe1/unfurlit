@@ -31,12 +31,14 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import io.github.originalrecipe1.unfurlit.domain.model.PlaybackSource
+import io.github.originalrecipe1.unfurlit.R
 
 @Composable
 fun ZoomableImage(
@@ -127,7 +129,7 @@ fun ZoomableImage(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Could not load this image.",
+                    text = stringResource(R.string.image_load_failed),
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -135,7 +137,7 @@ fun ZoomableImage(
                     onClick = onRetry,
                     modifier = Modifier.sizeIn(minHeight = 48.dp),
                 ) {
-                    Text("Extract again")
+                    Text(stringResource(R.string.action_extract_again))
                 }
             }
         }

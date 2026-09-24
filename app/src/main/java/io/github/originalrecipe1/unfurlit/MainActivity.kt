@@ -21,7 +21,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        handleIntent(intent)
+        // After recreation the shared link was already handled; opening it again would
+        // re-extract it and discard where the user navigated since.
+        if (savedInstanceState == null) handleIntent(intent)
         setContent {
             UnfurlitApp(
                 unfurlitViewModel = unfurlitViewModel,

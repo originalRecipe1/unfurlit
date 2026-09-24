@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -43,7 +44,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.C
 import androidx.media3.ui.PlayerView
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
@@ -65,7 +66,7 @@ fun VideoPlayer(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val player = remember(video, extraction.title, extraction.author) {
-        ExoPlayer.Builder(context).build().apply {
+        buildMediaPlayer(context, C.AUDIO_CONTENT_TYPE_MOVIE).apply {
             setMediaSource(Media3PlaybackMapper(context).map(extraction, video))
             playWhenReady = active
             prepare()
@@ -183,9 +184,9 @@ fun VideoPlayer(
                         },
                     ),
                     contentDescription = if (fullscreen) {
-                        "Exit fullscreen"
+                        stringResource(R.string.exit_fullscreen)
                     } else {
-                        "Enter fullscreen"
+                        stringResource(R.string.enter_fullscreen)
                     },
                 )
             }
@@ -205,7 +206,7 @@ fun VideoPlayer(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Could not play this stream.",
+                    text = stringResource(R.string.playback_video_failed),
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -213,7 +214,7 @@ fun VideoPlayer(
                     onClick = onRetry,
                     modifier = Modifier.sizeIn(minHeight = 48.dp),
                 ) {
-                    Text("Extract again")
+                    Text(stringResource(R.string.action_extract_again))
                 }
             }
         }

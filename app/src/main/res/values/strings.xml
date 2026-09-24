@@ -4,7 +4,73 @@
     <string name="home_eyebrow">MEDIA FROM A LINK</string>
     <string name="home_title">Ready when\nyou are.</string>
     <string name="home_description">Paste a link to open its media.</string>
+    <string name="home_url_label">Social-media URL</string>
+    <string name="home_url_placeholder">https://…</string>
+    <string name="home_invalid_url">Enter a valid public HTTP or HTTPS URL.</string>
+    <string name="home_clipboard_no_url">The clipboard does not contain a supported URL.</string>
     <string name="supported_media_title">Supported links and media</string>
     <string name="supported_media_description">YouTube — videos\nInstagram — videos &amp; photos\nTikTok — videos &amp; photos\nReddit — videos\nX/Twitter — videos\nPeerTube — videos\n\nPublic links only. Availability varies.</string>
+
+    <string name="action_open">Open</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_open_link">Open link</string>
+    <string name="action_try_again">Try again</string>
+    <string name="action_try_another_link">Try another link</string>
+    <string name="action_go_home">Go home</string>
+    <string name="action_extract_again">Extract again</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_back">Back</string>
     <string name="close">Close</string>
+
+    <string name="open_history">Open history</string>
+    <string name="open_link_failed">No browser is available to open this link.</string>
+    <string name="enter_fullscreen">Enter fullscreen</string>
+    <string name="exit_fullscreen">Exit fullscreen</string>
+
+    <string name="media_generic">Media</string>
+    <string name="media_untitled">Untitled media</string>
+    <string name="media_video">Video</string>
+    <string name="media_image">Image</string>
+    <string name="media_audio">Audio</string>
+    <string name="media_gallery">Gallery</string>
+    <plurals name="media_item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+
+    <string name="viewer_idle">Choose a link from Home to open media.</string>
+    <string name="viewer_loading">Extracting stream information…</string>
+    <string name="viewer_loading_note">No media file is being saved</string>
+    <string name="playback_video_failed">Could not play this stream.</string>
+    <string name="playback_audio_failed">Could not play this audio.</string>
+    <string name="image_load_failed">Could not load this image.</string>
+
+    <string name="error_unsupported_url">No viewable media found</string>
+    <string name="error_unsupported_url_recovery">This link may be a page without media, or a site Unfurlit doesn’t support. Try a direct link to a post, video, or audio track.</string>
+    <string name="error_media_unavailable">Media unavailable</string>
+    <string name="error_media_unavailable_recovery">This post may have been removed or may no longer be available. Open the original to check, or try another link.</string>
+    <string name="error_authentication_required">Sign-in may be needed</string>
+    <string name="error_authentication_required_recovery">This site may require sign-in or restrict access to this post. Open the original in your browser to check.</string>
+    <string name="error_network_failure">Couldn’t reach this site</string>
+    <string name="error_network_failure_recovery">Check your connection and try again. The site may also be temporarily unavailable.</string>
+    <string name="error_timeout">This took too long</string>
+    <string name="error_timeout_recovery">The site was slow to respond or the media could not be read in time. Try again, or open the original to view it on the site.</string>
+    <string name="error_extraction_failed">Couldn’t open this media</string>
+    <string name="error_extraction_failed_recovery">Unfurlit couldn’t read the media in this link. Try again, or open the original to view it on the site.</string>
+
+    <string name="history_title">History</string>
+    <string name="history_clear_all">Clear all</string>
+    <string name="history_loading">Loading history…</string>
+    <string name="history_unavailable">History is unavailable</string>
+    <string name="history_unavailable_description">Your history could not be loaded.</string>
+    <string name="history_empty_title">A little rewind</string>
+    <string name="history_empty_description">Media you watch will appear here.\nOpen a link to start your collection.</string>
+    <string name="history_clear_title">Clear viewing history?</string>
+    <string name="history_clear_description">This removes all visits and their saved thumbnails from this device.</string>
+    <string name="history_clear_confirm">Clear history</string>
+    <string name="history_load_failed_retry">Couldn’t load history. Retry</string>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="history_remove">Remove %1$s from history</string>
 </resources>

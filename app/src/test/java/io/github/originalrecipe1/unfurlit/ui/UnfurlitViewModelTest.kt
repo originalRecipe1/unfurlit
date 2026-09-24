@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.ui
 
+import androidx.lifecycle.SavedStateHandle
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -24,5 +25,18 @@ class UnfurlitViewModelTest {
         model.showHistory()
         model.leaveHistory()
         assertEquals(UnfurlitDestination.Home, model.destination.value)
+    }
+
+    @Test
+    fun navigationIsRestoredFromSavedState() {
+        val savedState = SavedStateHandle()
+        UnfurlitViewModel(savedState).apply {
+            showViewer()
+            showHistory()
+        }
+        val restored = UnfurlitViewModel(savedState)
+        assertEquals(UnfurlitDestination.History, restored.destination.value)
+        restored.leaveHistory()
+        assertEquals(UnfurlitDestination.Viewer, restored.destination.value)
     }
 }
