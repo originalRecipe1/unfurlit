@@ -183,3 +183,15 @@ was submitted to `fdroiddata` in merge request !47809. Do not claim that officia
 active until that merge request has been accepted. GitHub Actions cannot publish
 directly into the official repository; F-Droid detects tags and controls its own
 build and signing queue.
+
+## gallery-dl image engine and F-Droid
+
+Builds after 1.2.0 also bundle the gallery-dl image engine, which
+`preparePinnedGalleryDl` assembles from six pinned, pure-Python PyPI wheels
+(gallery-dl and the requests stack). The F-Droid recipe above has not been
+updated or validated for it yet. Before the next F-Droid release, decide whether
+the build may fetch those wheels (they contain only Python sources and license
+files, and each is checksum-verified), or provide them from `srclibs` in a
+`prebuild` step and pass the directory with `-Punfurlit.gallerydl.wheels=...`.
+Wheels rebuilt from source archives would not match the pinned checksums, so
+that route would need a separate checksum override like the yt-dlp one.

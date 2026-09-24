@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 
+import io.github.originalrecipe1.unfurlit.data.extractor.MediaRequestHeaders
 import org.json.JSONArray
 import org.json.JSONObject
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
@@ -272,23 +273,9 @@ internal object YtDlpJsonParser {
 
     private fun JSONObject.optStringMap(key: String): Map<String, String> {
         val value = optJSONObject(key) ?: return emptyMap()
-        return value.keys().asSequence()
-            .take(MAX_HEADER_COUNT)
-            .mapNotNull { header ->
-                val headerValue = value.optStringOrNull(header)
-                if (header.matches(HEADER_NAME) &&
-                    header.lowercase() !in BLOCKED_HEADERS &&
-                    headerValue != null &&
-                    headerValue.length <= MAX_HEADER_LENGTH &&
-                    '\r' !in headerValue &&
-                    '\n' !in headerValue
-                ) {
-                    header to headerValue
-                } else {
-                    null
-                }
-            }
-            .toMap()
+        return MediaRequestHeaders.sanitize(
+            value.keys().asSequence().map { header -> header to value.optStringOrNull(header) },
+        )
     }
 
     private fun JSONObject.selectedFormats(): List<JSONObject> = buildList {
@@ -384,26 +371,8 @@ internal object YtDlpJsonParser {
     private const val MAX_FORMATS_PER_ENTRY = 32
     private const val MAX_AVAILABLE_FORMATS = 512
     private const val MAX_VIDEO_HEIGHT = 1080
-    private const val MAX_HEADER_COUNT = 32
-    private const val MAX_HEADER_LENGTH = 8 * 1024
     private val IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp", "gif", "avif", "heic", "heif")
     private val AUDIO_EXTENSIONS = setOf("m4a", "mp3", "ogg", "oga", "opus", "wav", "flac", "aac")
-    private val HEADER_NAME = Regex("[!#$%&'*+.^_`|~0-9A-Za-z-]+")
-    private val BLOCKED_HEADERS = setOf(
-        "connection",
-        "content-length",
-        "forwarded",
-        "host",
-        "proxy-authorization",
-        "proxy-connection",
-        "range",
-        "te",
-        "trailer",
-        "transfer-encoding",
-        "upgrade",
-        "x-forwarded-for",
-        "x-real-ip",
-    )
     private val MIME_TYPE = Regex("[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+")
     private val FORMAT_QUALITY = compareBy<JSONObject>(
         { it.optInt("height", 0) },

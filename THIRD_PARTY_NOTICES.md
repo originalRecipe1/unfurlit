@@ -19,6 +19,12 @@ by `releaseRuntimeClasspath` and the components bundled by youtubedl-android
 | QuickJS runtime embedded by youtubedl-android | bundled native runtime | MIT |
 | PyCryptodome embedded in the Python runtime | 3.23.0 | BSD-2-Clause and public-domain portions |
 | Mutagen embedded in the Python runtime | bundled Python package | GPL-2.0-or-later |
+| gallery-dl, in the separately run image engine | 1.32.13 | GPL-2.0-only |
+| Requests, in the image engine | 2.34.2 | Apache-2.0 |
+| urllib3, in the image engine | 2.8.0 | MIT |
+| idna, in the image engine | 3.20 | BSD-3-Clause |
+| certifi, in the image engine | 2026.7.22 | MPL-2.0 |
+| charset-normalizer, in the image engine | 3.5.1 | MIT |
 | OpenSSL | bundled with the Python runtime | Apache-2.0 |
 | zlib | bundled with the Python runtime | Zlib |
 | libffi | bundled with the Python runtime | MIT |
@@ -30,7 +36,12 @@ by `releaseRuntimeClasspath` and the components bundled by youtubedl-android
 | Expat | bundled with the Python runtime | MIT |
 | Android C++ shared runtime and Termux Android support libraries | bundled with the Python runtime | Apache-2.0 and respective upstream licenses |
 
-The app itself is GPL-3.0-only; see `LICENSE`. Maven coordinates and resolved
+The app itself is GPL-3.0-only; see `LICENSE`. The image engine
+(`app/gallery-dl/__main__.py` plus the packages above, assembled into one zip)
+is a separate program that the app starts as a process and reads JSON from; its
+entry point imports gallery-dl and is licensed GPL-2.0-or-later so that it stays
+compatible with gallery-dl's GPL-2.0-only license. Each package's license file
+is included in the engine zip. Maven coordinates and resolved
 versions can be audited with:
 
 ```bash
@@ -42,6 +53,8 @@ upstream projects and their source distributions:
 
 - <https://github.com/JunkFood02/youtubedl-android>
 - <https://github.com/yt-dlp/yt-dlp>
+- <https://github.com/mikf/gallery-dl>
+- <https://github.com/psf/requests>
 - <https://github.com/FFmpeg/FFmpeg> (not included by Unfurlit's current dependency set)
 - <https://www.python.org/downloads/source/>
 - <https://bellard.org/quickjs/>

@@ -9,7 +9,7 @@
     <string name="home_invalid_url">Enter a valid public HTTP or HTTPS URL.</string>
     <string name="home_clipboard_no_url">The clipboard does not contain a supported URL.</string>
     <string name="supported_media_title">Supported links and media</string>
-    <string name="supported_media_description">YouTube — videos\nInstagram — videos &amp; photos\nTikTok — videos &amp; photos\nReddit — videos\nX/Twitter — videos\nPeerTube — videos\n\nPublic links only. Availability varies.</string>
+    <string name="supported_media_description">YouTube — videos\nInstagram — videos &amp; photos\nTikTok — videos &amp; photos\nReddit — videos\nX/Twitter — videos\nPeerTube — videos\nMany other sites — photos &amp; galleries\n\nPublic links only. Availability varies.</string>
 
     <string name="action_open">Open</string>
     <string name="action_paste">Paste</string>

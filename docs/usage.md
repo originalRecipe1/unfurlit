@@ -41,9 +41,12 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - TikTok: videos and photo posts, including available photo soundtracks.
 - Reddit and X/Twitter: videos.
 - PeerTube: videos.
+- Reddit, X/Twitter, Imgur, Bluesky, Pixiv and many other sites: photos and
+  galleries. When yt-dlp finds no video in a post, Unfurlit tries the bundled
+  gallery-dl engine, which supports image posts on hundreds of sites. Direct
+  links to an image also open. This is new and not yet checked on live links.
 
-Other sites may work too. Photo support is currently limited to Instagram and
-TikTok; audio and galleries depend on the source. Availability varies by post,
+Other sites may work too; audio and galleries depend on the source. Availability varies by post,
 region and platform changes. Private, login-gated or restricted posts may not
 open; signing in is not available.
 

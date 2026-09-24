@@ -1,12 +1,16 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import io.github.originalrecipe1.unfurlit.buildlogic.PythonZipApp
 import io.github.originalrecipe1.unfurlit.buildlogic.TrimPythonRuntime
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -110,6 +114,66 @@ abstract class PreparePinnedYtDlp : DefaultTask() {
     }
 }
 
+/**
+ * Assembles the gallery-dl image engine: pinned pure-Python wheels plus Unfurlit's
+ * entry point, as one reproducible zip application run by the bundled Python.
+ */
+@CacheableTask
+abstract class PreparePinnedGalleryDl : DefaultTask() {
+    /** One "URL SHA-256" pair per wheel. */
+    @get:Input
+    abstract val wheels: ListProperty<String>
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val entryPoint: RegularFileProperty
+
+    /** Offline builds (e.g. F-Droid) may provide the same wheel files here. */
+    @get:InputDirectory
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val localWheels: DirectoryProperty
+
+    @get:OutputFile
+    abstract val destination: RegularFileProperty
+
+    @TaskAction
+    fun prepare() {
+        val workDirectory = temporaryDir.also { it.deleteRecursively(); it.mkdirs() }
+        val wheelFiles = wheels.get().map { spec ->
+            val (url, expectedHash) = spec.split(" ").also {
+                require(it.size == 2) { "Expected \"URL SHA-256\" but got \"$spec\"" }
+            }
+            val fileName = url.substringAfterLast('/')
+            val target = workDirectory.resolve(fileName)
+            val localWheel = localWheels.orNull?.file(fileName)?.asFile
+            val input = localWheel?.inputStream() ?: URI(url).toURL().openConnection().apply {
+                connectTimeout = 30_000
+                readTimeout = 60_000
+                setRequestProperty("User-Agent", "Unfurlit-Android-build")
+            }.getInputStream()
+            val digest = MessageDigest.getInstance("SHA-256")
+            input.buffered().use { source ->
+                target.outputStream().buffered().use { output ->
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    while (true) {
+                        val count = source.read(buffer)
+                        if (count < 0) break
+                        digest.update(buffer, 0, count)
+                        output.write(buffer, 0, count)
+                    }
+                }
+            }
+            val actualHash = digest.digest().joinToString("") { "%02x".format(it) }
+            check(actualHash == expectedHash) { "$fileName checksum mismatch: $actualHash" }
+            target.toPath()
+        }
+        val destinationFile = destination.get().asFile
+        destinationFile.parentFile.mkdirs()
+        PythonZipApp.assemble(wheelFiles, entryPoint.get().asFile.toPath(), destinationFile.toPath())
+    }
+}
+
 val ytDlpEngineVersion = libs.versions.ytDlpEngine.get()
 val ytDlpReleaseSha256 = "1fa6733c37ea6fb51c99ad8fe785e7b7e5f3246c9b980230329d4fb72ed8d4d6"
 // Retain old property aliases for existing local/F-Droid build setups.
@@ -127,6 +191,27 @@ require(ytDlpEngineSha256.matches(Regex("[0-9a-f]{64}"))) {
 }
 val generatedYtDlpResources = layout.buildDirectory.dir("generated/unfurlitYtDlp/res")
 val bundledYtDlp = generatedYtDlpResources.map { it.file("raw/ytdlp") }
+val bundledGalleryDl = generatedYtDlpResources.map { it.file("raw/gallerydl") }
+val galleryDlVersion = libs.versions.galleryDl.get()
+// Pure-Python wheels from PyPI: gallery-dl and the requests stack it needs.
+val galleryDlWheels = listOf(
+    "https://files.pythonhosted.org/packages/49/21/dd6f66a907ca96033766adcd435eb370e2b78c2ce7c47eea0e19101aa685/gallery_dl-1.32.13-py3-none-any.whl " +
+        "37f08b19603398cafbd3902c9abb546420d141ae3cd61215d5540d8c3f6ce624",
+    "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl " +
+        "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+    "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl " +
+        "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3",
+    "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl " +
+        "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+    "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl " +
+        "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+    "https://files.pythonhosted.org/packages/cc/61/d01fc49b8dea277640b55a9e15960dbca9fdc8c9fde18e572d39c59f4019/charset_normalizer-3.5.1-py3-none-any.whl " +
+        "6df0ec430f9a831772c23ca5a224cba36517a58a84bb32c32bb59a9fa67c47f6",
+)
+require(galleryDlWheels.first().contains("/gallery_dl-$galleryDlVersion-py3-none-any.whl")) {
+    "Update the pinned gallery-dl wheel together with libs.versions.toml"
+}
+val localGalleryDlWheels = providers.gradleProperty("unfurlit.gallerydl.wheels").orNull
 val ciX86_64 = providers.gradleProperty("unfurlit.ci.x86_64")
     .map { it.toBooleanStrict() }
     .orElse(false)
@@ -139,6 +224,15 @@ val preparePinnedYtDlp by tasks.registering(PreparePinnedYtDlp::class) {
     expectedSha256.set(ytDlpEngineSha256)
     localYtDlpPath?.let { localEngine.fileValue(file(it)) }
     destination.set(bundledYtDlp)
+}
+
+val preparePinnedGalleryDl by tasks.registering(PreparePinnedGalleryDl::class) {
+    description = "Fetches pinned gallery-dl wheels and assembles the bundled image engine"
+    group = "build setup"
+    wheels.set(galleryDlWheels)
+    entryPoint.set(layout.projectDirectory.file("gallery-dl/__main__.py"))
+    localGalleryDlWheels?.let { localWheels.set(file(it)) }
+    destination.set(bundledGalleryDl)
 }
 
 android {
@@ -167,6 +261,11 @@ android {
             "String",
             "YT_DLP_ENGINE_SHA256",
             "\"$ytDlpEngineSha256\"",
+        )
+        buildConfigField(
+            "String",
+            "GALLERY_DL_VERSION",
+            "\"$galleryDlVersion\"",
         )
     }
 
@@ -235,7 +334,7 @@ android {
 }
 
 tasks.named("preBuild").configure {
-    dependsOn(preparePinnedYtDlp)
+    dependsOn(preparePinnedYtDlp, preparePinnedGalleryDl)
 }
 
 kotlin {
