@@ -79,6 +79,11 @@ class GalleryDlJsonParserTest {
         assertError(ExtractionError.ExtractionFailed, error("HttpError", 400))
         assertError(ExtractionError.ExtractionFailed, error("ChallengeError", 403))
         assertError(ExtractionError.ExtractionFailed, error("KeyError"))
+        assertError(ExtractionError.ExtractionFailed, error("AbortExtraction"))
+        assertError(
+            ExtractionError.AuthenticationRequired,
+            """{"error": {"type": "AbortExtraction", "status": 0, "message": "\"You've been blocked by network security.\""}}""",
+        )
     }
 
     @Test

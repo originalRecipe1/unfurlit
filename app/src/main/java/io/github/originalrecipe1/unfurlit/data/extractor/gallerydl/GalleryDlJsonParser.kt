@@ -70,6 +70,12 @@ internal object GalleryDlJsonParser {
             "NotFoundError" -> ExtractionError.MediaUnavailable
             "AuthRequired", "AuthorizationError", "AuthenticationError" ->
                 ExtractionError.AuthenticationRequired
+            // e.g. Reddit's "You've been blocked by network security" page.
+            "AbortExtraction" -> if (text("message")?.contains("blocked", ignoreCase = true) == true) {
+                ExtractionError.AuthenticationRequired
+            } else {
+                ExtractionError.ExtractionFailed
+            }
             "HttpError" -> when {
                 status == 404 || status == 410 -> ExtractionError.MediaUnavailable
                 status == 401 || status == 403 -> ExtractionError.AuthenticationRequired
