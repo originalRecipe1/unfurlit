@@ -47,6 +47,7 @@ import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
+import io.github.originalrecipe1.unfurlit.playback.ActivePlayback
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.R
 
@@ -107,8 +108,10 @@ fun AudioPlayer(
                 }
             }
         }
+        // Audio links keep playing in the background. A photo post's looping
+        // soundtrack is ambient, so it still pauses when the app is left.
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) player.pause()
+            if (event == Lifecycle.Event.ON_STOP && loop) player.pause()
         }
         player.addListener(playerListener)
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -117,6 +120,12 @@ fun AudioPlayer(
             lifecycleOwner.lifecycle.removeObserver(observer)
             player.release()
         }
+    }
+
+    // Declared after the effect above so the player is detached before it is released.
+    DisposableEffect(player, active, loop) {
+        if (active && !loop) ActivePlayback.attach(context, player)
+        onDispose { ActivePlayback.detach(player) }
     }
 
     Box(

@@ -1,6 +1,5 @@
 package io.github.originalrecipe1.unfurlit.ui.player
 
-import android.app.Activity
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -12,12 +11,15 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.util.Rational
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import io.github.originalrecipe1.unfurlit.R
@@ -31,7 +33,7 @@ val LocalPictureInPicture = staticCompositionLocalOf<PictureInPictureController?
  * attaches its player; while it plays, leaving the app (Home, recents, or the PiP
  * button) shrinks the viewer into a window with a play/pause action.
  */
-class PictureInPictureController(private val activity: Activity) {
+class PictureInPictureController(private val activity: ComponentActivity) {
     var inPictureInPicture by mutableStateOf(false)
         private set
 
@@ -44,6 +46,19 @@ class PictureInPictureController(private val activity: Activity) {
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) = updateParams()
         override fun onVideoSizeChanged(videoSize: VideoSize) = updateParams()
+    }
+    // Set when PiP ends before the activity resumes or stops, to tell the two apart.
+    private var leavingPictureInPicture = false
+    private val lifecycleObserver = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> leavingPictureInPicture = false
+            // Stopping in (or just out of) PiP means the window was closed.
+            Lifecycle.Event.ON_STOP -> {
+                if (inPictureInPicture || leavingPictureInPicture) player?.pause()
+                leavingPictureInPicture = false
+            }
+            else -> Unit
+        }
     }
     private val actionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -78,6 +93,7 @@ class PictureInPictureController(private val activity: Activity) {
     }
 
     fun onCreate() {
+        activity.lifecycle.addObserver(lifecycleObserver)
         if (!supported) return
         ContextCompat.registerReceiver(
             activity,
@@ -93,7 +109,18 @@ class PictureInPictureController(private val activity: Activity) {
         player = null
     }
 
+    /**
+     * Closing the window pauses the video; expanding it keeps playing. Depending on the
+     * Android version, PiP ends before or after the activity stops, so both are handled.
+     */
     fun onPictureInPictureModeChanged(inPictureInPicture: Boolean) {
+        if (this.inPictureInPicture && !inPictureInPicture) {
+            val state = activity.lifecycle.currentState
+            when {
+                !state.isAtLeast(Lifecycle.State.STARTED) -> player?.pause()
+                !state.isAtLeast(Lifecycle.State.RESUMED) -> leavingPictureInPicture = true
+            }
+        }
         this.inPictureInPicture = inPictureInPicture
     }
 

@@ -24,6 +24,11 @@ Opening the app alone does not start loading media.
   has a play/pause action; closing it pauses the video.
 - Photos support pinch-to-zoom and panning.
 - Audio has playback controls.
+- Videos and audio keep playing in the background, for example with the screen
+  off, with controls in the notification, on the lock screen, and on headsets.
+  In the background a video plays only its sound. A photo post's soundtrack
+  pauses when you leave the app, and swiping Unfurlit away from recents stops
+  playback.
 - Posts with multiple extracted media items appear in a swipeable gallery.
 
 The first link can take longer while the bundled media extractor initializes.
