@@ -39,6 +39,16 @@ class YtDlpMediaExtractor(
     private val galleryDlRunner = GalleryDlRunner(appContext)
 
     override suspend fun extract(url: String): ExtractionResult {
+        val result = extractMedia(url)
+        // Reddit post URLs carry the title; use it when no engine reported one.
+        return if (result.title == null) {
+            result.copy(title = RedditLinks.titleFromPostUrl(url))
+        } else {
+            result
+        }
+    }
+
+    private suspend fun extractMedia(url: String): ExtractionResult {
         // Reddit mirrors and image wrappers are extracted from their canonical URL.
         val secureInputUrl = UrlValidator.toHttpsUrl(url)
             ?.let(RedditLinks::normalize)

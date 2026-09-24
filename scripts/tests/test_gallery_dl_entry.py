@@ -58,6 +58,20 @@ class CollectorTest(unittest.TestCase):
         item = result["items"][0]
         self.assertEqual(("image", "jpg", 10, None), (item["kind"], item["extension"], item["width"], item["height"]))
 
+    def test_reddit_post_text_becomes_the_description(self):
+        collector = entry.Collector()
+        collector.add_metadata({"title": "What happened?", "selftext": "Long post body", "author": "ann"})
+        result = collector.result()
+        self.assertEqual("What happened?", result["title"])
+        self.assertEqual("Long post body", result["description"])
+
+    def test_description_repeating_the_title_is_dropped(self):
+        collector = entry.Collector()
+        collector.add_metadata({"content": "A tweet that is its own title"})
+        result = collector.result()
+        self.assertEqual("A tweet that is its own title", result["title"])
+        self.assertIsNone(result["description"])
+
     def test_is_full_at_the_item_limit(self):
         collector = entry.Collector()
         for index in range(entry.MAX_ITEMS):

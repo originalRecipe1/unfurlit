@@ -46,6 +46,23 @@ class RedditLinksTest {
     }
 
     @Test
+    fun postUrlSlugGivesAFallbackTitle() {
+        assertEquals(
+            "What happened to orlando bloom",
+            RedditLinks.titleFromPostUrl(
+                "https://www.reddit.com/r/okbuddycinephile/comments/1wop7o6/what_happened_to_orlando_bloom/",
+            ),
+        )
+        assertEquals(
+            "This needs more attention",
+            RedditLinks.titleFromPostUrl("https://eddrit.com/r/codex/comments/1woxxj2/this_needs_more_attention"),
+        )
+        assertEquals(null, RedditLinks.titleFromPostUrl("https://www.reddit.com/r/pics/comments/abc123/"))
+        assertEquals(null, RedditLinks.titleFromPostUrl("https://i.redd.it/4pwb0mds2grh1.png"))
+        assertEquals(null, RedditLinks.titleFromPostUrl("https://x.com/someone/status/123"))
+    }
+
+    @Test
     fun leavesEverythingElseUnchanged() {
         listOf(
             "https://www.reddit.com/r/codex/comments/1woxxj2/title/",

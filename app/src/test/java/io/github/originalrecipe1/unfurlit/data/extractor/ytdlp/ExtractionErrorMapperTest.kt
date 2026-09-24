@@ -11,6 +11,7 @@ class ExtractionErrorMapperTest {
             "Unsupported URL: https://example.com" to ExtractionError.UnsupportedUrl,
             "No video could be found in this post" to ExtractionError.UnsupportedUrl,
             "No video formats found!" to ExtractionError.UnsupportedUrl,
+            "[Reddit] 1wop7o6: No media found" to ExtractionError.UnsupportedUrl,
             "HTTP Error 404: Not Found" to ExtractionError.MediaUnavailable,
             "HTTP Error 410: Gone" to ExtractionError.MediaUnavailable,
             "Video has been removed" to ExtractionError.MediaUnavailable,

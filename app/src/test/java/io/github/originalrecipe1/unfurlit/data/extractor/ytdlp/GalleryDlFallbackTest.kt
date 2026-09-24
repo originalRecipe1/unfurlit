@@ -10,11 +10,11 @@ import org.junit.Test
 
 class GalleryDlFallbackTest {
     @Test
-    fun onlyNoVideoOrFailedExtractionFallsBackToGalleryDl() {
+    fun noVideoFailedExtractionOrSignInFallsBackToGalleryDl() {
         assertTrue(ExtractionError.UnsupportedUrl.allowsGalleryDlFallback())
         assertTrue(ExtractionError.ExtractionFailed.allowsGalleryDlFallback())
+        assertTrue(ExtractionError.AuthenticationRequired.allowsGalleryDlFallback())
         assertFalse(ExtractionError.MediaUnavailable.allowsGalleryDlFallback())
-        assertFalse(ExtractionError.AuthenticationRequired.allowsGalleryDlFallback())
         assertFalse(ExtractionError.NetworkFailure.allowsGalleryDlFallback())
         assertFalse(ExtractionError.Timeout.allowsGalleryDlFallback())
     }

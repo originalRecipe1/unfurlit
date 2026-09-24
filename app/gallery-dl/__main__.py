@@ -37,7 +37,7 @@ FORWARDED_HEADERS = ("User-Agent", "Referer", "Origin")
 TITLE_KEYS = ("title", "content", "caption", "description", "text")
 AUTHOR_KEYS = ("author", "user", "uploader", "artist", "owner", "username", "blog")
 AUTHOR_NAME_KEYS = ("name", "nick", "display_name", "username", "screen_name", "handle")
-DESCRIPTION_KEYS = ("description", "content", "caption", "text")
+DESCRIPTION_KEYS = ("description", "selftext", "content", "caption", "text")
 
 
 def media_kind(extension):
@@ -126,11 +126,15 @@ class Collector:
 
     def result(self):
         metadata = self.metadata or {}
+        title = first_text(metadata, TITLE_KEYS, MAX_SHORT_TEXT)
+        description = first_text(metadata, DESCRIPTION_KEYS, MAX_TEXT)
+        if title and description and description.startswith(title):
+            description = None  # e.g. a post's text already shown as its title
         return {
             "category": self.category,
-            "title": first_text(metadata, TITLE_KEYS, MAX_SHORT_TEXT),
+            "title": title,
             "author": author_name(metadata),
-            "description": first_text(metadata, DESCRIPTION_KEYS, MAX_TEXT),
+            "description": description,
             "items": self.items,
         }
 

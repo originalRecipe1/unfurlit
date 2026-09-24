@@ -18,7 +18,7 @@ internal fun Throwable.toDomainError(): ExtractionError {
             ExtractionError.AuthenticationRequired
         mentions(
             "unsupported url", "no suitable extractor", "no video could be found",
-            "no video formats found", "does not contain any video",
+            "no video formats found", "does not contain any video", "no media found",
         ) -> ExtractionError.UnsupportedUrl
         mentions("unavailable", "removed", "deleted", "not available", "http error 404", "http error 410") ->
             ExtractionError.MediaUnavailable
