@@ -48,6 +48,12 @@ gallery-dl engine: when yt-dlp finds no video in a post, Unfurlit tries
 gallery-dl, which supports image posts on hundreds of sites. Direct links to an
 image also open. This is new and not yet checked on live links.
 
+Reddit posts shared from alternative front ends such as eddrit or Redlib, Reddit
+"copy image link" links (`reddit.com/media?url=…`), and resized
+`preview.redd.it` images are opened from the matching Reddit post or original
+`i.redd.it` image, so extraction contacts Reddit rather than the front end. The
+viewer and History keep the link you shared.
+
 Other sites may work too; audio and galleries depend on the source. Availability varies by post,
 region and platform changes. Private, login-gated or restricted posts may not
 open; signing in is not available.

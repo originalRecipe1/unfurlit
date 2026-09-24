@@ -2,6 +2,7 @@ package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlJsonParser
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlRunner
+import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoExtractor
@@ -38,7 +39,10 @@ class YtDlpMediaExtractor(
     private val galleryDlRunner = GalleryDlRunner(appContext)
 
     override suspend fun extract(url: String): ExtractionResult {
+        // Reddit mirrors and image wrappers are extracted from their canonical URL.
         val secureInputUrl = UrlValidator.toHttpsUrl(url)
+            ?.let(RedditLinks::normalize)
+            ?.let(UrlValidator::toHttpsUrl)
         if (secureInputUrl == null) {
             throw ExtractionException(ExtractionError.UnsupportedUrl)
         }
