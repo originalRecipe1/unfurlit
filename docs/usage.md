@@ -39,12 +39,14 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - YouTube: videos and Shorts.
 - Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
 - TikTok: videos and photo posts, including available photo soundtracks.
-- Reddit and X/Twitter: videos.
+- Reddit and X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
-- Reddit, X/Twitter, Imgur, Bluesky, Pixiv and many other sites: photos and
-  galleries. When yt-dlp finds no video in a post, Unfurlit tries the bundled
-  gallery-dl engine, which supports image posts on hundreds of sites. Direct
-  links to an image also open. This is new and not yet checked on live links.
+- Imgur, Bluesky, Pixiv and many other sites: photos and galleries.
+
+Photos and galleries outside Instagram and TikTok come from the bundled
+gallery-dl engine: when yt-dlp finds no video in a post, Unfurlit tries
+gallery-dl, which supports image posts on hundreds of sites. Direct links to an
+image also open. This is new and not yet checked on live links.
 
 Other sites may work too; audio and galleries depend on the source. Availability varies by post,
 region and platform changes. Private, login-gated or restricted posts may not

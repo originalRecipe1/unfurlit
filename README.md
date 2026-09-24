@@ -23,11 +23,13 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 - YouTube: videos.
 - Instagram: Reels, photos and carousels (no photo-post soundtracks).
 - TikTok: videos and photo posts, including available photo soundtracks.
-- Reddit and X/Twitter: videos.
+- Reddit and X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
-- Reddit, X/Twitter, Imgur, Bluesky, Pixiv and many other sites: photos and
-  galleries through the bundled [gallery-dl](https://github.com/mikf/gallery-dl)
-  engine, used when a post has no video. New; not yet checked on live links.
+- Imgur, Bluesky, Pixiv and many other sites: photos and galleries.
+
+Photos and galleries outside Instagram and TikTok come from the bundled
+[gallery-dl](https://github.com/mikf/gallery-dl) engine, used when a post has no
+video. This is new and not yet checked on live links.
 
 Other sites may work too; audio and galleries depend on the source. Availability varies by post,
 region and platform changes. Private, login-gated or restricted posts may not
