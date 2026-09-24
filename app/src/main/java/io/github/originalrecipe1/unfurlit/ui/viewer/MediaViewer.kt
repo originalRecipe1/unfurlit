@@ -25,6 +25,7 @@ import androidx.media3.common.util.UnstableApi
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.ui.player.AudioPlayer
+import io.github.originalrecipe1.unfurlit.ui.player.LocalPictureInPicture
 import io.github.originalrecipe1.unfurlit.ui.player.VideoPlayer
 import io.github.originalrecipe1.unfurlit.R
 
@@ -119,19 +120,25 @@ private fun MediaContent(
                 )
             }
         }
-        Surface(
+        val positionDescription = stringResource(
+            R.string.gallery_position_description,
+            pagerState.currentPage + 1,
+            extraction.media.size,
+        )
+        if (LocalPictureInPicture.current?.inPictureInPicture != true) Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(12.dp)
-                .semantics {
-                    contentDescription =
-                        "Item ${pagerState.currentPage + 1} of ${extraction.media.size}"
-                },
+                .semantics { contentDescription = positionDescription },
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
             shape = MaterialTheme.shapes.extraLarge,
         ) {
             Text(
-                text = "${pagerState.currentPage + 1} / ${extraction.media.size}",
+                text = stringResource(
+                    R.string.gallery_position,
+                    pagerState.currentPage + 1,
+                    extraction.media.size,
+                ),
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelLarge,
             )

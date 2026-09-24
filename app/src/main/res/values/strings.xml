@@ -27,6 +27,11 @@
     <string name="open_link_failed">No browser is available to open this link.</string>
     <string name="enter_fullscreen">Enter fullscreen</string>
     <string name="exit_fullscreen">Exit fullscreen</string>
+    <string name="enter_picture_in_picture">Picture-in-picture</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="gallery_position">%1$d / %2$d</string>
+    <string name="gallery_position_description">Item %1$d of %2$d</string>
 
     <string name="media_generic">Media</string>
     <string name="media_untitled">Untitled media</string>
