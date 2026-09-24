@@ -18,7 +18,11 @@ internal object GalleryDlJsonParser {
         val line = output.lineSequence().map(String::trim).lastOrNull { it.startsWith("{") }
             ?: fail(ExtractionError.ExtractionFailed)
         val root = runCatching { JSONObject(line) }.getOrElse { fail(ExtractionError.ExtractionFailed) }
-        root.optJSONObject("error")?.let { fail(it.toDomainError()) }
+        root.optJSONObject("error")?.let { error ->
+            // Keep gallery-dl's own reason for the (redacted) failure log.
+            val detail = "gallery-dl ${error.text("type")} ${error.optInt("status", 0)}: ${error.text("message")}"
+            fail(error.toDomainError(), IllegalStateException(detail.take(MAX_SHORT_TEXT)))
+        }
 
         val items = root.optJSONArray("items") ?: fail(ExtractionError.ExtractionFailed)
         val media = (0 until minOf(items.length(), MAX_MEDIA_ENTRIES))
@@ -84,7 +88,8 @@ internal object GalleryDlJsonParser {
     private fun JSONObject.text(key: String): String? =
         if (isNull(key)) null else optString(key).trim().takeIf(String::isNotEmpty)
 
-    private fun fail(error: ExtractionError): Nothing = throw ExtractionException(error)
+    private fun fail(error: ExtractionError, cause: Throwable? = null): Nothing =
+        throw ExtractionException(error, cause)
 
     private const val MAX_OUTPUT_LENGTH = 2 * 1024 * 1024
     private const val MAX_MEDIA_ENTRIES = 50
