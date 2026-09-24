@@ -58,7 +58,11 @@ class YtDlpMediaExtractor(
         }
 
         return try {
-            val extractionUrl = urlPreflight.resolve(secureInputUrl)
+            val resolvedUrl = urlPreflight.resolve(secureInputUrl)
+            val extractionUrl = RedditLinks.keepPostOverGate(secureInputUrl, resolvedUrl)
+            if (extractionUrl != resolvedUrl) {
+                Log.i(TAG, "Ignoring a redirect from a Reddit post to a non-post Reddit page")
+            }
             TikTokPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 return TikTokPhotoExtractor().extract(url, pageUrl)
             }
@@ -147,6 +151,7 @@ class YtDlpMediaExtractor(
             }
         }
     } catch (error: ExtractionException) {
+        logFailure(error)
         throw preferredFailure(ytDlpFailure, error)
     } catch (error: TimeoutCancellationException) {
         throw ytDlpFailure

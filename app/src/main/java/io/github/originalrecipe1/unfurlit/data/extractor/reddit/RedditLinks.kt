@@ -38,6 +38,24 @@ internal object RedditLinks {
     }
 
     /**
+     * Reddit redirects clients without a session from a post to pages such as its
+     * over-18 or login gate. When a post URL [requested] lands on another Reddit page,
+     * extraction uses the post itself; any other redirect target is kept.
+     */
+    fun keepPostOverGate(requested: String, resolved: String): String {
+        if (requested == resolved || !requested.isRedditPost()) return resolved
+        val resolvedHost = runCatching { URI(resolved).host?.lowercase() }.getOrNull() ?: return resolved
+        return if (resolvedHost.isReddit() && !resolved.isRedditPost()) requested else resolved
+    }
+
+    private fun String.isRedditPost(): Boolean {
+        val uri = runCatching { URI(this) }.getOrNull() ?: return false
+        val host = uri.host?.lowercase() ?: return false
+        val path = uri.rawPath.orEmpty()
+        return host.isReddit() && (POST_PATH.matches(path) || SHORT_POST_PATH.matches(path))
+    }
+
+    /**
      * The title Reddit puts in a post URL's slug, e.g. `…/comments/1wop7o6/what_happened_to_orlando_bloom/`
      * gives "What happened to orlando bloom". Null for other URLs or an empty slug.
      */
@@ -61,5 +79,6 @@ internal object RedditLinks {
     private val IMAGE_NAME = Regex("[A-Za-z0-9]+\\.(?:png|jpe?g|gif|webp)", RegexOption.IGNORE_CASE)
     private const val MAX_TITLE_LENGTH = 512
     private val POST_SLUG = Regex("/r/[A-Za-z0-9_]{2,21}/comments/[a-z0-9]+/([^/]+)/?")
+    private val SHORT_POST_PATH = Regex("/(?:comments|gallery)/[a-z0-9]+(?:/[^?#]*)?")
     private val POST_PATH = Regex("/r/[A-Za-z0-9_]{2,21}/comments/[a-z0-9]+(?:/[^?#]*)?")
 }
