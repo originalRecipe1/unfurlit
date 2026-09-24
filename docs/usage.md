@@ -67,7 +67,8 @@ Opening an entry extracts
 the original page again so stale stream URLs are never reused. Individual events can
 be removed with their trash icon, and **Clear all** in the toolbar clears the
 entire history after confirmation. Visits appear in date groups with small
-thumbnails and media-type icons.
+thumbnails and media-type icons. Viewing a link again moves it to the top
+instead of adding a duplicate, and only the 1,000 most recent visits are kept.
 
 History is stored in the app's private SQLite database and is excluded from Android
 backup and device transfer. A record contains the original page URL, basic display

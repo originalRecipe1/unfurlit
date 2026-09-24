@@ -2,6 +2,8 @@ package io.github.originalrecipe1.unfurlit.data.history
 
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.originalrecipe1.unfurlit.domain.model.HistoryEntry
+import io.github.originalrecipe1.unfurlit.domain.model.HistoryMediaKind
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.UUID
@@ -51,5 +53,41 @@ class HistoryDatabaseTest {
         } finally {
             context.deleteDatabase(name)
         }
+    }
+
+    @Test
+    fun recordReplacesEarlierVisitsToTheSameLinkAndKeepsTheirThumbnail() {
+        withDatabase { database ->
+            val bytes = byteArrayOf(4, 5, 6)
+            val first = database.record(visit("https://example.com/post", viewedAt = 1))
+            database.updateThumbnail(first, bytes)
+            database.record(visit("https://example.com/other", viewedAt = 2))
+            val again = database.record(visit("https://example.com/post", viewedAt = 3))
+
+            val entries = database.readPage(50)
+            assertEquals(listOf("https://example.com/post", "https://example.com/other"), entries.map { it.sourceUrl })
+            assertEquals(again, entries.first().id)
+            assertArrayEquals(bytes, database.readThumbnail(again))
+            assertNull(database.readThumbnail(first))
+        }
+    }
+
+    @Test
+    fun recordDropsTheOldestVisitsBeyondTheLimit() {
+        withDatabase { database ->
+            repeat(5) { index -> database.record(visit("https://example.com/$index", viewedAt = index.toLong()), maxEntries = 3) }
+            assertEquals(
+                listOf("https://example.com/4", "https://example.com/3", "https://example.com/2"),
+                database.readPage(50).map { it.sourceUrl },
+            )
+        }
+    }
+
+    private fun visit(url: String, viewedAt: Long) = HistoryEntry(0, url, null, null, null, HistoryMediaKind.Video, 1, null, viewedAt)
+
+    private fun withDatabase(test: (HistoryDatabase) -> Unit) {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val name = "history-record-${UUID.randomUUID()}.db"
+        try { HistoryDatabase(context, name).use(test) } finally { context.deleteDatabase(name) }
     }
 }
