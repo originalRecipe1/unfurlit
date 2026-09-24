@@ -54,6 +54,7 @@ import io.github.originalrecipe1.unfurlit.R
 import io.github.originalrecipe1.unfurlit.domain.model.canRetry
 import io.github.originalrecipe1.unfurlit.ui.components.PredictiveBackSurface
 import io.github.originalrecipe1.unfurlit.ui.components.UnfurlitTopAppBar
+import io.github.originalrecipe1.unfurlit.ui.player.LocalPictureInPicture
 
 @Composable
 fun ViewerRoute(
@@ -65,6 +66,8 @@ fun ViewerRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var fullscreen by rememberSaveable { mutableStateOf(false) }
+    // The picture-in-picture window uses the fullscreen layout: only the media.
+    val inPictureInPicture = LocalPictureInPicture.current?.inPictureInPicture == true
     val sourceUrl = (state as? ViewerState.Ready)?.extraction?.sourceUrl
     LaunchedEffect(sourceUrl) {
         fullscreen = false
@@ -84,7 +87,7 @@ fun ViewerRoute(
             onViewed = viewModel::recordView,
             onBack = onBack,
             onShowHistory = onShowHistory,
-            fullscreen = fullscreen,
+            fullscreen = fullscreen || inPictureInPicture,
             onFullscreenChange = { fullscreen = it },
         )
     }

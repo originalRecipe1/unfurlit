@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -77,6 +78,8 @@ fun VideoPlayer(
     var viewReported by remember(video) { mutableStateOf(false) }
     var displayAspectRatio by remember(video) { mutableStateOf<Float?>(null) }
     val currentOnViewed by rememberUpdatedState(onViewed)
+    val pictureInPicture = LocalPictureInPicture.current
+    val inPictureInPicture = pictureInPicture?.inPictureInPicture == true
 
     LaunchedEffect(player, active) {
         player.playWhenReady = active
@@ -114,6 +117,12 @@ fun VideoPlayer(
             lifecycleOwner.lifecycle.removeObserver(observer)
             player.release()
         }
+    }
+
+    // Declared after the effect above so the player is detached before it is released.
+    DisposableEffect(pictureInPicture, player, active) {
+        if (active) pictureInPicture?.attach(player)
+        onDispose { pictureInPicture?.detach(player) }
     }
 
     Box(
@@ -155,6 +164,8 @@ fun VideoPlayer(
             update = {
                 it.controllerAutoShow = autoShowControls
                 it.player = player
+                // The PiP window shows only the video; it has its own play/pause action.
+                it.useController = !inPictureInPicture
                 // Clear controls on the outgoing page so swiping back stays unobstructed.
                 if (!active && !autoShowControls) it.hideController()
             },
@@ -166,7 +177,7 @@ fun VideoPlayer(
             },
         )
 
-        if (controlsVisible) Surface(
+        if (controlsVisible && !inPictureInPicture) Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(8.dp),
@@ -174,21 +185,31 @@ fun VideoPlayer(
             contentColor = androidx.compose.ui.graphics.Color.White,
             shape = MaterialTheme.shapes.extraLarge,
         ) {
-            IconButton(onClick = { onFullscreenChange(!fullscreen) }) {
-                Icon(
-                    painter = painterResource(
-                        if (fullscreen) {
-                            R.drawable.ic_fullscreen_exit
+            Row {
+                if (pictureInPicture?.supported == true) {
+                    IconButton(onClick = pictureInPicture::enter) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_picture_in_picture),
+                            contentDescription = stringResource(R.string.enter_picture_in_picture),
+                        )
+                    }
+                }
+                IconButton(onClick = { onFullscreenChange(!fullscreen) }) {
+                    Icon(
+                        painter = painterResource(
+                            if (fullscreen) {
+                                R.drawable.ic_fullscreen_exit
+                            } else {
+                                R.drawable.ic_fullscreen
+                            },
+                        ),
+                        contentDescription = if (fullscreen) {
+                            stringResource(R.string.exit_fullscreen)
                         } else {
-                            R.drawable.ic_fullscreen
+                            stringResource(R.string.enter_fullscreen)
                         },
-                    ),
-                    contentDescription = if (fullscreen) {
-                        stringResource(R.string.exit_fullscreen)
-                    } else {
-                        stringResource(R.string.enter_fullscreen)
-                    },
-                )
+                    )
+                }
             }
         }
 

@@ -19,6 +19,9 @@ Opening the app alone does not start loading media.
 
 - Videos have playback and seeking controls, adapt to portrait or landscape
   content, and support fullscreen. Back exits fullscreen first.
+- On Android 8.0 and later, a playing video continues in a picture-in-picture
+  window when you leave the app or tap the picture-in-picture button. The window
+  has a play/pause action; closing it pauses the video.
 - Photos support pinch-to-zoom and panning.
 - Audio has playback controls.
 - Posts with multiple extracted media items appear in a swipeable gallery.
