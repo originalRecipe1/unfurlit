@@ -144,7 +144,10 @@ entry point runs gallery-dl's extractors without configuration files, cache, or
 downloads and prints one JSON object with the media URLs, the request headers
 their hosts expect (such as a Referer), and basic metadata. It is tried only when
 yt-dlp reports no video or fails to extract, is limited to 60 seconds and 50
-items, and its output is validated like yt-dlp's. Its pure Python logic is tested
+items, and its output is validated like yt-dlp's. For Reddit posts it first
+loads `old.reddit.com` for the anonymous session cookie that Reddit's JSON pages
+expect (as yt-dlp does); if Reddit still answers with its network-security block
+page, it retries once through Reddit's OAuth API with gallery-dl's own client ID. Its pure Python logic is tested
 by `scripts/tests/test_gallery_dl_entry.py`; `PythonRuntimeTest` also runs it on
 the device runtime without network access.
 

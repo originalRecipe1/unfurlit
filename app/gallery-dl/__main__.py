@@ -39,6 +39,12 @@ AUTHOR_KEYS = ("author", "user", "uploader", "artist", "owner", "username", "blo
 AUTHOR_NAME_KEYS = ("name", "nick", "display_name", "username", "screen_name", "handle")
 DESCRIPTION_KEYS = ("description", "selftext", "content", "caption", "text")
 
+# Reddit answers its JSON pages with a "blocked by network security" page to
+# clients it does not trust. gallery-dl's own registered client for Reddit's OAuth
+# API is the second route when that happens.
+REDDIT_BLOCKED = "blocked by network security"
+REDDIT_OAUTH_CLIENT_ID = "6N9uN0krSDE-ig"
+
 
 def media_kind(extension):
     extension = (extension or "").lower()
@@ -161,6 +167,25 @@ def configure(config):
     config.set(("output",), "mode", "null")
 
 
+def prepare_reddit(extr):
+    """Sets up a session the way yt-dlp does, which Reddit lets read its JSON pages.
+
+    Reddit hands an anonymous session cookie ("loid") to visitors of old.reddit.com;
+    without it the JSON pages are often blocked. The over18 cookie opts in to
+    age-restricted posts, as yt-dlp does.
+    """
+    extr.initialize()
+    extr.cookies.set("over18", "1", domain=".reddit.com")
+    try:
+        extr.request("https://old.reddit.com/", fatal=False)
+    except Exception:
+        pass  # the post request reports any real network problem
+
+
+def is_reddit_block(exc):
+    return exc is not None and REDDIT_BLOCKED in str(exc).lower()
+
+
 def collect(url):
     from gallery_dl import config, exception, extractor, job
 
@@ -184,11 +209,22 @@ def collect(url):
         def handle_directory(self, kwdict):
             self.collector.add_metadata(kwdict)
 
-    extr = extractor.find(url)
-    if extr is None:
-        raise exception.NoExtractorError()
-    collector_job = CollectJob(extr)
-    collector_job.run()
+    def run():
+        extr = extractor.find(url)
+        if extr is None:
+            raise exception.NoExtractorError()
+        if extr.category == "reddit" and extr.subcategory != "image":
+            prepare_reddit(extr)
+        collector_job = CollectJob(extr)
+        collector_job.run()
+        return collector_job
+
+    collector_job = run()
+    if not collector_job.collector.items and is_reddit_block(collector_job.exception):
+        config.set(("extractor", "reddit"), "client-id", REDDIT_OAUTH_CLIENT_ID)
+        retry = run()
+        if retry.collector.items:
+            collector_job = retry  # otherwise Reddit's block stays the reported reason
     # DataJob records the first failure instead of raising it.
     if collector_job.exception is not None and not collector_job.collector.items:
         raise collector_job.exception

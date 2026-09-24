@@ -80,6 +80,13 @@ class CollectorTest(unittest.TestCase):
         self.assertTrue(collector.full)
 
 
+class RedditBlockTest(unittest.TestCase):
+    def test_recognizes_reddits_network_security_page(self):
+        self.assertTrue(entry.is_reddit_block(Exception('"You\'ve been blocked by network security."')))
+        self.assertFalse(entry.is_reddit_block(Exception("HTTP request failed")))
+        self.assertFalse(entry.is_reddit_block(None))
+
+
 class ErrorResultTest(unittest.TestCase):
     def test_reports_type_status_and_short_message(self):
         class HttpError(Exception):
