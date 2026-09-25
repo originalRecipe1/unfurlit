@@ -41,12 +41,14 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - TikTok: videos and photo posts, including available photo soundtracks.
 - Reddit and X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
-- Imgur, Bluesky, Pixiv and many other sites: photos and galleries.
+- Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
 Photos and galleries outside Instagram and TikTok come from the bundled
 gallery-dl engine: when yt-dlp finds no video in a post, Unfurlit tries
 gallery-dl, which supports image posts on hundreds of sites. Direct links to an
-image also open. This is new and not yet checked on live links.
+image also open. In a live run on 2026-09-25, 21 of 23 photo and gallery links
+opened; see the [detailed results](social-link-baseline.md#media-types-on-the-ci-runner).
+Pixiv needs a sign-in, so Pixiv links do not open.
 
 Reddit posts shared from alternative front ends such as eddrit or Redlib, Reddit
 "copy image link" links (`reddit.com/media?url=…`), and resized

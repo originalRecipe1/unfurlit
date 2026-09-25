@@ -25,11 +25,12 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 - TikTok: videos and photo posts, including available photo soundtracks.
 - Reddit and X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
-- Imgur, Bluesky, Pixiv and many other sites: photos and galleries.
+- Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
 Photos and galleries outside Instagram and TikTok come from the bundled
 [gallery-dl](https://github.com/mikf/gallery-dl) engine, used when a post has no
-video. This is new and not yet checked on live links.
+video. In a live run on 2026-09-25, 21 of 23 photo and gallery links opened;
+see the [detailed results](docs/social-link-baseline.md#media-types-on-the-ci-runner).
 
 Other sites may work too; audio and galleries depend on the source. Availability varies by post,
 region and platform changes. Private, login-gated or restricted posts may not

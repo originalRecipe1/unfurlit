@@ -1,0 +1,7 @@
+- Photo posts and galleries from Reddit, X, Imgur, Bluesky and many more sites.
+- Videos continue in a picture-in-picture window when you leave the app.
+- Videos and audio keep playing in the background, with notification and lock-screen controls.
+- Playback pauses when headphones disconnect.
+- Reddit mirror, preview and image links now open.
+- Revisited links move to the top of History instead of repeating.
+- Open link now opens the page in your browser.
