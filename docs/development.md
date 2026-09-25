@@ -298,7 +298,8 @@ media URLs, headers or cookies. Each case also logs this observation and its ext
 time under the `SocialLinksTest` logcat tag.
 
 After the tests, `scripts/social_links_report.py` writes a Markdown table of every
-case, grouped by media type, to the workflow's job summary. Reports and logcat are
+case, grouped by media type, to the workflow's job summary, followed by the app's
+redacted failure log line for each failed case. Reports and logcat are
 uploaded even on failure. Review failures for site changes, deleted fixtures and CI
 blocking before changing an expectation. No cookies or accounts are used. This checks
 extraction; playback, seeking and image rendering still need the manual viewer checks

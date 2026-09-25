@@ -87,9 +87,13 @@ class ReportTest(unittest.TestCase):
 </testsuite>
 """
     LOGCAT = (
+        "09-25 10:00:00.500  4242  4262 E YtDlpExtractor: Extraction failed (ExtractionException): stale\n"
         "09-25 10:00:01.000  4242  4260 I SocialLinksTest: reddit-gallery: success: 3 images, from Reddit in 3.2 s\n"
+        "09-25 10:00:01.500  4242  4262 E YtDlpExtractor: Extraction failed (YoutubeDLException): "
+        "ERROR: [youtube] abc: Sign in to confirm you're not a bot\n"
         "09-25 10:00:02.000  4242  4260 I SocialLinksTest: yt-video: AuthenticationRequired in 6.9 s\n"
         "09-25 10:00:03.000  4242  4260 E TestRunner: at SocialLinksTest.kt:45\n"
+        "09-25 10:00:04.000  4242  4260 I SocialLinksTest: missing-page: MediaUnavailable in 1.0 s\n"
     )
 
     def render(self):
@@ -112,7 +116,14 @@ class ReportTest(unittest.TestCase):
                           outcomes["reddit-gallery"].seconds))
         self.assertEqual("missing image", outcomes["x-mixed"].problems)
         self.assertEqual("test timed out after 210000 milliseconds", outcomes["slow-track"].observed)
-        self.assertEqual("as expected", outcomes["missing-page"].observed)
+        self.assertEqual("MediaUnavailable", outcomes["missing-page"].observed)
+
+    def test_attaches_the_last_app_failure_log_to_a_failed_case(self):
+        outcomes, markdown = self.render()
+        self.assertEqual("ERROR: [youtube] abc: Sign in to confirm you're not a bot", outcomes["yt-video"].reason)
+        self.assertIsNone(outcomes["reddit-gallery"].reason)
+        self.assertIsNone(outcomes["missing-page"].reason)
+        self.assertIn("- `yt-video`: ERROR: [youtube] abc: Sign in to confirm you're not a bot", markdown)
 
     def test_renders_a_table_per_media_group(self):
         _, markdown = self.render()
@@ -126,7 +137,7 @@ class ReportTest(unittest.TestCase):
                       markdown)
         self.assertIn("| ✅ | [reddit-gallery](https://r/g) | 3 images | success: 3 images, from Reddit | 3.2 s |",
                       markdown)
-        self.assertIn("| ✅ | `missing-page` | MediaUnavailable | as expected | 1.0 s |", markdown)
+        self.assertIn("| ✅ | `missing-page` | MediaUnavailable | MediaUnavailable | 1.0 s |", markdown)
         self.assertNotIn("not-selected", markdown)
 
     def test_reports_a_run_without_results(self):

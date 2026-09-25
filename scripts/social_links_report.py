@@ -36,6 +36,9 @@ MESSAGE = re.compile(
 LOG_LINE = re.compile(
     rf"{TEST_CLASS}[^:]*: (?P<id>[a-z0-9-]+): (?P<observed>.+) in (?P<seconds>\d+(?:\.\d+)?) s\s*$"
 )
+# The app's own failure log; SafeLog has already removed URLs and secrets from it.
+DIAGNOSTIC = re.compile(r"YtDlpExtractor[^:]*: Extraction failed \((?P<type>[^)]*)\): (?P<detail>.*?)\s*$")
+MAX_REASON = 300
 GROUPS = (
     ("video", "Video"),
     ("image", "Photos and galleries"),
@@ -52,6 +55,7 @@ class Outcome:
     observed: str
     problems: str = ""
     seconds: float | None = None
+    reason: str | None = None
 
 
 def error_names(source: Path = ERRORS) -> set[str]:
@@ -155,13 +159,23 @@ def read_results(directory: Path) -> dict[str, Outcome]:
             else:
                 outcomes[match.group(1)] = Outcome(False, line or "failed", seconds=seconds)
     # Logcat has what each case observed, including passing ones, and its extraction time.
+    # Cases run one at a time, so the app's last failure log before a case's own line is
+    # the reason that case failed.
     for path in sorted(directory.rglob("*.txt")):
+        reason = None
         for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if diagnostic := DIAGNOSTIC.search(line):
+                reason = diagnostic["detail"]
+                continue
             logged = LOG_LINE.search(line)
             if logged and logged["id"] in outcomes:
                 outcome = outcomes[logged["id"]]
                 outcome.observed = logged["observed"]
                 outcome.seconds = float(logged["seconds"])
+                if not outcome.passed and reason:
+                    outcome.reason = reason[:MAX_REASON]
+            if logged:
+                reason = None
     return outcomes
 
 
@@ -218,6 +232,11 @@ def render(cases: list[dict], outcomes: dict[str, Outcome]) -> str:
             seconds = f"{outcome.seconds:.1f} s" if outcome.seconds is not None else ""
             mark = "✅" if outcome.passed else "❌"
             lines.append(f"| {mark} | {link} | {cell(expectation(case))} | {cell(observed)} | {seconds} |")
+    reasons = [(case["id"], outcomes[case["id"]].reason) for case in ran if outcomes[case["id"]].reason]
+    if reasons:
+        lines += ["", "### Failure details", "", "The app's redacted extraction log for each failed case:", ""]
+        # Keep SafeLog's <url> placeholders visible instead of letting Markdown drop them as tags.
+        lines += [f"- `{name}`: {reason.replace('<', '&lt;').replace('>', '&gt;')}" for name, reason in reasons]
     return "\n".join(lines) + "\n"
 
 
