@@ -20,7 +20,7 @@
   {"id":"peertube-video","url":"https://framatube.org/videos/watch/9c9de5e8-0a1e-484a-b099-e80766180a6d","expected":"success","media":"video","count":1},
   {"id":"dailymotion-video","url":"https://www.dailymotion.com/video/x5kesuj","expected":"success","media":"video","count":1},
   {"id":"twitch-clip","url":"https://clips.twitch.tv/FaintLightGullWholeWheat","expected":"success","media":"video","count":1},
-  {"id":"direct-video-file","url":"https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4","expected":"success","media":"video","count":1},
+  {"id":"direct-video-file","url":"https://upload.wikimedia.org/wikipedia/commons/c/c0/Big_Buck_Bunny_4K.webm","expected":"success","media":"video","count":1},
 
   {"id":"instagram-photo-carousel","url":"https://www.instagram.com/p/DXnKI92jWYQ/","expected":"success","media":"image","count":11},
   {"id":"instagram-eight-photo-post","url":"https://www.instagram.com/p/DSXSG7pjHPH/","expected":"success","media":"image","count":8},

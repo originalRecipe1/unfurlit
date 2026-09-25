@@ -264,7 +264,7 @@ and Instagram photo posts. The 55 cases in
 
 - **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit, X (including
   an animated GIF), Instagram posts, Reels and video carousels, TikTok, Bluesky, an Imgur
-  GIFV, PeerTube, Dailymotion, a Twitch clip and a direct MP4 file.
+  GIFV, PeerTube, Dailymotion, a Twitch clip and a direct WebM file.
 - **Photos and galleries:** Instagram and TikTok photo posts (with and without a
   soundtrack), Reddit image posts, galleries, direct `i.redd.it`, `preview.redd.it`,
   `reddit.com/media` and mirror links, X photos, Bluesky, Imgur images and albums, Flickr,
