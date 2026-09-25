@@ -33,13 +33,21 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
 
-      - name: Test release version updates
+      - name: Test build and test-link scripts
         run: python3 -m unittest discover -s scripts/tests
 
       - name: Verify the Android project
         run: >-
           ./gradlew --no-daemon :buildSrc:test testDebugUnitTest lintDebug assembleDebug
-          assembleDebugAndroidTest assembleRelease
+          assembleDebugAndroidTest assembleRelease assembleLinkCheck
+
+      - name: Upload the link-check APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unfurlit-link-check-apk
+          path: app/build/outputs/apk/linkCheck/*.apk
+          if-no-files-found: error
+          retention-days: 14
 
   instrumented-tests:
     name: Deterministic UI tests

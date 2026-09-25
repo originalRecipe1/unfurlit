@@ -68,3 +68,44 @@ After removing experimental Instagram soundtrack extraction on 2026-09-17,
 all five focused live cases passed again: both Instagram photo posts, the
 Instagram video and reel, and TikTok photos with audio. All 61 unit tests,
 Android lint, debug builds, and deterministic emulator tests also passed.
+
+## Media types on the CI runner
+
+On 2026-09-25 the fixture grew to 55 cases grouped by media type, and the
+**Live social links** workflow ran all of them on a GitHub-hosted runner: API 30
+x86_64 managed emulator, bundled yt-dlp 2026.08.19 and gallery-dl 1.32.13,
+anonymous access. Sites block datacenter addresses more often than phones on home
+connections, so this run understates what users can open. A second run of only
+the 14 failed cases reproduced every failure with the same reason.
+
+| Media | Passed | Worked |
+| --- | --- | --- |
+| Video | 11 of 22 | Instagram posts, Reels and video carousels; an X video and animated GIF; a TikTok video; Bluesky; Imgur GIFV; PeerTube; Dailymotion; a Twitch clip |
+| Photos and galleries | 21 of 23 | All Instagram and TikTok photo posts; Reddit image posts, galleries, and direct, preview, `reddit.com/media` and mirror links; a four-photo X post; Bluesky; Imgur images and albums; Flickr; Mastodon; Pinterest; Wikimedia Commons; a direct JPEG |
+| Audio | 4 of 4 | SoundCloud (HLS), Bandcamp (progressive), Mixcloud (DASH), a direct Ogg file |
+| Mixed media | 0 of 1 | — |
+| Error handling | 5 of 5 | All cases, including a missing Imgur image reported as unavailable |
+
+Every TikTok photo post returned its soundtrack, including the single-photo post.
+The X video, PeerTube and Dailymotion used HLS; the other passing videos, including the X
+animated GIF, were progressive.
+
+These cases failed, with the reason from the app's redacted extraction log:
+
+| Case | Outcome | Reason |
+| --- | --- | --- |
+| youtube-video | Media unavailable | The upstream test clip is unavailable (dead fixture). |
+| youtube-short-link, youtube-big-buck-bunny, youtube-shorts | Sign-in required | YouTube asked the runner to “confirm you’re not a bot”. Big Buck Bunny played locally on 2026-09-15. |
+| vimeo-video | Sign-in required | Vimeo's web client requires an account. |
+| vimeo-player | Extraction failed | Vimeo blocked the client's TLS fingerprint. |
+| reddit-video, reddit-native-video | Sign-in required | Reddit blocked both engines (“blocked by network security”). Reddit photo posts still open through gallery-dl, but for a video post it only offers a `ytdl:` DASH manifest link, which the bundled entry point drops, so even its OAuth retry returns no media and Reddit's block is reported. |
+| x-video | Extraction failed | The linked Amplify video no longer exists (dead fixture, also noted on 2026-09-04). |
+| tiktok-video | Extraction failed | TikTok blocked the runner's IP address for this post. |
+| tumblr-photo-post | Network failure | Tumblr closed yt-dlp's connection without a response. Network failures do not fall back to gallery-dl. |
+| pixiv-artwork | Sign-in required | gallery-dl needs a Pixiv `refresh-token`, so anonymous Pixiv links cannot open, although Pixiv is listed as supported. |
+| x-mixed-media | Only the video | yt-dlp returned the post's video without its photo; gallery-dl is only tried when yt-dlp fails. |
+
+The first direct-video case, a Blender download URL, returned HTTP 404 and is
+not counted among the failures above. Its replacement, a Wikimedia Commons WebM
+file, passed a focused run as one progressive video, so the current fixture
+expects 12 of 22 video cases to pass from CI.

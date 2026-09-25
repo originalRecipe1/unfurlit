@@ -2,6 +2,11 @@ name: Live social links
 
 on:
   workflow_dispatch:
+    inputs:
+      link_ids:
+        description: Comma-separated case IDs from social-links.json (empty runs every case)
+        required: false
+        default: ""
   schedule:
     - cron: "41 6 * * 2"
 
@@ -15,7 +20,7 @@ concurrency:
 jobs:
   social-links:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Check out Unfurlit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -37,13 +42,27 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-30;aosp_atd;x86_64"
 
+      - name: Check the link fixture
+        run: python3 scripts/social_links_report.py --check
+
       - name: Test public social links
-        run: >-
-          ./gradlew --no-daemon pixel2Api30DebugAndroidTest
-          -Punfurlit.ci.x86_64=true
-          -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
-          -Pandroid.testInstrumentationRunnerArguments.liveLinks=true
-          -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest
+        env:
+          LINK_IDS: ${{ inputs.link_ids }}
+        run: |
+          selection=()
+          if [ -n "${LINK_IDS// /}" ]; then
+            selection=("-Pandroid.testInstrumentationRunnerArguments.linkId=${LINK_IDS// /}")
+          fi
+          ./gradlew --no-daemon pixel2Api30DebugAndroidTest \
+            -Punfurlit.ci.x86_64=true \
+            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            -Pandroid.testInstrumentationRunnerArguments.liveLinks=true \
+            -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest \
+            "${selection[@]}"
+
+      - name: Summarize results by media type
+        if: always()
+        run: python3 scripts/social_links_report.py | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload per-link test reports
         if: always()
