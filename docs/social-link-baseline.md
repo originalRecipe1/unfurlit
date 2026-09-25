@@ -105,5 +105,7 @@ These cases failed, with the reason from the app's redacted extraction log:
 | pixiv-artwork | Sign-in required | gallery-dl needs a Pixiv `refresh-token`, so anonymous Pixiv links cannot open, although Pixiv is listed as supported. |
 | x-mixed-media | Only the video | yt-dlp returned the post's video without its photo; gallery-dl is only tried when yt-dlp fails. |
 
-The first direct-video case, a Blender download URL, returned HTTP 404 and was
-replaced by a Wikimedia Commons WebM file.
+The first direct-video case, a Blender download URL, returned HTTP 404 and is
+not counted among the failures above. Its replacement, a Wikimedia Commons WebM
+file, passed a focused run as one progressive video, so the current fixture
+expects 12 of 22 video cases to pass from CI.
