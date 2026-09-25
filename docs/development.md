@@ -260,7 +260,7 @@ The **Live social links** workflow runs weekly and on manual dispatch. It exerci
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
 gallery-dl engines and JSON normalization, with native page-data adapters for TikTok
 and Instagram photo posts. The 55 cases in
-`app/src/androidTest/assets/social-links.json` are grouped by media type:
+`app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
 - **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit, X (including
   an animated GIF), Instagram posts, Reels and video carousels, TikTok, Bluesky, an Imgur
@@ -323,6 +323,35 @@ lowercase hyphenated ID, `expected`, and where known the media kinds and count.
 
 See the [live baseline](social-link-baseline.md) for observed passes and
 compatibility failures, including the media-type results from CI.
+
+### Checking links by hand
+
+The `linkCheck` build type is a debug build installed as a separate app, **Unfurlit
+Link Check** (`io.github.originalrecipe1.unfurlit.linkcheck`), with its own History.
+When it starts, History lists every case from `social-links.json` in fixture order. Each
+entry is titled with the case ID; the line above names its media group, and the line below
+says what to expect, such as “Expect 16 images, with soundtrack” or, for an error case,
+the failure screen's title.
+
+Tap an entry to open its link, then check playback and seeking, zoom and swiping, the
+item indicator and soundtrack, or the failure screen. A link that opens is recorded like
+any visit and moves to the top with its real title and thumbnail, so the labelled entries
+left below are the links still to check or that failed. Delete an entry to set it aside.
+Clear all and restart the app for a fresh list; when the fixture changes, the next start
+adds every case that isn't in History.
+
+Each Android CI run uploads this app as the **unfurlit-link-check-apk** artifact, built
+for ARM64 phones. CI signs it with a new debug key each time, so uninstall an earlier
+link-check app before installing a newer CI build. To install it from a checkout:
+
+```bash
+./gradlew :app:installLinkCheck                            # ARM64 phone
+./gradlew :app:installLinkCheck -Punfurlit.ci.x86_64=true  # x86_64 emulator
+```
+
+Unlike the live workflow, this checks what opens on your own device and connection,
+including playback, which CI does not verify. The fixture and its parser live in
+`app/src/socialLinks/`, shared by `SocialLinksTest` and this build.
 
 TikTok `/photo/` links use the public post's page data to retain ordered images
 and an optional shared soundtrack. The adapter requests TikTok's `/video/` page

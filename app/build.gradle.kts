@@ -293,6 +293,17 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
         }
+        create("linkCheck") {
+            initWith(getByName("debug"))
+            // A separate debug app whose History starts with every live test link, for
+            // checking playback and rendering by hand. Its own ID keeps other history intact.
+            applicationIdSuffix = ".linkcheck"
+            versionNameSuffix = "-linkcheck"
+            matchingFallbacks += "debug"
+            ndk {
+                abiFilters += if (ciX86_64) "x86_64" else "arm64-v8a"
+            }
+        }
     }
 
     buildFeatures {
@@ -317,6 +328,11 @@ android {
 
     sourceSets.named("main") {
         res.srcDir(generatedYtDlpResources)
+    }
+    // The live test links and their parser, used by SocialLinksTest and the linkCheck build.
+    sourceSets.matching { it.name == "androidTest" || it.name == "linkCheck" }.configureEach {
+        java.srcDir("src/socialLinks/java")
+        assets.srcDir("src/socialLinks/assets")
     }
 
     packaging {

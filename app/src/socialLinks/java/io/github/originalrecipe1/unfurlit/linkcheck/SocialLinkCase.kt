@@ -1,4 +1,4 @@
-package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
+package io.github.originalrecipe1.unfurlit.linkcheck
 
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
@@ -6,8 +6,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * One entry of `social-links.json`. [expected] is `success` or an `ExtractionError` name;
- * [media], [count], [minCount] and [soundtrack] further constrain a success.
+ * One entry of `social-links.json`, shared by the live `SocialLinksTest` and the linkCheck
+ * build. [expected] is `success` or an `ExtractionError` name; [media], [count], [minCount]
+ * and [soundtrack] further constrain a success.
  */
 class SocialLinkCase(
     val id: String,
@@ -20,9 +21,12 @@ class SocialLinkCase(
     /** Whether a photo post must (true) or must not (false) have a separate soundtrack. */
     val soundtrack: Boolean?,
 ) {
-    val expectation: String
+    val succeeds: Boolean
+        get() = expected == SUCCESS
+
+    /** What a success must contain, such as "3 images, with soundtrack"; null if any media will do. */
+    val mediaExpectation: String?
         get() {
-            if (expected != SUCCESS) return expected
             val noun = media?.let { kinds -> MEDIA_KINDS.filter(kinds::contains).joinToString("+") }
             val items = when {
                 count != null -> quantity(count, noun ?: "item")
@@ -33,7 +37,13 @@ class SocialLinkCase(
                 items,
                 soundtrack?.let { if (it) "with soundtrack" else "without soundtrack" },
             )
-            return if (details.isEmpty()) SUCCESS else "$SUCCESS: " + details.joinToString(", ")
+            return details.joinToString(", ").takeIf(String::isNotEmpty)
+        }
+
+    val expectation: String
+        get() = when {
+            !succeeds -> expected
+            else -> mediaExpectation?.let { "$SUCCESS: $it" } ?: SUCCESS
         }
 
     fun problemsWith(observed: SocialLinkObservation): List<String> {
@@ -58,6 +68,11 @@ class SocialLinkCase(
     override fun toString() = id
 
     companion object {
+        fun parseAll(json: String): List<SocialLinkCase> {
+            val cases = JSONArray(json)
+            return (0 until cases.length()).map { index -> fromJson(cases.getJSONObject(index)) }
+        }
+
         fun fromJson(json: JSONObject): SocialLinkCase {
             val id = json.getString("id")
             val media = when (val value = json.opt("media")) {

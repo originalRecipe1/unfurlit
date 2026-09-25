@@ -4,8 +4,9 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
+import io.github.originalrecipe1.unfurlit.linkcheck.SocialLinkCase
+import io.github.originalrecipe1.unfurlit.linkcheck.SocialLinkObservation
 import kotlinx.coroutines.runBlocking
-import org.json.JSONArray
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -52,11 +53,7 @@ class SocialLinksTest(
         fun links(): List<Array<Any>> {
             val json = InstrumentationRegistry.getInstrumentation().context.assets
                 .open("social-links.json").bufferedReader().use { it.readText() }
-            val cases = JSONArray(json)
-            return (0 until cases.length()).map { index ->
-                val case = SocialLinkCase.fromJson(cases.getJSONObject(index))
-                arrayOf<Any>(case.id, case)
-            }
+            return SocialLinkCase.parseAll(json).map { case -> arrayOf<Any>(case.id, case) }
         }
     }
 }

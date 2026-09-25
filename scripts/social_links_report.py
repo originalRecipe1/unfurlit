@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Summarize a live social-link run, or check its fixture.
 
-Reads app/src/androidTest/assets/social-links.json and the JUnit XML and logcat files of
+Reads app/src/socialLinks/assets/social-links.json and the JUnit XML and logcat files of
 an instrumented SocialLinksTest run, and prints a Markdown report grouped by media kind
 (for example into $GITHUB_STEP_SUMMARY). With --check it only validates the fixture.
 """
@@ -18,7 +18,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = ROOT / "app" / "src" / "androidTest" / "assets" / "social-links.json"
+FIXTURE = ROOT / "app" / "src" / "socialLinks" / "assets" / "social-links.json"
 RESULTS = ROOT / "app" / "build" / "outputs" / "androidTest-results"
 ERRORS = ROOT / "app" / "src" / "main" / "java" / "io" / "github" / "originalrecipe1" / "unfurlit" / "domain" / "model" / "ExtractionError.kt"
 
