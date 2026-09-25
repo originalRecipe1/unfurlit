@@ -257,36 +257,68 @@ The application is licensed under [GPL-3.0-only](../LICENSE). Keep the
 ## Social-link regression pipeline
 
 The **Live social links** workflow runs weekly and on manual dispatch. It exercises
-`YtDlpMediaExtractor` on Android, including URL preflight, the bundled engine and
-JSON normalization, with native page-data adapters for TikTok and Instagram photo posts. The 19 cases in
-`app/src/androidTest/assets/social-links.json` cover YouTube, Vimeo, Reddit, X,
-Instagram and TikTok (two public links each), a TikTok photo post with a soundtrack and two Instagram photo carousels,
-plus a non-media page, missing page,
-invalid scheme and private address. Public positive examples are seeded from
-upstream extractor fixtures and YouTube sample videos; they are expectations,
-not a claim that each site currently permits anonymous access from CI.
+`YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
+gallery-dl engines and JSON normalization, with native page-data adapters for TikTok
+and Instagram photo posts. The 55 cases in
+`app/src/androidTest/assets/social-links.json` are grouped by media type:
 
-Each link gets its own named JUnit result. Positive cases require nonempty parsed
-media; negative cases require the specified error category. Login challenges,
-network failures and unexpected extraction errors fail positive cases and do not
-count as successful negative tests. Reports are uploaded even on failure. Review
-failures for site changes, deleted fixtures and CI blocking before changing an
-expectation. No cookies or accounts are used. Reports omit extracted media URLs
-and credentials. This checks extraction; playback, seeking and image rendering
-still need the manual viewer checks above.
+- **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit, X (including
+  an animated GIF), Instagram posts, Reels and video carousels, TikTok, Bluesky, an Imgur
+  GIFV, PeerTube, Dailymotion, a Twitch clip and a direct MP4 file.
+- **Photos and galleries:** Instagram and TikTok photo posts (with and without a
+  soundtrack), Reddit image posts, galleries, direct `i.redd.it`, `preview.redd.it`,
+  `reddit.com/media` and mirror links, X photos, Bluesky, Imgur images and albums, Flickr,
+  Tumblr, Mastodon, Pixiv, Pinterest, Wikimedia Commons and a direct JPEG file.
+- **Mixed media:** an X post with a photo and a video.
+- **Audio:** SoundCloud, Bandcamp, Mixcloud and a direct Ogg file.
+- **Error handling:** a non-media page, missing pages, an invalid scheme and a
+  private address.
 
-Run against a connected x86_64 emulator:
+Public positive examples are seeded from the pinned yt-dlp and gallery-dl extractor
+test fixtures and YouTube sample videos; they are expectations, not a claim that each
+site currently permits anonymous access from CI.
+
+Each link gets its own named JUnit result. `expected` is `success` or the exact
+`ExtractionError` category a negative case must report. A successful case can also
+require:
+
+| Field | Meaning |
+| --- | --- |
+| `media` | `video`, `image` or `audio`, or a list of them. Every extracted item must be one of these kinds, and each listed kind must appear. |
+| `count` / `minCount` | The exact or minimum number of extracted items. |
+| `soundtrack` | `true` if a photo post must have a separate soundtrack, `false` if it must not. |
+
+Login challenges, network failures and unexpected extraction errors fail positive cases
+and do not count as successful negative tests. A failure names what was expected and
+what was observed, for example `expected [success: 4 images] but observed
+[success: 1 video (Progressive), from Twitter] (unexpected video; missing image; 1 item
+instead of 4)`. The observation lists item kinds, stream formats, whether video audio
+is a separate stream, soundtrack presence and the reporting extractor; it never contains
+media URLs, headers or cookies. Each case also logs this observation and its extraction
+time under the `SocialLinksTest` logcat tag.
+
+After the tests, `scripts/social_links_report.py` writes a Markdown table of every
+case, grouped by media type, to the workflow's job summary. Reports and logcat are
+uploaded even on failure. Review failures for site changes, deleted fixtures and CI
+blocking before changing an expectation. No cookies or accounts are used. This checks
+extraction; playback, seeking and image rendering still need the manual viewer checks
+above.
+
+To rerun selected cases, start the workflow manually with comma-separated case IDs in
+**link_ids**. Against a connected x86_64 emulator:
 
 ```bash
 ./gradlew connectedDebugAndroidTest -Punfurlit.ci.x86_64=true \
   -Pandroid.testInstrumentationRunnerArguments.liveLinks=true \
   -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest
+python3 scripts/social_links_report.py
 ```
 
 Without `liveLinks=true`, these cases are skipped. The normal CI suite covers
 error classification and the failure screen's recovery actions without contacting
-social sites. To extend live coverage, add a public URL, unique descriptive ID and
-`success` or an exact `ExtractionError` category to the JSON fixture.
+social sites, and validates the fixture with `python3 scripts/social_links_report.py
+--check` (through `scripts/tests`). To extend live coverage, add a public URL, a unique
+lowercase hyphenated ID, `expected`, and where known the media kinds and count.
 
 See the [initial live baseline](social-link-baseline.md) for observed passes and
 compatibility failures.
