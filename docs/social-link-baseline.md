@@ -102,7 +102,7 @@ These cases failed, with the reason from the app's redacted extraction log:
 | x-video | Extraction failed | The linked Amplify video no longer exists (dead fixture, also noted on 2026-09-04). |
 | tiktok-video | Extraction failed | TikTok blocked the runner's IP address for this post. |
 | tumblr-photo-post | Network failure | Tumblr closed yt-dlp's connection without a response. Network failures do not fall back to gallery-dl. |
-| pixiv-artwork | Sign-in required | gallery-dl needs a Pixiv `refresh-token`, so anonymous Pixiv links cannot open, although Pixiv is listed as supported. |
+| pixiv-artwork | Sign-in required | gallery-dl needs a Pixiv `refresh-token`, so anonymous Pixiv links cannot open. |
 | x-mixed-media | Only the video | yt-dlp returned the post's video without its photo; gallery-dl is only tried when yt-dlp fails. |
 
 The first direct-video case, a Blender download URL, returned HTTP 404 and is

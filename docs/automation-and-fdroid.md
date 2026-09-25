@@ -186,7 +186,7 @@ build and signing queue.
 
 ## gallery-dl image engine and F-Droid
 
-Builds after 1.2.0 also bundle the gallery-dl image engine, which
+Builds from 1.3.0 on also bundle the gallery-dl image engine, which
 `preparePinnedGalleryDl` assembles from six pinned, pure-Python PyPI wheels
 (gallery-dl and the requests stack). The F-Droid recipe above has not been
 updated or validated for it yet. Before the next F-Droid release, decide whether
