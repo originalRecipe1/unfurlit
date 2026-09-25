@@ -321,8 +321,8 @@ social sites, and validates the fixture with `python3 scripts/social_links_repor
 --check` (through `scripts/tests`). To extend live coverage, add a public URL, a unique
 lowercase hyphenated ID, `expected`, and where known the media kinds and count.
 
-See the [initial live baseline](social-link-baseline.md) for observed passes and
-compatibility failures.
+See the [live baseline](social-link-baseline.md) for observed passes and
+compatibility failures, including the media-type results from CI.
 
 TikTok `/photo/` links use the public post's page data to retain ordered images
 and an optional shared soundtrack. The adapter requests TikTok's `/video/` page
