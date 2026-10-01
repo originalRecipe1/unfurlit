@@ -23,27 +23,27 @@ changing the major or minor version. Git tags use `v1.0.0`, APK assets use
 Local side-by-side builds append `-preview`; this is not part of the release tag.
 
 The extractor updater increments only the patch and build code and creates
-release notes for that build. Its tests run in Android CI. Manually prepared
-app releases also update the F-Droid submission candidate to the new version.
+release notes for that build. Its tests run in Android CI. Review the F-Droid
+submission candidate separately before advancing it to a new app release.
 
 ## Unfurlit rebrand submission
 
-The existing [F-Droid merge request !47809](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/47809)
-is open on `originalRecipe1/fdroiddata:org.peek.app`. Its current recipe and
-successful pipeline still reference the Peek v5 release documented below.
+The [F-Droid merge request !47809](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/47809)
+proposes `metadata/io.github.originalrecipe1.unfurlit.yml` from the `org.peek.app`
+branch of the `originalRecipe1/fdroiddata` fork. `org.peek.app` is the retained
+branch name; the proposed metadata has not been merged into official `fdroiddata`.
 
-The prepared replacement is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
-It targets Unfurlit `1.0.1`, version code 8, and the new
-`Unfurlit-%v.apk` release filename. Its new application ID is
+The local copy is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
+It matches the MR's Unfurlit `1.3.0`, version code 11, pinned to
+`1d22c3f2e23a5c1e4042c2ce667b9044bf718092`, with the
+`Unfurlit-%v.apk` release filename. Its application ID is
 `io.github.originalrecipe1.unfurlit`, and its repository and release URLs point to
 `originalRecipe1/unfurlit`. The signing certificate, extractor version, and
 source-build properties are retained.
-The signed [1.0.0 release](https://github.com/originalRecipe1/unfurlit/releases/tag/v1.0.0)
-is published. The previous candidate pinned its full commit,
-`80f79dd1328775d57c19c99d6592f54e552e8440`, and passed local validation on
-September 12, 2026; see [the validation record](fdroid/validation-1.0.0.md).
-The updated candidate targets `v1.0.1`; the previous F-Droid validation does not
-cover this release's ARM64-only packaging, R8, or trimmed Python runtime.
+
+Earlier local validation is recorded for [1.0.0](fdroid/validation-1.0.0.md)
+and [1.0.1](fdroid/validation-1.0.1.md). Those records do not establish F-Droid
+validation for the current 1.3.0 candidate or the subsequent EJS build changes.
 Official F-Droid acceptance and publication are still pending.
 
 Store title, description, icon, and screenshots are imported from the release's
@@ -61,10 +61,13 @@ replace the old APK branding or its screenshots. See F-Droid's
 3. Rejects unexpected version formats, checksum mismatches, changed immutable
    releases, and version downgrades.
 4. Updates the pinned engine version and checksum, advances the yt-dlp source
-   submodule to the same release, and increments Unfurlit's literal `versionCode`
-   and the patch component of `versionName`.
+   submodule to the same release and EJS to the version its Makefile requires,
+   refreshes their third-party notices from the catalog and npm lockfile, and
+   increments Unfurlit's literal `versionCode` and patch component of `versionName`.
 5. Runs unit tests, Android lint, and APK builds, then verifies both the official
    release asset and the locally source-built yt-dlp file embedded in debug APKs.
+   Both source-built EJS solver scripts must match the checksum-verified official
+   release byte for byte; a moved EJS tag with different output fails the update.
 6. Opens a pull request for review. It never merges the update itself.
 
 The workflow can also be run manually from the Actions tab. For its pull-request
@@ -74,10 +77,13 @@ still requests only `contents: write` and `pull-requests: write`.
 
 After an automation pull request is merged, `release-tag.yml` rebuilds the merged
 commit and creates a GitHub release and `v<versionName>` tag. It can also be run
-manually to tag a normal app release. Release APKs use the same pinned submodule
-and source-built yt-dlp path as the F-Droid recipe; the official prebuilt yt-dlp
-asset is used only by normal development builds. A human merge is deliberately
-the gate between an upstream extractor release and an app/F-Droid release.
+manually to tag a normal app release. Release APKs use pinned yt-dlp and EJS
+submodules, with the challenge solver built using Node.js 22 and its npm lockfile.
+PR CI first builds a debug APK using the official asset, then builds and packages
+the source extractor into the APKs it verifies. Normal development builds use the
+official prebuilt yt-dlp asset. A human merge is the
+gate between an upstream extractor update and an app release. The F-Droid recipe
+has not been adapted to the EJS build; its remaining work is described below.
 
 ### Signed and reproducible GitHub APKs
 
@@ -91,9 +97,9 @@ configure all four Actions secrets:
 
 The workflow builds yt-dlp from the pinned source submodule, passes that artifact
 to Gradle, aligns the unsigned release APK, and signs/verifies it with Android
-Build Tools 34.0.0. This mirrors the F-Droid source-only recipe so F-Droid can
-compare its unsigned rebuild with the upstream-signed APK before copying the
-signature. All four secrets are required; a missing or partial configuration
+Build Tools 34.0.0. F-Droid must reproduce the unsigned APK before it can copy the
+upstream signature; the current recipe does not cover the EJS build introduced
+by this fix. All four secrets are required; a missing or partial configuration
 fails before a tag or GitHub release can be created.
 
 Keep the original keystore and credentials backed up securely outside GitHub;
@@ -105,56 +111,24 @@ byte-for-byte match for a tagged release.
 
 ## F-Droid auto-update configuration
 
-Official F-Droid metadata does not live in this repository. The existing
-submission's `metadata/org.peek.app.yml` in `fdroiddata` uses the following
-verified build block for the previous Peek v5 release:
+Official F-Droid metadata does not live in this repository. The proposed file is
+`metadata/io.github.originalrecipe1.unfurlit.yml` on the fork's `org.peek.app`
+branch, pending merge in !47809. The local Unfurlit candidate is
+[`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml),
+which targets `1.3.0` at commit `1d22c3f`. Use that file for the full metadata.
+Its build block uses the current property names:
 
 ```yaml
-AntiFeatures:
-  NonFreeNet:
-    en-US: Connects to third-party social platforms and media CDNs
-Categories:
-  - Internet
-License: GPL-3.0-only
-AuthorName: originalRecipe1
-SourceCode: https://github.com/originalRecipe1/peek
-IssueTracker: https://github.com/originalRecipe1/peek/issues
-
-AutoName: Peek
-
-RepoType: git
-Repo: https://github.com/originalRecipe1/peek.git
-Binaries: https://github.com/originalRecipe1/peek/releases/download/v%v/Peek-%v.apk
-
-Builds:
-  - versionName: 0.1.0-experiment.5
-    versionCode: 5
-    commit: 737f6d09667fd774742933c6dbe792dc12fd22e8
-    subdir: app
-    submodules: true
-    sudo:
-      - apt-get update
-      - apt-get install -y make zip
-    gradle:
-      - yes
-    build:
-      - ../scripts/build_yt_dlp_from_source.sh
-      - echo "peek.ytdlp.file=$PWD/../build/yt-dlp-source/yt-dlp" >> ../gradle.properties
-      - echo "peek.ytdlp.sha256=$(sha256sum ../build/yt-dlp-source/yt-dlp | awk '{print
-        $1}')" >> ../gradle.properties
-
-AllowedAPKSigningKeys: 3528e91676bde711bf40c70bce363f7c76a554ae9de91f221635b6e975400a3c
-
-AutoUpdateMode: Version
-UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+([-.+][0-9A-Za-z.]+)?$
-UpdateCheckData: app/build.gradle.kts|versionCode\s*=\s*(\d+)||v(.*)
-CurrentVersion: 0.1.0-experiment.5
-CurrentVersionCode: 5
+build:
+  - ../scripts/build_yt_dlp_from_source.sh
+  - echo "unfurlit.ytdlp.file=$PWD/../build/yt-dlp-source/yt-dlp" >> ../gradle.properties
+  - echo "unfurlit.ytdlp.sha256=$(sha256sum ../build/yt-dlp-source/yt-dlp | awk '{print $1}')" >> ../gradle.properties
 ```
 
-This recipe was normalized and linted successfully in the current official
-`fdroiddata` configuration with the current `fdroidserver` container on
-2026-09-04. Its full source scan reported zero problems, and its offline build
+The previous Peek v5 recipe, pinned to
+`737f6d09667fd774742933c6dbe792dc12fd22e8`, was normalized and linted successfully
+in the official `fdroiddata` configuration with the `fdroidserver` container on
+2026-09-04. That source scan reported zero problems, and its offline build
 produced the expected unsigned APK with an embedded yt-dlp hash matching the
 source-built file. A second build starting with an empty Gradle cache confirmed
 that the declared repositories resolve the complete dependency graph; Android
@@ -172,24 +146,31 @@ the tagged app source rather than from `fdroiddata`.
 F-Droid will then notice the release tags, update its build metadata, and queue a
 new build. Publication is asynchronous and remains controlled by F-Droid.
 
-The source-build script constructs yt-dlp from the pinned git submodule before
-calling Gradle. The local-file Gradle path never downloads the release asset and
+The F-Droid candidate pins the published 1.3.0 commit and retains its existing
+build steps, with no npm cache or EJS build steps. The current EJS lockfile uses
+Rollup 4, whose Linux installation
+includes a prebuilt native package from npm. Before proposing metadata for this
+fix, agree on an acceptable build dependency approach with F-Droid reviewers and
+validate it using their Node version, source scanner, and offline build environment.
+Local validation used Node.js 22 and does not establish F-Droid compatibility.
+
+The local-file Gradle path never downloads the release asset and
 rejects checksum or version mismatches. The youtubedl-android runtime is resolved
 from Maven Central, a trusted Maven repository; it contains the native Python and
 QuickJS runtimes documented in `THIRD_PARTY_NOTICES.md`.
 
-The repository is public, the first reviewed release is tagged, and the v5 block
-was submitted to `fdroiddata` in merge request !47809. Do not claim that official F-Droid publication is
-active until that merge request has been accepted. GitHub Actions cannot publish
-directly into the official repository; F-Droid detects tags and controls its own
-build and signing queue.
+Merge request !47809 originally proposed Peek v5 and now proposes Unfurlit 1.3.0.
+Official F-Droid acceptance and publication remain pending. GitHub Actions cannot
+publish directly into the official repository; F-Droid detects tags and controls
+its own build and signing queue.
 
 ## gallery-dl image engine and F-Droid
 
 Builds from 1.3.0 on also bundle the gallery-dl image engine, which
 `preparePinnedGalleryDl` assembles from six pinned, pure-Python PyPI wheels
-(gallery-dl and the requests stack). The F-Droid recipe above has not been
-updated or validated for it yet. Before the next F-Droid release, decide whether
+(gallery-dl and the requests stack). The candidate now targets that release, but
+its build steps have not been adapted or validated locally for the image engine.
+Before the next F-Droid release, decide whether
 the build may fetch those wheels (they contain only Python sources and license
 files, and each is checksum-verified), or provide them from `srclibs` in a
 `prebuild` step and pass the directory with `-Punfurlit.gallerydl.wheels=...`.

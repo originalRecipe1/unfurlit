@@ -1,3 +1,6 @@
 [submodule "third_party/yt-dlp"]
 	path = third_party/yt-dlp
 	url = https://github.com/yt-dlp/yt-dlp.git
+[submodule "third_party/yt-dlp-ejs"]
+	path = third_party/yt-dlp-ejs
+	url = https://github.com/yt-dlp/ejs.git

@@ -104,6 +104,10 @@ class YtDlpMediaExtractor(
             addOption("--playlist-end", MAX_MEDIA_ENTRIES.toString())
             addOption("--no-warnings")
             addOption("--format", FORMAT_SELECTOR)
+            // Some public videos ask the default clients to sign in but still play
+            // through YouTube's embedded player. Retain defaults for non-embeddable videos.
+            // Accept an extra player request per YouTube extraction to avoid a full retry.
+            addOption("--extractor-args", "youtube:player_client=default,web_embedded")
             addCommands(
                 metadataLimits(
                     "title" to SHORT_METADATA_PATTERN,

@@ -109,3 +109,33 @@ The first direct-video case, a Blender download URL, returned HTTP 404 and is
 not counted among the failures above. Its replacement, a Wikimedia Commons WebM
 file, passed a focused run as one progressive video, so the current fixture
 expects 12 of 22 video cases to pass from CI.
+
+## YouTube public Shorts recovery — 2026-10-01
+
+The reported public Short `x2zTi8aEjsA` reproduced `AuthenticationRequired`
+(“Please sign in”) on the unchanged app in a local API 30 x86_64 emulator.
+YouTube's public embedded player returned video and audio for the same link
+without an account, so extraction now includes `web_embedded` alongside the
+default clients.
+
+The published 1.3.0 APK also omitted `yt_dlp_ejs`: the source-build target did
+not include the JavaScript solver bundled in the official yt-dlp executable
+used by development builds. Without it, the embedded-player path still failed.
+Source builds now compile and package the pinned EJS sources and verify the
+package and both solver scripts. The live workflow uses this same source-built
+extractor, and the reported Short is a permanent success case.
+
+With the fix, the reported Short, the original Shorts case, the short-link case,
+and Big Buck Bunny all extracted video plus separate audio on the local Android
+emulator. All four runtime tests passed, including the new solver packaging
+check. Host requests for the reported Short's video and audio returned HTTP 206.
+These checks establish extraction and stream access; physical-phone playback
+has not been retested. The earlier GitHub runner bot challenges are a separate
+access limitation, and remain failures if YouTube rejects every client.
+
+Build review checks on the same date also confirmed that both source-built EJS
+scripts match the checksum-verified official yt-dlp release byte for byte. A
+deliberately altered script failed the update workflow's comparison. Forcing
+`current-ejs-version` to fail its import caused upstream Make to download the EJS
+wheel, after which the source-build script rejected the build. These checks used
+Node.js 22; the F-Droid build steps have not been adapted or validated for EJS.
