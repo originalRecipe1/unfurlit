@@ -60,6 +60,31 @@ class RedditLinksTest {
     }
 
     @Test
+    fun galleryRoutingSurvivesPreflightRedirectsToThePost() {
+        val gallery = "https://www.reddit.com/gallery/hrrh23"
+        val post = "https://www.reddit.com/r/announcements/comments/hrrh23/now_you_can_make_posts_with_multiple_images/"
+        assertEquals(gallery, RedditLinks.galleryUrl(gallery, gallery))
+        assertEquals(gallery, RedditLinks.galleryUrl(gallery, post))
+        assertEquals(gallery, RedditLinks.galleryUrl("https://redd.it/hrrh23", gallery))
+        val withQuery = "https://old.reddit.com/gallery/hrrh23/?share_id=example#images"
+        assertEquals(withQuery, RedditLinks.galleryUrl(withQuery, post))
+    }
+
+    @Test
+    fun galleryRoutingDoesNotCaptureOtherPostsOrUnrelatedSites() {
+        listOf(
+            "https://www.reddit.com/r/aww/comments/90bu6w/heat_index_was_110_degrees_so_we_offered_him_a/",
+            "https://www.reddit.com/comments/hrrh23",
+            "https://i.redd.it/fs12v3j0z1b51.png",
+            "https://example.com/gallery/hrrh23",
+            "https://reddit.com.example.com/gallery/hrrh23",
+            "https://www.reddit.com/gallery/",
+            "https://www.reddit.com/gallery/hrrh23/unrelated",
+            "not a url",
+        ).forEach { url -> assertEquals(url, null, RedditLinks.galleryUrl(url, url)) }
+    }
+
+    @Test
     fun postUrlSlugGivesAFallbackTitle() {
         assertEquals(
             "What happened to orlando bloom",
