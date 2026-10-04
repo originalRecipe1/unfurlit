@@ -140,7 +140,7 @@ internal fun HistoryScreen(
                         key = { index -> entries.itemSnapshotList.historyItemKey(index) },
                         contentType = { index -> entries.itemSnapshotList.historyItemContentType(index) },
                     ) { index ->
-                        when (val item = entries[index]) {
+                        when (val item = entries.itemSnapshotList.historyItemOrNull(index) { entries[it] }) {
                             is HistoryListItem.Day -> HistoryDay(item.timestamp)
                             is HistoryListItem.Visit -> HistoryRow(
                                 entry = item.entry,
@@ -185,6 +185,12 @@ internal fun ItemSnapshotList<HistoryListItem>.historyItemContentType(index: Int
         is HistoryListItem.Visit -> "entry"
         null -> "pending"
     }
+
+// Preserve Paging's load hints for valid indices without accessing stale layout positions.
+internal inline fun ItemSnapshotList<HistoryListItem>.historyItemOrNull(
+    index: Int,
+    accessItem: (Int) -> HistoryListItem?,
+): HistoryListItem? = if (index in indices) accessItem(index) else null
 
 internal sealed interface HistoryListItem {
     val key: String
