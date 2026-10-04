@@ -48,42 +48,64 @@ class HistoryPaginationTest {
 
     @Test
     fun longScrollDropsAndReloadsPagesAndWritesRefreshVisibleData() {
-        seed(1_000)
         lateinit var items: LazyPagingItems<HistoryListItem>
-        composeRule.setContent {
-            val flow = remember { repository.observeHistory().map { it.withDateHeaders() } }
-            items = flow.collectAsLazyPagingItems()
-            MaterialTheme { HistoryScreen(items, {}, {}, {}, {}) }
-        }
         fun visits() = items.itemSnapshotList.items.filterIsInstance<HistoryListItem.Visit>().map { it.entry }
-        composeRule.waitUntil(10_000) { visits().size >= 100 }
-        assertTrue(visits().size < 1_000)
-        assertEquals(2, items.itemSnapshotList.items.filterIsInstance<HistoryListItem.Day>().size)
-        repeat(12) {
-            val oldest = visits().last().id
-            composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(items.itemCount - 1)
-            composeRule.waitUntil(10_000) { visits().last().id < oldest }
-            val keys = items.itemSnapshotList.items.map { it.key }
-            assertEquals("Page boundaries must not duplicate date headers or visits", keys.distinct().size, keys.size)
+        phase("initial load") {
+            seed(1_000)
+            composeRule.setContent {
+                val flow = remember { repository.observeHistory().map { it.withDateHeaders() } }
+                items = flow.collectAsLazyPagingItems()
+                MaterialTheme { HistoryScreen(items, {}, {}, {}, {}) }
+            }
+            composeRule.waitUntil(10_000) { visits().size >= 100 }
+            assertTrue(visits().size < 1_000)
+            assertEquals(2, items.itemSnapshotList.items.filterIsInstance<HistoryListItem.Day>().size)
         }
-        assertTrue("Distant pages should be dropped", visits().first().id < 1_000)
-        assertTrue("Metadata should remain bounded", visits().size <= 300)
-        val first = visits().first().id
-        composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-        composeRule.waitUntil(10_000) { visits().first().id > first }
-        assertTrue(visits().size <= 300)
-        val selected = visits()[20]
-        runBlocking { repository.remove(selected.id) }
-        composeRule.waitUntil(10_000) { visits().none { it.id == selected.id } }
-        runBlocking { repository.clear() }
-        composeRule.waitUntil(10_000) { items.itemCount == 0 }
-        composeRule.onNodeWithText("A little rewind").assertIsDisplayed()
-        runBlocking {
-            repository.recordView(ExtractionResult("https://example.com/new", null, "New visit", null, null, null, emptyList()))
+        repeat(12) { iteration ->
+            phase("append loop ${iteration + 1}") {
+                val oldest = visits().last().id
+                composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(items.itemCount - 1)
+                composeRule.waitUntil(10_000) { visits().last().id < oldest }
+                val keys = items.itemSnapshotList.items.map { it.key }
+                assertEquals("Page boundaries must not duplicate date headers or visits", keys.distinct().size, keys.size)
+            }
         }
-        composeRule.waitUntil(10_000) { visits().any { it.title == "New visit" } }
-        composeRule.onNodeWithText("New visit").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Today").assertCountEquals(1)
+        phase("append bounds") {
+            assertTrue("Distant pages should be dropped", visits().first().id < 1_000)
+            assertTrue("Metadata should remain bounded", visits().size <= 300)
+        }
+        phase("prepend") {
+            val first = visits().first().id
+            composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
+            composeRule.waitUntil(10_000) { visits().first().id > first }
+            assertTrue(visits().size <= 300)
+        }
+        phase("single delete") {
+            val selected = visits()[20]
+            runBlocking { repository.remove(selected.id) }
+            composeRule.waitUntil(10_000) { visits().none { it.id == selected.id } }
+        }
+        phase("clear") {
+            runBlocking { repository.clear() }
+            composeRule.waitUntil(10_000) { items.itemCount == 0 }
+            composeRule.onNodeWithText("A little rewind").assertIsDisplayed()
+        }
+        phase("re-add") {
+            runBlocking {
+                repository.recordView(ExtractionResult("https://example.com/new", null, "New visit", null, null, null, emptyList()))
+            }
+            composeRule.waitUntil(10_000) { visits().any { it.title == "New visit" } }
+            composeRule.onNodeWithText("New visit").assertIsDisplayed()
+            composeRule.onAllNodesWithText("Today").assertCountEquals(1)
+        }
+    }
+
+    private inline fun phase(name: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (failure: Throwable) {
+            throw AssertionError("History pagination phase: $name", failure)
+        }
     }
 
     @Test
