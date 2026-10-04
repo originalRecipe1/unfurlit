@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -29,7 +31,7 @@ public class PythonZipAppTest {
             List<String> names = new ArrayList<>();
             for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
                 names.add(entry.getName());
-                assertEquals(PythonZipApp.ENTRY_TIME, entry.getTime());
+                assertEquals(LocalDateTime.of(1980, 1, 2, 0, 0), entry.getTimeLocal());
             }
             assertEquals(List.of("__main__.py", "dep/__init__.py", "pkg-1.0.dist-info/METADATA",
                 "pkg-1.0.dist-info/licenses/LICENSE", "pkg/__init__.py", "pkg/mod.py"), names);
@@ -45,6 +47,20 @@ public class PythonZipAppTest {
         Path first = assemble("first.zip", a, b);
         Path second = assemble("second.zip", b, a);
         assertArrayEquals(Files.readAllBytes(first), Files.readAllBytes(second));
+    }
+
+    @Test public void outputIsReproducibleAcrossDefaultTimeZones() throws Exception {
+        Path input = wheel("input.whl", "pkg/__init__.py");
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            Path utc = assemble("utc.zip", input);
+            TimeZone.setDefault(TimeZone.getTimeZone("Pacific/Kiritimati"));
+            Path kiritimati = assemble("kiritimati.zip", input);
+            assertArrayEquals(Files.readAllBytes(utc), Files.readAllBytes(kiritimati));
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 
     @Test public void rejectsDuplicatePaths() throws Exception {
