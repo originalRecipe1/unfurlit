@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -19,8 +21,8 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 public final class PythonZipApp {
     private PythonZipApp() {}
 
-    /** 1980-01-02T00:00:00Z: the earliest date every zip reader agrees on. */
-    static final long ENTRY_TIME = 315_619_200_000L;
+    /** 1980-01-02 00:00 in local DOS time; ZIP timestamps have no timezone. */
+    private static final LocalDateTime ENTRY_TIME = LocalDateTime.of(1980, 1, 2, 0, 0);
 
     public static void assemble(List<Path> wheels, Path entryPoint, Path output) throws IOException {
         // Sorted by path so the result does not depend on wheel or entry order.
@@ -42,10 +44,12 @@ public final class PythonZipApp {
                 }
             }
         }
+        // setTime converts an instant to DOS fields in the JVM's default zone.
+        long entryTime = ENTRY_TIME.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         try (ZipArchiveOutputStream destination = new ZipArchiveOutputStream(output)) {
             for (var file : files.entrySet()) {
                 ZipArchiveEntry entry = new ZipArchiveEntry(file.getKey());
-                entry.setTime(ENTRY_TIME);
+                entry.setTime(entryTime);
                 entry.setMethod(ZipArchiveEntry.DEFLATED);
                 destination.putArchiveEntry(entry);
                 destination.write(file.getValue());
