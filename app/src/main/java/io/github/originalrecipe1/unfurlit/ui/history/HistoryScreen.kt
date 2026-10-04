@@ -24,12 +24,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.paging.ItemSnapshotList
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
-import androidx.paging.compose.itemContentType
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import coil3.compose.AsyncImage
@@ -138,8 +137,8 @@ internal fun HistoryScreen(
                     }
                     items(
                         count = entries.itemCount,
-                        key = entries.itemKey { it.key },
-                        contentType = entries.itemContentType { if (it is HistoryListItem.Day) "day" else "entry" },
+                        key = { index -> entries.itemSnapshotList.historyItemKey(index) },
+                        contentType = { index -> entries.itemSnapshotList.historyItemContentType(index) },
                     ) { index ->
                         when (val item = entries[index]) {
                             is HistoryListItem.Day -> HistoryDay(item.timestamp)
@@ -175,6 +174,17 @@ internal fun HistoryScreen(
         )
     }
 }
+
+// A retained layout callback can request an old index after a refresh shrinks the snapshot.
+internal fun ItemSnapshotList<HistoryListItem>.historyItemKey(index: Int): String =
+    getOrNull(index)?.key ?: "pending-$index"
+
+internal fun ItemSnapshotList<HistoryListItem>.historyItemContentType(index: Int): String =
+    when (getOrNull(index)) {
+        is HistoryListItem.Day -> "day"
+        is HistoryListItem.Visit -> "entry"
+        null -> "pending"
+    }
 
 internal sealed interface HistoryListItem {
     val key: String
