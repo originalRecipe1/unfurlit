@@ -6,10 +6,16 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.TimeZone;
+import org.apache.commons.compress.archivers.zip.X000A_NTFS;
+import org.apache.commons.compress.archivers.zip.X5455_ExtendedTimestamp;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.archivers.zip.ZipShort;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -32,6 +38,14 @@ public class PythonRuntimeArchiveTest {
                 assertEquals(a.getTime(), b.getTime());
                 assertEquals(a.getMethod(), b.getMethod());
                 assertEquals(a.getCrc(), b.getCrc());
+                for (var id : new ZipShort[]{
+                    X5455_ExtendedTimestamp.HEADER_ID, X000A_NTFS.HEADER_ID
+                }) {
+                    assertArrayEquals(a.getExtraField(id).getLocalFileDataData(),
+                        b.getExtraField(id).getLocalFileDataData());
+                    assertArrayEquals(a.getExtraField(id).getCentralDirectoryData(),
+                        b.getExtraField(id).getCentralDirectoryData());
+                }
                 try (var original = before.getRawInputStream(a); var kept = after.getRawInputStream(b)) {
                     assertArrayEquals(original.readAllBytes(), kept.readAllBytes());
                 }
@@ -50,6 +64,24 @@ public class PythonRuntimeArchiveTest {
         PythonRuntimeArchive.trim(input, first);
         PythonRuntimeArchive.trim(input, second);
         assertArrayEquals(Files.readAllBytes(first), Files.readAllBytes(second));
+    }
+
+    @Test public void outputIsReproducibleAcrossDefaultTimeZones() throws Exception {
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            Path input = fixture(true);
+            Path utc = folder.getRoot().toPath().resolve("utc.zip");
+            PythonRuntimeArchive.trim(input, utc);
+            for (String zone : new String[]{"Europe/Berlin", "Pacific/Kiritimati"}) {
+                TimeZone.setDefault(TimeZone.getTimeZone(zone));
+                Path output = folder.newFile().toPath();
+                PythonRuntimeArchive.trim(input, output);
+                assertArrayEquals(zone, Files.readAllBytes(utc), Files.readAllBytes(output));
+            }
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 
     @Test public void changedUpstreamLayoutRequiresReview() throws Exception {
@@ -75,7 +107,9 @@ public class PythonRuntimeArchiveTest {
 
     private void entry(ZipArchiveOutputStream zip, String name, int mode, String data) throws IOException {
         ZipArchiveEntry entry = new ZipArchiveEntry(name);
-        entry.setTime(1_700_000_000_000L);
+        // Include absolute extended timestamps, as the upstream Python ZIP does.
+        // These UTC fields fall inside Berlin's DST gap, so a local-time round trip is unsafe.
+        entry.setLastModifiedTime(FileTime.from(Instant.parse("2025-03-30T02:30:00Z")));
         entry.setUnixMode(mode);
         zip.putArchiveEntry(entry);
         zip.write(data.getBytes(StandardCharsets.UTF_8));
