@@ -3,11 +3,14 @@ package io.github.originalrecipe1.unfurlit.buildlogic;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.TimeZone;
 import org.apache.commons.compress.archivers.zip.X000A_NTFS;
@@ -73,15 +76,38 @@ public class PythonRuntimeArchiveTest {
             Path input = fixture(true);
             Path utc = folder.getRoot().toPath().resolve("utc.zip");
             PythonRuntimeArchive.trim(input, utc);
+            assertUtcDosTimestamp(utc);
             for (String zone : new String[]{"Europe/Berlin", "Pacific/Kiritimati"}) {
                 TimeZone.setDefault(TimeZone.getTimeZone(zone));
                 Path output = folder.newFile().toPath();
                 PythonRuntimeArchive.trim(input, output);
                 assertArrayEquals(zone, Files.readAllBytes(utc), Files.readAllBytes(output));
+                assertUtcDosTimestamp(output);
             }
         } finally {
             TimeZone.setDefault(original);
         }
+    }
+
+    private static void assertUtcDosTimestamp(Path output) throws IOException {
+        // Read the actual DOS fields: ZIP readers may prefer the absolute timestamp extras.
+        ByteBuffer zip = ByteBuffer.wrap(Files.readAllBytes(output)).order(ByteOrder.LITTLE_ENDIAN);
+        assertEquals(0x04034b50, zip.getInt(0));
+        // This small fixture has no archive comment or ZIP64 end records.
+        int endOffset = zip.limit() - 22;
+        assertEquals(0x06054b50, zip.getInt(endOffset));
+        int centralOffset = zip.getInt(endOffset + 16);
+        assertEquals(0x02014b50, zip.getInt(centralOffset));
+        LocalDateTime expected = LocalDateTime.of(2025, 3, 30, 2, 30, 0);
+        assertEquals("local header DOS timestamp", expected, readDosTimestamp(zip, 10));
+        assertEquals("central header DOS timestamp", expected, readDosTimestamp(zip, centralOffset + 12));
+    }
+
+    private static LocalDateTime readDosTimestamp(ByteBuffer zip, int offset) {
+        int time = Short.toUnsignedInt(zip.getShort(offset));
+        int date = Short.toUnsignedInt(zip.getShort(offset + 2));
+        return LocalDateTime.of(1980 + (date >> 9), (date >> 5) & 15, date & 31,
+            time >> 11, (time >> 5) & 63, (time & 31) * 2);
     }
 
     @Test public void changedUpstreamLayoutRequiresReview() throws Exception {
