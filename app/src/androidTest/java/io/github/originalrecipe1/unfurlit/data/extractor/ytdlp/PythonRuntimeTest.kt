@@ -12,6 +12,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import java.io.File
 import java.util.UUID
+import java.util.zip.ZipFile
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -20,6 +21,27 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 class PythonRuntimeTest {
+    @Test
+    fun bundledEngineIncludesYoutubeChallengeSolver() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        BundledYtDlpInstaller(context).ensureCurrent()
+        val directory = File(File(context.noBackupFilesDir, YoutubeDL.baseName), YoutubeDL.ytdlpDirName)
+        ZipFile(File(directory, YoutubeDL.ytdlpBin)).use { engine ->
+            // Checks whichever engine this APK packages: normally the official asset,
+            // or the source build when -Punfurlit.ytdlp.file is supplied. The source
+            // build script independently checks its output before Gradle packages it.
+            for (path in listOf(
+                "__init__.py", "_version.py", "yt/__init__.py", "yt/solver/__init__.py",
+                "yt/solver/core.min.js", "yt/solver/lib.min.js",
+            )) {
+                assertTrue("Missing YouTube solver file: $path", engine.getEntry("yt_dlp_ejs/$path") != null)
+            }
+            for (script in listOf("core.min.js", "lib.min.js")) {
+                assertTrue(engine.getEntry("yt_dlp_ejs/yt/solver/$script").size > 0)
+            }
+        }
+    }
+
     @Test(timeout = 120_000)
     fun runtimeUpgradeRemovesObsoleteFilesAndPreservesDatabase() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext

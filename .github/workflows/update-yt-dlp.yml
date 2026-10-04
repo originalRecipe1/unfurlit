@@ -25,6 +25,12 @@ jobs:
         with:
           submodules: true
 
+      - name: Set up Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
       - name: Set up Java 21
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
@@ -88,6 +94,15 @@ jobs:
             echo "The fetched yt-dlp source reports $source_version instead of $latest" >&2
             exit 1
           fi
+          ejs_version="$(sed -nE 's/^EJS_VERSION = (.*)$/\1/p' third_party/yt-dlp/Makefile)"
+          if [[ ! "$ejs_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Could not read yt-dlp's required EJS version" >&2
+            exit 1
+          fi
+          git -C third_party/yt-dlp-ejs fetch --depth=1 origin "refs/tags/$ejs_version"
+          git -C third_party/yt-dlp-ejs checkout --detach FETCH_HEAD
+          sed -i -E "s/^ytDlpEjs = \"[^\"]+\"$/ytDlpEjs = \"$ejs_version\"/" gradle/libs.versions.toml
+          python3 scripts/update_yt_dlp_notices.py
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "version=$latest" >> "$GITHUB_OUTPUT"
           echo "sha256=$actual_sha" >> "$GITHUB_OUTPUT"
@@ -104,6 +119,15 @@ jobs:
           ./scripts/build_yt_dlp_from_source.sh
           source_file="$PWD/build/yt-dlp-source/yt-dlp"
           source_sha="$(sha256sum "$source_file" | awk '{ print $1 }')"
+          release_file="$RUNNER_TEMP/yt-dlp-${{ steps.release.outputs.version }}/yt-dlp"
+          for solver in core.min.js lib.min.js; do
+            cmp <(unzip -p "$source_file" "yt_dlp_ejs/yt/solver/$solver") \
+              <(unzip -p "$release_file" "yt_dlp_ejs/yt/solver/$solver") || {
+                echo "Source-built $solver differs from the verified official release" >&2
+                exit 1
+              }
+          done
+          python3 scripts/update_yt_dlp_notices.py --check
           ./gradlew --no-daemon assembleDebug assembleRelease \
             -Punfurlit.ytdlp.file="$source_file" \
             -Punfurlit.ytdlp.sha256="$source_sha"
@@ -124,7 +148,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -C "$branch"
-          git add app/build.gradle.kts gradle/libs.versions.toml docs/development.md third_party/yt-dlp fastlane/metadata/android/en-US/changelogs
+          git add app/build.gradle.kts gradle/libs.versions.toml docs/development.md THIRD_PARTY_NOTICES.md third_party/yt-dlp third_party/yt-dlp-ejs fastlane/metadata/android/en-US/changelogs
           git commit -m "chore: update yt-dlp to $VERSION"
           git push --force origin "HEAD:refs/heads/$branch"
 
@@ -134,5 +158,5 @@ jobs:
               --base "$GITHUB_REF_NAME" \
               --head "$branch" \
               --title "chore: update yt-dlp to $VERSION" \
-              --body "Updates the pinned stable yt-dlp engine to **$VERSION**. The official asset checksum was verified, the embedded APK resource matches it, and unit tests plus Android lint passed. Please smoke-test representative social links before merging."
+              --body "Updates the pinned stable yt-dlp engine to **$VERSION**, its required EJS source, and dependency notices. The official asset checksum and both APK resource variants were verified. Source-built solver scripts match the official release byte for byte; unit tests, Android lint, and APK builds passed. Please smoke-test representative social links before merging."
           fi

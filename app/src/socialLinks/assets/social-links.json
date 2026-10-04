@@ -3,6 +3,7 @@
   {"id":"youtube-short-link","url":"https://youtu.be/jNQXAC9IVRw","expected":"success","media":"video","count":1},
   {"id":"youtube-big-buck-bunny","url":"https://www.youtube.com/watch?v=aqz-KE-bpKQ","expected":"success","media":"video","count":1},
   {"id":"youtube-shorts","url":"https://www.youtube.com/shorts/18NGQq7p3LY","expected":"success","media":"video","count":1},
+  {"id":"youtube-shorts-sign-in-fallback","url":"https://www.youtube.com/shorts/x2zTi8aEjsA","expected":"success","media":"video","count":1},
   {"id":"vimeo-video","url":"https://vimeo.com/33951933","expected":"success","media":"video","count":1},
   {"id":"vimeo-player","url":"https://player.vimeo.com/video/54469442","expected":"success","media":"video","count":1},
   {"id":"reddit-video","url":"https://www.reddit.com/r/videos/comments/6rrwyj/that_small_heart_attack/","expected":"success","media":"video","count":1},

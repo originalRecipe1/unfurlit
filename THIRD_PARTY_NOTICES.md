@@ -15,6 +15,9 @@ by `releaseRuntimeClasspath` and the components bundled by youtubedl-android
 | JetBrains annotations and JSpecify | transitive | Apache-2.0 |
 | youtubedl-android | 0.18.1 | GPL-3.0 |
 | yt-dlp | 2026.08.19 | Unlicense |
+| yt-dlp-ejs, bundled YouTube JavaScript challenge solver | 0.8.0 | Unlicense |
+| astring, bundled in the EJS solver | 1.9.0 | MIT |
+| meriyah, bundled in the EJS solver | 6.1.4 | ISC |
 | CPython runtime embedded by youtubedl-android | 3.12 | Python-2.0 / PSF-2.0 |
 | QuickJS runtime embedded by youtubedl-android | bundled native runtime | MIT |
 | PyCryptodome embedded in the Python runtime | 3.23.0 | BSD-2-Clause and public-domain portions |
@@ -36,6 +39,12 @@ by `releaseRuntimeClasspath` and the components bundled by youtubedl-android
 | Expat | bundled with the Python runtime | MIT |
 | Android C++ shared runtime and Termux Android support libraries | bundled with the Python runtime | Apache-2.0 and respective upstream licenses |
 
+The yt-dlp, EJS, astring, and meriyah rows are synchronized from the version
+catalog and EJS npm lockfile by `python3 scripts/update_yt_dlp_notices.py`.
+The extractor update workflow runs it automatically; PR CI runs it with
+`--check` to reject stale notices. Changes to the solver's runtime dependency
+set require review before updating the generator.
+
 The app itself is GPL-3.0-only; see `LICENSE`. The image engine
 (`app/gallery-dl/__main__.py` plus the packages above, assembled into one zip)
 is a separate program that the app starts as a process and reads JSON from; its
@@ -53,6 +62,9 @@ upstream projects and their source distributions:
 
 - <https://github.com/JunkFood02/youtubedl-android>
 - <https://github.com/yt-dlp/yt-dlp>
+- <https://github.com/yt-dlp/ejs>
+- <https://github.com/davidbonnet/astring>
+- <https://github.com/meriyah/meriyah>
 - <https://github.com/mikf/gallery-dl>
 - <https://github.com/psf/requests>
 - <https://github.com/FFmpeg/FFmpeg> (not included by Unfurlit's current dependency set)

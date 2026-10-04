@@ -9,7 +9,7 @@ Requirements:
 - JDK 21 for the Gradle runtime (the app still targets Java 17 bytecode)
 - Android SDK 36
 - a 64-bit ARM device running Android 7.0+, or an emulator (see the CI build option below)
-- Git, Python 3, Make, and Zip only when building the extractor from source
+- Git, Python 3, Make, Zip, Node.js 22 and npm only when building the extractor from source
 
 The repository pins the Gradle daemon to Java 21 in
 `gradle/gradle-daemon-jvm.properties`. Gradle 8.14.5 cannot run on Java 25.
@@ -111,7 +111,7 @@ and verifies its pinned SHA-256 before packaging it as an app resource. The app
 then uses that bundled copy through youtubedl-android; it does not fetch or update
 executable code at runtime.
 
-For an offline/F-Droid-style source build, initialize the pinned submodule and
+For a source build, initialize the pinned submodules and
 build the extractor first:
 
 ```bash
@@ -125,9 +125,28 @@ source_sha="$(sha256sum "$source_file" | awk '{print $1}')"
 ```
 
 This path performs no extractor download during Gradle execution. Gradle verifies
-the supplied archive's checksum and embedded version before packaging it. The
-source-built variant has also completed the YouTube streaming proof of concept
-on the emulator.
+the supplied archive's checksum and embedded version before packaging it.
+Targeted YouTube extraction checks passed on the API 30 emulator with the
+source-built engine; physical-phone playback still needs confirmation.
+
+The source build includes yt-dlp's required JavaScript challenge solver from the
+pinned `third_party/yt-dlp-ejs` source, using its npm lockfile. `npm ci` needs
+network access or a populated npm cache (`npm_config_offline=true`); the resulting
+solver is bundled in the extractor, with no runtime code download. Its version in
+`libs.versions.toml` must match the pinned yt-dlp Makefile. The build checks both
+solver scripts and their Python package, and fails if the Makefile falls back to
+downloading the upstream EJS wheel. PR CI builds a debug APK with the official
+asset, then verifies APK builds using the source-built extractor;
+the update workflow also compares its solver scripts byte for byte with the
+checksum-verified official release. Run `python3 scripts/update_yt_dlp_notices.py`
+after changing these pins; CI checks that the notices match. The F-Droid candidate
+has not been updated for EJS; see [the remaining build work](automation-and-fdroid.md#f-droid-auto-update-configuration).
+
+YouTube requests also include the public embedded player client alongside yt-dlp's defaults, because
+some public Shorts ask the default clients to sign in while remaining embeddable.
+This accepts an extra player API request for each YouTube extraction, including
+links that already work with the default clients. It avoids restarting extraction
+after a sign-in failure; playback remains native through Media3.
 
 The build also assembles a second engine for photos and galleries: gallery-dl
 `1.32.13` and the pure-Python requests stack it needs (requests, urllib3, idna,
@@ -256,10 +275,11 @@ The application is licensed under [GPL-3.0-only](../LICENSE). Keep the
 
 ## Social-link regression pipeline
 
-The **Live social links** workflow runs weekly and on manual dispatch. It exercises
+The **Live social links** workflow runs weekly and on manual dispatch, using the
+same source-built extractor as release APKs. It exercises
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
 gallery-dl engines and JSON normalization, with native page-data adapters for TikTok
-and Instagram photo posts. The 55 cases in
+and Instagram photo posts. The 56 cases in
 `app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
 - **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit, X (including
