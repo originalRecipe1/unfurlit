@@ -34,7 +34,8 @@ branch of the `originalRecipe1/fdroiddata` fork. `org.peek.app` is the retained
 branch name; the proposed metadata has not been merged into official `fdroiddata`.
 
 The local copy is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
-It matches the MR's Unfurlit `1.3.0`, version code 11, pinned to
+Apart from disabling auto-update locally, it matches the MR's Unfurlit `1.3.0`,
+version code 11, pinned to
 `1d22c3f2e23a5c1e4042c2ce667b9044bf718092`, with the
 `Unfurlit-%v.apk` release filename. Its application ID is
 `io.github.originalrecipe1.unfurlit`, and its repository and release URLs point to
@@ -143,11 +144,21 @@ Store text, the app icon, and phone screenshots are maintained in the upstream
 `fastlane/metadata/android/en-US` directory. F-Droid imports those assets from
 the tagged app source rather than from `fdroiddata`.
 
-F-Droid will then notice the release tags, update its build metadata, and queue a
-new build. Publication is asynchronous and remains controlled by F-Droid.
+Auto-update is disabled locally with `AutoUpdateMode: None` because the v1.3.0
+build block has no Node.js or npm and cannot build releases that contain the EJS
+solver. Restore `AutoUpdateMode: Version` only after reviewers accept an EJS
+build approach, the candidate targets the first tag containing the agreed EJS
+and gallery-dl build approaches, and that candidate passes F-Droid validation
+(lint, scanner, offline build, and an empty-cache build). F-Droid can then update
+its build metadata from release tags and queue new builds. Publication is
+asynchronous and remains controlled by F-Droid.
 
 The F-Droid candidate pins the published 1.3.0 commit and retains its existing
-build steps, with no npm cache or EJS build steps. The current EJS lockfile uses
+build steps, with no npm cache or EJS build steps. That 1.3.0 F-Droid build lacks
+`yt_dlp_ejs` and has the YouTube regression fixed on the
+`fix/youtube-extraction-ejs` branch. Physical-phone playback of the fix remains
+unverified; the owner will test it with the link-check APK before release.
+The current EJS lockfile uses
 Rollup 4, whose Linux installation
 includes a prebuilt native package from npm. Before proposing metadata for this
 fix, agree on an acceptable build dependency approach with F-Droid reviewers and
@@ -168,11 +179,17 @@ its own build and signing queue.
 
 Builds from 1.3.0 on also bundle the gallery-dl image engine, which
 `preparePinnedGalleryDl` assembles from six pinned, pure-Python PyPI wheels
-(gallery-dl and the requests stack). The candidate now targets that release, but
-its build steps have not been adapted or validated locally for the image engine.
-Before the next F-Droid release, decide whether
-the build may fetch those wheels (they contain only Python sources and license
-files, and each is checksum-verified), or provide them from `srclibs` in a
-`prebuild` step and pass the directory with `-Punfurlit.gallerydl.wheels=...`.
-Wheels rebuilt from source archives would not match the pinned checksums, so
-that route would need a separate checksum override like the yt-dlp one.
+(gallery-dl and the requests stack). A reviewer on !47809 raised that these
+wheels are downloaded during Gradle's `preBuild`, outside the F-Droid scanner.
+The proposed fix is to build from pinned git submodules and check the resulting
+`gallerydl` resource in CI against the resource assembled from the hash-pinned
+wheels. This proposal is waiting on the reviewer's answer; it has not been
+implemented or validated in the F-Droid build environment.
+
+## 32-bit ARM support
+
+A reviewer on !47809 also raised that release builds support only arm64.
+32-bit ARM is deferred beyond the first F-Droid release: reproducible per-ABI
+APKs need matching per-ABI upstream releases and a new `versionCode` scheme.
+The existing ABI filters, release assets, and version-code scheme remain in
+place for the first release.
