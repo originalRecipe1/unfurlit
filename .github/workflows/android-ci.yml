@@ -57,6 +57,18 @@ jobs:
           set -euo pipefail
           ./scripts/build_yt_dlp_from_source.sh
           source_file="$PWD/build/yt-dlp-source/yt-dlp"
+          python3 - "$source_file" app/build/generated/unfurlitYtDlp/res/raw/ytdlp <<'PY'
+          import hashlib
+          import sys
+          from zipfile import ZipFile
+          # The first debug build downloaded and hash-verified this official asset.
+          with ZipFile(sys.argv[1]) as source, ZipFile(sys.argv[2]) as official:
+              for name in ("core.min.js", "lib.min.js"):
+                  path = f"yt_dlp_ejs/yt/solver/{name}"
+                  output = source.read(path)
+                  assert output and output == official.read(path), f"{name} differs from the official solver"
+                  print(f"Verified official solver bytes: {name} {hashlib.sha256(output).hexdigest()}")
+          PY
           echo "file=$source_file" >> "$GITHUB_OUTPUT"
           echo "sha256=$(sha256sum "$source_file" | awk '{ print $1 }')" >> "$GITHUB_OUTPUT"
 
@@ -72,6 +84,14 @@ jobs:
         with:
           name: unfurlit-link-check-apk
           path: app/build/outputs/apk/linkCheck/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the unsigned release APK for reproducibility checks
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unfurlit-unsigned-release-apk
+          path: app/build/outputs/apk/release/*-unsigned.apk
           if-no-files-found: error
           retention-days: 14
 

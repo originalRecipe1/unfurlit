@@ -1,0 +1,6 @@
+- YouTube videos and Shorts that asked you to sign in play again.
+- Videos that stop loading reload automatically once.
+- Reddit galleries open from post, share and short links.
+- Vimeo page links play without signing in.
+- Bandcamp tracks use an audio format every device can play.
+- Fixed a crash when clearing History while scrolling.
