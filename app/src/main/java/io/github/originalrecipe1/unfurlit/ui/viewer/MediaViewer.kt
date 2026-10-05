@@ -27,6 +27,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.ui.player.AudioPlayer
 import io.github.originalrecipe1.unfurlit.ui.player.LocalPictureInPicture
 import io.github.originalrecipe1.unfurlit.ui.player.VideoPlayer
+import io.github.originalrecipe1.unfurlit.ui.player.PlaybackResume
 import io.github.originalrecipe1.unfurlit.R
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -39,6 +40,9 @@ fun MediaViewer(
     modifier: Modifier = Modifier,
     fullscreen: Boolean = false,
     onFullscreenChange: (Boolean) -> Unit = {},
+    playbackResume: PlaybackResume? = null,
+    refreshingMediaIndex: Int? = null,
+    onPlaybackForbidden: (PlaybackResume) -> Boolean = { false },
 ) {
     Column(modifier = modifier) {
         MediaContent(
@@ -46,6 +50,9 @@ fun MediaViewer(
             modifier = if (fullscreen) Modifier.weight(1f) else Modifier.fillMaxWidth(),
             fullscreen = fullscreen,
             onFullscreenChange = onFullscreenChange,
+            playbackResume = playbackResume,
+            refreshingMediaIndex = refreshingMediaIndex,
+            onPlaybackForbidden = onPlaybackForbidden,
         )
         extraction.backgroundAudio?.let { audio ->
             AudioPlayer(
@@ -72,6 +79,9 @@ private fun MediaContent(
     modifier: Modifier,
     fullscreen: Boolean,
     onFullscreenChange: (Boolean) -> Unit,
+    playbackResume: PlaybackResume?,
+    refreshingMediaIndex: Int?,
+    onPlaybackForbidden: (PlaybackResume) -> Boolean,
 ) {
     if (extraction.media.size == 1) {
         SingleMediaViewer(
@@ -82,6 +92,9 @@ private fun MediaContent(
             modifier = modifier,
             fullscreen = fullscreen,
             onFullscreenChange = onFullscreenChange,
+            playbackResume = playbackResume?.takeIf { it.mediaIndex == 0 },
+            refreshing = refreshingMediaIndex == 0,
+            onPlaybackForbidden = onPlaybackForbidden,
         )
         return
     }
@@ -117,6 +130,11 @@ private fun MediaContent(
                     modifier = Modifier.fillMaxSize(),
                     fullscreen = fullscreen,
                     onFullscreenChange = onFullscreenChange,
+                    playbackResume = playbackResume?.takeIf { it.mediaIndex == page },
+                    refreshing = refreshingMediaIndex == page,
+                    onPlaybackForbidden = { position, playing ->
+                        onPlaybackForbidden(PlaybackResume(page, position, playing))
+                    },
                 )
             }
         }
@@ -156,6 +174,9 @@ private fun SingleMediaViewer(
     modifier: Modifier,
     fullscreen: Boolean,
     onFullscreenChange: (Boolean) -> Unit,
+    playbackResume: PlaybackResume?,
+    refreshing: Boolean,
+    onPlaybackForbidden: (PlaybackResume) -> Boolean,
 ) {
     when (media) {
         is ExtractedMedia.Video -> VideoPlayer(
@@ -166,6 +187,11 @@ private fun SingleMediaViewer(
             modifier = modifier.fillMaxWidth(),
             fullscreen = fullscreen,
             onFullscreenChange = onFullscreenChange,
+            resume = playbackResume,
+            refreshing = refreshing,
+            onPlaybackForbidden = { position, playing ->
+                onPlaybackForbidden(PlaybackResume(0, position, playing))
+            },
         )
 
         is ExtractedMedia.Image -> ZoomableImage(
@@ -203,6 +229,9 @@ private fun MediaPage(
     modifier: Modifier,
     fullscreen: Boolean,
     onFullscreenChange: (Boolean) -> Unit,
+    playbackResume: PlaybackResume?,
+    refreshing: Boolean,
+    onPlaybackForbidden: (Long, Boolean) -> Boolean,
 ) {
     when (media) {
         is ExtractedMedia.Video -> Box(
@@ -219,6 +248,9 @@ private fun MediaPage(
                 modifier = Modifier.fillMaxWidth(),
                 fullscreen = fullscreen,
                 onFullscreenChange = onFullscreenChange,
+                resume = playbackResume,
+                refreshing = refreshing,
+                onPlaybackForbidden = onPlaybackForbidden,
             )
         }
 

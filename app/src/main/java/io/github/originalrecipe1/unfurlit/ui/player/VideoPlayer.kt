@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,27 +65,38 @@ fun VideoPlayer(
     autoShowControls: Boolean = true,
     fullscreen: Boolean = false,
     onFullscreenChange: (Boolean) -> Unit = {},
+    resume: PlaybackResume? = null,
+    refreshing: Boolean = false,
+    onPlaybackForbidden: (Long, Boolean) -> Boolean = { _, _ -> false },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val player = remember(video, extraction.title, extraction.author) {
+    val playbackClient = LocalPlaybackHttpClient.current
+    val player = remember(video, extraction.title, extraction.author, resume, playbackClient) {
         buildMediaPlayer(context, C.AUDIO_CONTENT_TYPE_MOVIE).apply {
-            setMediaSource(Media3PlaybackMapper(context).map(extraction, video))
-            playWhenReady = active
+            setMediaSource(
+                Media3PlaybackMapper(context, playbackClient).map(extraction, video),
+                resume?.positionMs ?: 0L,
+            )
+            playWhenReady = active && (resume?.playWhenReady ?: true)
             prepare()
         }
     }
     var controlsVisible by remember(video, autoShowControls) { mutableStateOf(autoShowControls) }
-    var playbackFailed by remember(video) { mutableStateOf(false) }
+    var playbackFailed by remember(player) { mutableStateOf(false) }
     var viewReported by remember(video) { mutableStateOf(false) }
     var displayAspectRatio by remember(video) { mutableStateOf<Float?>(null) }
     val currentOnViewed by rememberUpdatedState(onViewed)
+    val currentOnPlaybackForbidden by rememberUpdatedState(onPlaybackForbidden)
+    val currentActive by rememberUpdatedState(active)
     val pictureInPicture = LocalPictureInPicture.current
     val inPictureInPicture = pictureInPicture?.inPictureInPicture == true
 
+    var wasActive by remember(player) { mutableStateOf(active) }
     LaunchedEffect(player, active) {
-        player.playWhenReady = active
         if (!active) player.pause()
+        else if (!wasActive) player.play()
+        wasActive = active
     }
 
     // Playback continues in the background; closing the picture-in-picture window
@@ -92,7 +104,9 @@ fun VideoPlayer(
     DisposableEffect(player) {
         val playerListener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
-                playbackFailed = true
+                val recovering = currentActive && error.isHttpForbidden() &&
+                    currentOnPlaybackForbidden(player.currentPosition, player.playWhenReady)
+                playbackFailed = !recovering
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -231,7 +245,9 @@ fun VideoPlayer(
             }
         }
 
-        if (playbackFailed) {
+        if (refreshing) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else if (playbackFailed) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

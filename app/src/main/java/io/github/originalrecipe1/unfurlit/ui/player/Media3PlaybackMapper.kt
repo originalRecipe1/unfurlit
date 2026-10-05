@@ -1,6 +1,7 @@
 package io.github.originalrecipe1.unfurlit.ui.player
 
 import android.content.Context
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
@@ -14,6 +15,8 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.domain.model.PlaybackSource
 import io.github.originalrecipe1.unfurlit.data.network.SafeHttpClient
 import io.github.originalrecipe1.unfurlit.data.network.PlaybackCookieJar
+
+internal val LocalPlaybackHttpClient = staticCompositionLocalOf { SafeHttpClient.streaming }
 
 @UnstableApi
 class Media3PlaybackMapper(
