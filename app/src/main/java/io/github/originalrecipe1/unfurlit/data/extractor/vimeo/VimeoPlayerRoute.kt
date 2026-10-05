@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.vimeo
 
+import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.util.UrlValidator
@@ -27,7 +28,10 @@ internal object VimeoPlayerRoute {
         playerUrl(originalUrl)?.let { playerUrl ->
             try {
                 return extract(originalUrl, playerUrl)
-            } catch (_: ExtractionException) {
+            } catch (error: ExtractionException) {
+                if (error.error == ExtractionError.Timeout || error.error == ExtractionError.NetworkFailure) {
+                    throw error
+                }
                 // Embedding can be disabled even when the original page is usable.
                 // Each attempt still runs the normal preflight and extraction pipeline.
             }

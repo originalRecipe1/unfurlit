@@ -89,6 +89,29 @@ class VimeoPlayerRouteTest {
         assertEquals(listOf("https://player.vimeo.com/video/33951933", "https://vimeo.com/33951933"), requests)
     }
 
+    @Test fun timeoutDoesNotRetryTheOriginalUrl() {
+        assertPlayerFailureIsRethrownWithoutRetry(ExtractionError.Timeout)
+    }
+
+    @Test fun networkFailureDoesNotRetryTheOriginalUrl() {
+        assertPlayerFailureIsRethrownWithoutRetry(ExtractionError.NetworkFailure)
+    }
+
+    private fun assertPlayerFailureIsRethrownWithoutRetry(error: ExtractionError) {
+        val playerFailure = ExtractionException(error)
+        val requests = mutableListOf<String>()
+        val failure = assertThrows(ExtractionException::class.java) {
+            runBlocking {
+                VimeoPlayerRoute.extract("https://vimeo.com/108650530") { _, request ->
+                    requests += request
+                    throw playerFailure
+                }
+            }
+        }
+        assertSame(playerFailure, failure)
+        assertEquals(listOf("https://player.vimeo.com/video/108650530"), requests)
+    }
+
     @Test fun cancellationDoesNotStartAnotherRequest() {
         val cancellation = CancellationException("Viewer closed")
         var attempts = 0
