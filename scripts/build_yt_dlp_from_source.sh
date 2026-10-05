@@ -51,7 +51,11 @@ git -C "$source_dir" archive --format=tar HEAD | tar -xf - -C "$build_dir"
 # yt-dlp target omits it, even though the official release includes it.
 mkdir -p "$ejs_build_dir"
 git -C "$ejs_source_dir" archive --format=tar HEAD | tar -xf - -C "$ejs_build_dir"
-npm --prefix "$ejs_build_dir" ci --ignore-scripts --no-audit --no-fund
+# Substitute the same Rollup version's integrity-pinned WASM package in this
+# exported copy only. Keep the submodule and every other locked dependency intact.
+# Optional fsevents contains a native macOS binary and is not needed to bundle.
+python3 "$script_dir/prepare_ejs_wasm.py" "$ejs_build_dir"
+npm --prefix "$ejs_build_dir" ci --omit=optional --ignore-scripts --no-audit --no-fund
 npm --prefix "$ejs_build_dir" run bundle
 cp -R "$ejs_build_dir/yt_dlp_ejs" "$build_dir/yt_dlp_ejs"
 printf "__version__ = version = '%s'\n" "$ejs_version" > "$build_dir/yt_dlp_ejs/_version.py"
