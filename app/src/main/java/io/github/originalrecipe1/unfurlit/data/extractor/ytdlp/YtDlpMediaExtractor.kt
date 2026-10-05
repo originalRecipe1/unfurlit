@@ -102,6 +102,7 @@ class YtDlpMediaExtractor(
     private suspend fun extractWithYtDlp(url: String, extractionUrl: String): ExtractionResult {
         val processId = "unfurlit-${UUID.randomUUID()}"
         val request = YoutubeDLRequest(extractionUrl).apply {
+            addCommands(redditExtractorOptions(extractionUrl))
             addOption("--ignore-config")
             addOption("--skip-download")
             addOption("--playlist-end", MAX_MEDIA_ENTRIES.toString())

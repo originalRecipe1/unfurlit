@@ -9,6 +9,7 @@ class ExtractionErrorMapperTest {
     @Test fun classifiesRepresentativeSiteFailures() {
         val cases = mapOf(
             "Unsupported URL: https://example.com" to ExtractionError.UnsupportedUrl,
+            "No suitable extractor found for URL https://www.reddit.com/gallery/hrrh23" to ExtractionError.UnsupportedUrl,
             "No video could be found in this post" to ExtractionError.UnsupportedUrl,
             "No video formats found!" to ExtractionError.UnsupportedUrl,
             "[Reddit] 1wop7o6: No media found" to ExtractionError.UnsupportedUrl,

@@ -43,9 +43,9 @@ internal object RedditLinks {
      * extraction uses the post itself; any other redirect target is kept.
      */
     fun keepPostOverGate(requested: String, resolved: String): String {
-        if (requested == resolved || !requested.isRedditPost()) return resolved
+        if (requested == resolved || !isPostUrl(requested)) return resolved
         val resolvedHost = runCatching { URI(resolved).host?.lowercase() }.getOrNull() ?: return resolved
-        return if (resolvedHost.isReddit() && !resolved.isRedditPost()) requested else resolved
+        return if (resolvedHost.isReddit() && !isPostUrl(resolved)) requested else resolved
     }
 
     /**
@@ -59,11 +59,12 @@ internal object RedditLinks {
                 GALLERY_PATH.matches(uri.rawPath.orEmpty())
         }
 
-    private fun String.isRedditPost(): Boolean {
-        val uri = runCatching { URI(this) }.getOrNull() ?: return false
-        val host = uri.host?.lowercase() ?: return false
+    fun isPostUrl(url: String): Boolean {
+        val uri = runCatching { URI(url) }.getOrNull() ?: return false
+        val host = uri.host?.lowercase()?.trimEnd('.') ?: return false
         val path = uri.rawPath.orEmpty()
-        return host.isReddit() && (POST_PATH.matches(path) || SHORT_POST_PATH.matches(path))
+        return host.isReddit() &&
+            (POST_PATH.matches(path) || USER_POST_PATH.matches(path) || SHORT_POST_PATH.matches(path))
     }
 
     /**
@@ -93,4 +94,5 @@ internal object RedditLinks {
     private val SHORT_POST_PATH = Regex("/(?:comments|gallery)/[a-z0-9]+(?:/[^?#]*)?")
     private val GALLERY_PATH = Regex("/gallery/[a-z0-9]+/?")
     private val POST_PATH = Regex("/r/[A-Za-z0-9_]{2,21}/comments/[a-z0-9]+(?:/[^?#]*)?")
+    private val USER_POST_PATH = Regex("/(?:u|user)/[A-Za-z0-9_-]+/comments/[a-z0-9]+(?:/[^?#]*)?")
 }
