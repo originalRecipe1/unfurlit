@@ -221,8 +221,15 @@ class YtDlpMediaExtractor(
 
     private companion object {
         const val TAG = "YtDlpExtractor"
+        // Prefer lossy audio; FLAC/WAV remain usable when no lossy formats are offered.
+        // Every branch excludes ALAC/AIFF and retains unknown codec metadata.
         const val FORMAT_SELECTOR =
-            "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
+            "bestvideo[height<=1080]+bestaudio[acodec!=?alac][acodec!=?aiff][acodec!=?flac][acodec!=?wav]/" +
+                "best[height<=1080][acodec!=?alac][acodec!=?aiff][acodec!=?flac][acodec!=?wav]/" +
+                "best[acodec!=?alac][acodec!=?aiff][acodec!=?flac][acodec!=?wav]/" +
+                "bestvideo[height<=1080]+bestaudio[acodec!=?alac][acodec!=?aiff]/" +
+                "best[height<=1080][acodec!=?alac][acodec!=?aiff]/" +
+                "best[acodec!=?alac][acodec!=?aiff]"
         const val OUTPUT_TEMPLATE =
             "%(.{extractor_key,extractor,title,uploader,channel,creator,description," +
                 "thumbnail,duration,url,protocol,ext,mime_type,vcodec,acodec,width," +
