@@ -55,6 +55,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.canRetry
 import io.github.originalrecipe1.unfurlit.ui.components.PredictiveBackSurface
 import io.github.originalrecipe1.unfurlit.ui.components.UnfurlitTopAppBar
 import io.github.originalrecipe1.unfurlit.ui.player.LocalPictureInPicture
+import io.github.originalrecipe1.unfurlit.ui.player.PlaybackResume
 
 @Composable
 fun ViewerRoute(
@@ -85,6 +86,7 @@ fun ViewerRoute(
             state = state,
             onRetry = viewModel::retry,
             onViewed = viewModel::recordView,
+            onPlaybackForbidden = viewModel::refreshPlayback,
             onBack = onBack,
             onShowHistory = onShowHistory,
             fullscreen = fullscreen || inPictureInPicture,
@@ -99,6 +101,7 @@ private fun ViewerScreen(
     state: ViewerState,
     onRetry: () -> Unit,
     onViewed: (io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult) -> Unit,
+    onPlaybackForbidden: (io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult, PlaybackResume) -> Boolean,
     onBack: () -> Unit,
     onShowHistory: () -> Unit,
     fullscreen: Boolean,
@@ -149,6 +152,9 @@ private fun ViewerScreen(
                     extraction = state.extraction,
                     onRetry = onRetry,
                     onViewed = { onViewed(state.extraction) },
+                    playbackResume = state.playbackResume,
+                    refreshingMediaIndex = state.refreshingMediaIndex,
+                    onPlaybackForbidden = { onPlaybackForbidden(state.extraction, it) },
                     modifier = if (fullscreen) {
                         Modifier.fillMaxSize()
                     } else {

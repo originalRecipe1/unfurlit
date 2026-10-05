@@ -14,17 +14,29 @@ import io.github.originalrecipe1.unfurlit.data.repository.RepositoryFactory
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
+import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
+import io.github.originalrecipe1.unfurlit.domain.repository.HistoryRepository
+import io.github.originalrecipe1.unfurlit.domain.repository.MediaRepository
+import io.github.originalrecipe1.unfurlit.ui.player.PlaybackResume
 
-class ViewerViewModel(
+class ViewerViewModel internal constructor(
     application: Application,
     private val savedState: SavedStateHandle,
+    private val repository: MediaRepository,
+    private val historyRepository: HistoryRepository,
 ) : AndroidViewModel(application) {
-    private val repository = RepositoryFactory.mediaRepository(application)
-    private val historyRepository = RepositoryFactory.historyRepository(application)
+    constructor(application: Application, savedState: SavedStateHandle) : this(
+        application,
+        savedState,
+        RepositoryFactory.mediaRepository(application),
+        RepositoryFactory.historyRepository(application),
+    )
+
     private val _state = MutableStateFlow<ViewerState>(ViewerState.Idle)
     val state: StateFlow<ViewerState> = _state.asStateFlow()
     private var extractionJob: Job? = null
     private var recordedResult: ExtractionResult? = null
+    private var playbackRefreshAttempted = false
 
     init {
         // Stream URLs expire, so a link restored after process death is extracted again.
@@ -38,6 +50,7 @@ class ViewerViewModel(
     fun open(url: String) {
         extractionJob?.cancel()
         recordedResult = null
+        playbackRefreshAttempted = false
         savedState[KEY_SOURCE_URL] = url
         extractionJob = viewModelScope.launch {
             _state.value = ViewerState.Loading(url)
@@ -51,6 +64,38 @@ class ViewerViewModel(
                 ViewerState.Failed(url, error.error)
             }
         }
+    }
+
+    /** Refresh once per opened link, including when extraction returns the same URLs. */
+    fun refreshPlayback(result: ExtractionResult, resume: PlaybackResume): Boolean {
+        val ready = state.value as? ViewerState.Ready ?: return false
+        if (ready.extraction !== result || playbackRefreshAttempted ||
+            result.media.getOrNull(resume.mediaIndex) !is ExtractedMedia.Video
+        ) return false
+
+        playbackRefreshAttempted = true
+        val refreshing = ready.copy(refreshingMediaIndex = resume.mediaIndex)
+        _state.value = refreshing
+        extractionJob = viewModelScope.launch {
+            try {
+                val refreshed = repository.open(result.sourceUrl)
+                if (refreshed.media.getOrNull(resume.mediaIndex) !is ExtractedMedia.Video) {
+                    throw ExtractionException(ExtractionError.MediaUnavailable)
+                }
+                // Closing the viewer or opening another link makes this result obsolete.
+                if (_state.value !== refreshing) return@launch
+                if (recordedResult === result) recordedResult = refreshed
+                _state.value = ViewerState.Ready(
+                    extraction = refreshed,
+                    playbackResume = resume.copy(positionMs = resume.positionMs.coerceAtLeast(0)),
+                )
+            } catch (error: ExtractionException) {
+                if (_state.value === refreshing) {
+                    _state.value = ViewerState.Failed(result.sourceUrl, error.error)
+                }
+            }
+        }
+        return true
     }
 
     fun recordView(result: ExtractionResult) {
@@ -91,6 +136,8 @@ sealed interface ViewerState {
 
     data class Ready(
         val extraction: ExtractionResult,
+        val playbackResume: PlaybackResume? = null,
+        val refreshingMediaIndex: Int? = null,
     ) : ViewerState {
         override val sourceUrl: String = extraction.sourceUrl
     }
