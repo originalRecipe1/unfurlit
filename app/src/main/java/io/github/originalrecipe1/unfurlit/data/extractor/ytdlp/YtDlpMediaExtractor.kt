@@ -3,6 +3,7 @@ package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlJsonParser
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlRunner
 import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
+import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoExtractor
@@ -39,7 +40,7 @@ class YtDlpMediaExtractor(
     private val galleryDlRunner = GalleryDlRunner(appContext)
 
     override suspend fun extract(url: String): ExtractionResult {
-        val result = extractMedia(url)
+        val result = VimeoPlayerRoute.extract(url, ::extractMedia)
         // Reddit post URLs carry the title; use it when no engine reported one.
         return if (result.title == null) {
             result.copy(title = RedditLinks.titleFromPostUrl(url))
@@ -48,9 +49,9 @@ class YtDlpMediaExtractor(
         }
     }
 
-    private suspend fun extractMedia(url: String): ExtractionResult {
+    private suspend fun extractMedia(url: String, requestUrl: String): ExtractionResult {
         // Reddit mirrors and image wrappers are extracted from their canonical URL.
-        val secureInputUrl = UrlValidator.toHttpsUrl(url)
+        val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
             ?.let(RedditLinks::normalize)
             ?.let(UrlValidator::toHttpsUrl)
         if (secureInputUrl == null) {
