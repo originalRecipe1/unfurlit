@@ -279,14 +279,16 @@ The **Live social links** workflow runs weekly and on manual dispatch, using the
 same source-built extractor as release APKs. It exercises
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
 gallery-dl engines and JSON normalization, with native page-data adapters for TikTok
-and Instagram photo posts. The 56 cases in
+and Instagram photo posts. The 61 cases in
 `app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
-- **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit, X (including
+- **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit (native video
+  and external Imgur/Streamable link posts), X (including
   an animated GIF), Instagram posts, Reels and video carousels, TikTok, Bluesky, an Imgur
   GIFV, PeerTube, Dailymotion, a Twitch clip and a direct WebM file.
 - **Photos and galleries:** Instagram and TikTok photo posts (with and without a
-  soundtrack), Reddit image posts, galleries, direct `i.redd.it`, `preview.redd.it`,
+  soundtrack), Reddit image posts, galleries (explicit, comments, mobile share and
+  `redd.it` links), direct `i.redd.it`, `preview.redd.it`,
   `reddit.com/media` and mirror links, X photos, Bluesky, Imgur images and albums, Flickr,
   Tumblr, Mastodon, Pixiv, Pinterest, Wikimedia Commons and a direct JPEG file.
 - **Mixed media:** an X post with a photo and a video.
@@ -294,9 +296,9 @@ and Instagram photo posts. The 56 cases in
 - **Error handling:** a non-media page, missing pages, an invalid scheme and a
   private address.
 
-Public positive examples are seeded from the pinned yt-dlp and gallery-dl extractor
-test fixtures and YouTube sample videos; they are expectations, not a claim that each
-site currently permits anonymous access from CI.
+Public positive examples come from the pinned yt-dlp and gallery-dl extractor
+test fixtures, YouTube sample videos and reported regression cases; they are
+expectations, not a claim that each site currently permits anonymous access from CI.
 
 Each link gets its own named JUnit result. `expected` is `success` or the exact
 `ExtractionError` category a negative case must report. A successful case can also

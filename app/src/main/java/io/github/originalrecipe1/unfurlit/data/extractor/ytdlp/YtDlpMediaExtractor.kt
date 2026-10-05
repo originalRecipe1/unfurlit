@@ -63,6 +63,9 @@ class YtDlpMediaExtractor(
             if (extractionUrl != resolvedUrl) {
                 Log.i(TAG, "Ignoring a redirect from a Reddit post to a non-post Reddit page")
             }
+            RedditLinks.galleryUrl(secureInputUrl, extractionUrl)?.let { galleryUrl ->
+                return runGalleryDl(url, galleryUrl)
+            }
             TikTokPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 return TikTokPhotoExtractor().extract(url, pageUrl)
             }
@@ -99,6 +102,7 @@ class YtDlpMediaExtractor(
     private suspend fun extractWithYtDlp(url: String, extractionUrl: String): ExtractionResult {
         val processId = "unfurlit-${UUID.randomUUID()}"
         val request = YoutubeDLRequest(extractionUrl).apply {
+            addCommands(redditExtractorOptions(extractionUrl))
             addOption("--ignore-config")
             addOption("--skip-download")
             addOption("--playlist-end", MAX_MEDIA_ENTRIES.toString())
@@ -145,15 +149,7 @@ class YtDlpMediaExtractor(
         extractionUrl: String,
         ytDlpFailure: ExtractionException,
     ): ExtractionResult = try {
-        withTimeout(GALLERY_DL_TIMEOUT_MILLIS) {
-            // gallery-dl runs on the Python runtime that yt-dlp's setup installs.
-            withContext(Dispatchers.IO) { ensureInitialized() }
-            GalleryDlJsonParser.parse(url, galleryDlRunner.run(extractionUrl))
-        }.also { result ->
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "gallery-dl extracted platform=${result.platform}, mediaCount=${result.media.size}")
-            }
-        }
+        runGalleryDl(url, extractionUrl)
     } catch (error: ExtractionException) {
         logFailure(error)
         throw preferredFailure(ytDlpFailure, error)
@@ -165,6 +161,17 @@ class YtDlpMediaExtractor(
         logFailure(error)
         throw preferredFailure(ytDlpFailure, ExtractionException(error.toDomainError(), error))
     }
+
+    private suspend fun runGalleryDl(url: String, extractionUrl: String): ExtractionResult =
+        withTimeout(GALLERY_DL_TIMEOUT_MILLIS) {
+            // gallery-dl runs on the Python runtime that yt-dlp's setup installs.
+            withContext(Dispatchers.IO) { ensureInitialized() }
+            GalleryDlJsonParser.parse(url, galleryDlRunner.run(extractionUrl))
+        }.also { result ->
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "gallery-dl extracted platform=${result.platform}, mediaCount=${result.media.size}")
+            }
+        }
 
     private suspend fun executeCancellable(
         request: YoutubeDLRequest,

@@ -43,16 +43,28 @@ internal object RedditLinks {
      * extraction uses the post itself; any other redirect target is kept.
      */
     fun keepPostOverGate(requested: String, resolved: String): String {
-        if (requested == resolved || !requested.isRedditPost()) return resolved
+        if (requested == resolved || !isPostUrl(requested)) return resolved
         val resolvedHost = runCatching { URI(resolved).host?.lowercase() }.getOrNull() ?: return resolved
-        return if (resolvedHost.isReddit() && !resolved.isRedditPost()) requested else resolved
+        return if (resolvedHost.isReddit() && !isPostUrl(resolved)) requested else resolved
     }
 
-    private fun String.isRedditPost(): Boolean {
-        val uri = runCatching { URI(this) }.getOrNull() ?: return false
-        val host = uri.host?.lowercase() ?: return false
+    /**
+     * Explicit galleries go straight to gallery-dl. Keep the original gallery URL
+     * when preflight redirects it to a comments URL: yt-dlp can loop between them.
+     */
+    fun galleryUrl(requested: String, resolved: String): String? =
+        listOf(requested, resolved).firstOrNull { url ->
+            val uri = runCatching { URI(url) }.getOrNull()
+            uri?.host?.lowercase()?.trimEnd('.')?.isReddit() == true &&
+                GALLERY_PATH.matches(uri.rawPath.orEmpty())
+        }
+
+    fun isPostUrl(url: String): Boolean {
+        val uri = runCatching { URI(url) }.getOrNull() ?: return false
+        val host = uri.host?.lowercase()?.trimEnd('.') ?: return false
         val path = uri.rawPath.orEmpty()
-        return host.isReddit() && (POST_PATH.matches(path) || SHORT_POST_PATH.matches(path))
+        return host.isReddit() &&
+            (POST_PATH.matches(path) || USER_POST_PATH.matches(path) || SHORT_POST_PATH.matches(path))
     }
 
     /**
@@ -80,5 +92,7 @@ internal object RedditLinks {
     private const val MAX_TITLE_LENGTH = 512
     private val POST_SLUG = Regex("/r/[A-Za-z0-9_]{2,21}/comments/[a-z0-9]+/([^/]+)/?")
     private val SHORT_POST_PATH = Regex("/(?:comments|gallery)/[a-z0-9]+(?:/[^?#]*)?")
+    private val GALLERY_PATH = Regex("/gallery/[a-z0-9]+/?")
     private val POST_PATH = Regex("/r/[A-Za-z0-9_]{2,21}/comments/[a-z0-9]+(?:/[^?#]*)?")
+    private val USER_POST_PATH = Regex("/(?:u|user)/[A-Za-z0-9_-]+/comments/[a-z0-9]+(?:/[^?#]*)?")
 }

@@ -139,3 +139,54 @@ deliberately altered script failed the update workflow's comparison. Forcing
 `current-ejs-version` to fail its import caused upstream Make to download the EJS
 wheel, after which the source-build script rejected the build. These checks used
 Node.js 22; the F-Droid build steps have not been adapted or validated for EJS.
+
+## Reddit gallery URL forms — 2026-10-05
+
+Verified on the local API 30 x86_64 emulator, anonymously, with bundled yt-dlp
+2026.08.19 and gallery-dl 1.32.13. The baseline is PR #29's initial `1dec86b`
+build, which already routes explicit `/gallery/` links directly to gallery-dl.
+The follow-up disables yt-dlp's GenericIE only for Reddit post URLs, after
+preflight resolves share/short links and the Reddit gate handling selects the
+extraction URL. Explicit galleries retain their direct route.
+
+RedditIE's self-recursion guard misses a post's media URL `/gallery/<id>` without
+a trailing slash. GenericIE redirects that URL back to the comments page and
+restarts RedditIE. This was also reproduced on upstream master
+`51bab8a0116f4d8004c315706d809782607d5847`. With `default,-generic`, the
+unsupported gallery handoff terminates promptly and allows gallery-dl to run.
+
+| Live fixture | Media | Before | After | Verification |
+| --- | --- | --- | --- | --- |
+| reddit-gallery-comments | 3 images, hrrh23 | Timeout, 120.0 s | Success, 14.0 s | Verified |
+| reddit-gallery-share | 4 images, wjs1lb | Timeout, 122.5 s | Success, 14.8 s | Verified |
+| reddit-gallery-short | 3 images, hrrh23 | Timeout, 121.0 s | Success, 15.7 s | Verified |
+| reddit-gallery | 3 images, explicit gallery URL | Success, 6.9 s | Success, 7.7 s | Verified |
+| reddit-video | 1 native video | Success, 14.0 s | Success, 11.3 s | Verified |
+| reddit-native-video | 1 native video | Success, 9.1 s | Success, 8.4 s | Verified |
+| reddit-image-post | 1 image | Success, 18.3 s | Success, 11.3 s | Verified |
+| reddit-external-imgur | 1 external video | Success, 13.4 s | Success, 12.5 s | Verified |
+| reddit-external-streamable | 1 external video | Success, 8.0 s | Success, 8.3 s | Verified |
+| reddit-direct-image | 1 image | Success, 8.5 s | Success, 8.9 s | Verified |
+| reddit-preview-image | 1 image | Success, 8.5 s | Success, 7.5 s | Verified |
+| reddit-image-link-wrapper | 1 image | Success, 8.1 s | Success, 8.5 s | Verified |
+| reddit-mirror-post | 1 image | Success, 18.2 s | Success, 11.3 s | Verified |
+
+The mobile share URL `https://www.reddit.com/r/woodworking/s/TT8dsTXe9V`
+resolves to the comments page for the four-image fox-lamp template gallery.
+It was tested separately after adding it to the fixture; the other 12 cases ran
+together. These are single-run elapsed extraction times, not a performance
+benchmark. The three gallery URL variants and two external-video controls are
+now permanent live fixtures and appear in the link-check APK's History.
+
+A separate verbose audit using the pinned yt-dlp executable verified that both
+native videos use RedditIE, and the external posts use RedditIE followed by
+ImgurIE or StreamableIE. GenericIE was invoked for the old image-post, mirror
+and direct-image cases, but failed to extract them; the app succeeds through
+gallery-dl. No existing successful Reddit fixture depended on GenericIE for
+media extraction. Direct image URLs still retain the default extractors.
+An external host supported only by GenericIE can be affected by disabling it;
+unlisted hosts have not been verified.
+
+These checks verify extraction, media types and counts. The owner confirmed the
+initial explicit-gallery fix on a physical phone; playback and rendering with
+this follow-up APK have not yet been verified on a physical device.
