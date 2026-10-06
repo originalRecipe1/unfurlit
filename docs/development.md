@@ -332,12 +332,22 @@ time under the `SocialLinksTest` logcat tag.
 
 After the tests, `scripts/social_links_report.py` writes a Markdown table of every
 selected case, grouped by media type, to the workflow's job summary. It reports
-**PASS**, **BLOCKED**, **KNOWN**, and **FAIL** counts separately:
+**PASS**, **BLOCKED**, **LOCAL-ONLY**, **KNOWN**, and **FAIL** counts separately:
 
 - **BLOCKED** requires `AuthenticationRequired` and the exact upstream message
   "Sign in to confirm you're not a bot" (including the curly-apostrophe spelling),
-  "blocked by network security", or "403 Blocked". Other sign-in messages,
-  including "Please sign in", remain failures.
+  "blocked by network security", "403 Blocked", or
+  `[Reddit] <id>: Account authentication is required`. The last pattern requires
+  the Reddit extractor prefix: the pinned yt-dlp raises it when an anonymous
+  `.json` response is not JSON. The phrase alone, or a different extractor prefix,
+  does not qualify. "Please sign in" is not a runner-block pattern; it is the
+  YouTube regression signature from 1.3.0.
+- **LOCAL-ONLY** applies to `youtube-shorts-sign-in-fallback` only when the report
+  runs with `--runner`, as it does in the workflow. Its actual outcome is always
+  reported and never fails the runner job, whether it passes or fails. Without
+  `--runner`, this case is judged normally: "Please sign in" still fails the report.
+  This regression case, and YouTube coverage in general, depend on the local
+  pre-release run: runner results cannot establish that YouTube works.
 - **KNOWN** requires the recorded failure signature for X mixed media
   ([#37](https://github.com/originalRecipe1/unfurlit/issues/37)), Tumblr
   ([#38](https://github.com/originalRecipe1/unfurlit/issues/38)), or Pixiv
@@ -345,7 +355,8 @@ selected case, grouped by media type, to the workflow's job summary. It reports
   in the report script; fixture expectations and JUnit assertions stay strict.
   A passing case from this mapping is flagged for review of the corresponding issue.
 - **FAIL** covers unexpected failures and selected cases without a completed
-  result. Neither BLOCKED nor KNOWN counts as a pass.
+  result, except runner-only LOCAL-ONLY cases. BLOCKED, LOCAL-ONLY, and KNOWN
+  do not count as passes.
 
 The report determines the job result: unexpected failures, incomplete runs,
 and test-run errors fail the job. The source build is also required to succeed.

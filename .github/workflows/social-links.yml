@@ -92,6 +92,7 @@ jobs:
         run: |
           mkdir -p app/build/reports/social-links
           python3 scripts/social_links_report.py \
+            --runner \
             --link-ids "$LINK_IDS" \
             --test-step-outcome "${{ steps.live_tests.outcome }}" \
             --json-output app/build/reports/social-links/results.json \
