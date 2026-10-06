@@ -1,9 +1,14 @@
 """Tests for the live social-link fixture check and report (no device or network)."""
 import importlib.util
+import contextlib
+from dataclasses import replace
+import io
+import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ElementTree
 
 spec = importlib.util.spec_from_file_location(
     "social_links_report", Path(__file__).parents[1] / "social_links_report.py"
@@ -103,7 +108,7 @@ class ReportTest(unittest.TestCase):
             (device / "TEST-pixel2Api30-_app-.xml").write_text(self.XML, encoding="utf-8")
             (device / "logcat-SocialLinksTest.txt").write_text(self.LOGCAT, encoding="utf-8")
             outcomes = report.read_results(Path(directory))
-        return outcomes, report.render(self.CASES, outcomes)
+        return outcomes, report.render(self.CASES[:-1], outcomes)
 
     def test_reads_outcomes_from_junit_xml_and_logcat(self):
         outcomes, _ = self.render()
@@ -123,25 +128,210 @@ class ReportTest(unittest.TestCase):
         self.assertEqual("ERROR: [youtube] abc: Sign in to confirm you're not a bot", outcomes["yt-video"].reason)
         self.assertIsNone(outcomes["reddit-gallery"].reason)
         self.assertIsNone(outcomes["missing-page"].reason)
-        self.assertIn("- `yt-video`: ERROR: [youtube] abc: Sign in to confirm you're not a bot", markdown)
+        self.assertIn("- `yt-video` (BLOCKED): ERROR: [youtube] abc: Sign in to confirm you're not a bot", markdown)
 
     def test_renders_a_table_per_media_group(self):
         _, markdown = self.render()
-        self.assertIn("**2 of 5 cases passed.**", markdown)
-        self.assertIn("1 fixture cases did not run.", markdown)
-        self.assertIn("| Video | 0 of 1 |", markdown)
-        self.assertIn("| Photos and galleries | 1 of 1 |", markdown)
-        self.assertIn("| Mixed media | 0 of 1 |", markdown)
-        self.assertIn("| Error handling | 1 of 1 |", markdown)
-        self.assertIn("| ❌ | [yt-video](https://y/v) | 1 video | AuthenticationRequired — wrong outcome | 6.9 s |",
+        self.assertIn("**PASS 2 · BLOCKED 1 · KNOWN 0 · FAIL 2**", markdown)
+        self.assertIn("5 selected cases.", markdown)
+        self.assertIn("| Video | 0 | 1 | 0 | 0 |", markdown)
+        self.assertIn("| Photos and galleries | 1 | 0 | 0 | 0 |", markdown)
+        self.assertIn("| Mixed media | 0 | 0 | 0 | 1 |", markdown)
+        self.assertIn("| Error handling | 1 | 0 | 0 | 0 |", markdown)
+        self.assertIn("| BLOCKED | [yt-video](https://y/v) | 1 video | AuthenticationRequired — wrong outcome | 6.9 s |",
                       markdown)
-        self.assertIn("| ✅ | [reddit-gallery](https://r/g) | 3 images | success: 3 images, from Reddit | 3.2 s |",
+        self.assertIn("| PASS | [reddit-gallery](https://r/g) | 3 images | success: 3 images, from Reddit | 3.2 s |",
                       markdown)
-        self.assertIn("| ✅ | `missing-page` | MediaUnavailable | MediaUnavailable | 1.0 s |", markdown)
+        self.assertIn("| PASS | `missing-page` | MediaUnavailable | MediaUnavailable | 1.0 s |", markdown)
         self.assertNotIn("not-selected", markdown)
 
     def test_reports_a_run_without_results(self):
         self.assertIn("No SocialLinksTest results were found", report.render(self.CASES, {}))
+
+
+# Captured observations and complete SafeLog-redacted error strings from this run.
+REFERENCE = json.loads((Path(__file__).parent / "fixtures/social-links-37472226940.json").read_text())
+REFERENCE_OUTCOMES = {name: report.Outcome(**value) for name, value in REFERENCE["outcomes"].items()}
+REFERENCE_CASES = [case for case in report.load_cases() if case["id"] in REFERENCE_OUTCOMES]
+CASES_BY_ID = {case["id"]: case for case in REFERENCE_CASES}
+
+
+class ClassifierTest(unittest.TestCase):
+    def classify(self, name, **changes):
+        outcome = replace(REFERENCE_OUTCOMES[name], **changes)
+        return report.classify(CASES_BY_ID[name], outcome)
+
+    def test_exact_reference_run_messages(self):
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "KNOWN": 3, "FAIL": 1},
+                         report.counts_for(REFERENCE_CASES, REFERENCE_OUTCOMES))
+        blocked = {name for name, outcome in REFERENCE_OUTCOMES.items()
+                   if report.classify(CASES_BY_ID[name], outcome).status == "BLOCKED"}
+        self.assertEqual({
+            "youtube-video", "youtube-short-link", "youtube-big-buck-bunny", "youtube-shorts",
+            "reddit-video", "reddit-native-video", "reddit-gallery-share", "reddit-external-streamable",
+        }, blocked)
+        # This actual message is not the bot-check message; do not chase a desired 9-block total.
+        self.assertIn("Please sign in.", REFERENCE_OUTCOMES["youtube-shorts-sign-in-fallback"].reason)
+        self.assertEqual("FAIL", self.classify("youtube-shorts-sign-in-fallback").status)
+        for name, number in [("x-mixed-media", 37), ("tumblr-photo-post", 38), ("pixiv-artwork", 39)]:
+            with self.subTest(name=name):
+                self.assertEqual(report.Classification("KNOWN", number), self.classify(name))
+
+    def test_both_bot_message_apostrophes_match(self):
+        original = REFERENCE_OUTCOMES["youtube-video"].reason
+        self.assertIn("you’re", original)
+        for reason in [original, original.replace("you’re", "you're")]:
+            with self.subTest(reason=reason):
+                self.assertEqual("BLOCKED", self.classify("youtube-video", reason=reason).status)
+
+    def test_other_authentication_failures_are_not_runner_blocks(self):
+        for reason in [None, "AuthenticationRequired", "Please sign in.", "Sign in to confirm your age.",
+                       "This is a private video; login required", "HTTP Error 403: Forbidden",
+                       "Sign in to confirm you're not a botany expert", "403 BlockedOther",
+                       "blocked by network securityOther"]:
+            with self.subTest(reason=reason):
+                self.assertEqual("FAIL", self.classify("youtube-video", reason=reason).status)
+
+    def test_block_requires_authentication_and_an_expectation_assertion(self):
+        self.assertEqual("FAIL", self.classify("youtube-video", observed="NetworkFailure").status)
+        self.assertEqual("FAIL", self.classify("youtube-video", problems="").status)
+        self.assertEqual("PASS", self.classify("youtube-video", passed=True).status)
+
+    def test_changed_known_issue_failure_remains_unexpected(self):
+        changes = [
+            ("x-mixed-media", {"observed": "success: 1 image, from Twitter"}),
+            ("x-mixed-media", {"problems": "missing image; 1 item instead of 2; unexpected soundtrack"}),
+            ("tumblr-photo-post", {"reason": "NetworkFailure | DNS lookup failed"}),
+            ("pixiv-artwork", {"reason": "AuthenticationRequired | Account has been suspended"}),
+            ("pixiv-artwork", {"reason": None}),
+            ("tumblr-photo-post", {"reason": None}),
+        ]
+        for name, fields in changes:
+            with self.subTest(name=name, fields=fields):
+                self.assertEqual("FAIL", self.classify(name, **fields).status)
+        case = dict(CASES_BY_ID["x-mixed-media"], id="different-mixed-media")
+        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["x-mixed-media"]).status)
+
+    def test_known_mapping_does_not_excuse_changed_expectations(self):
+        case = dict(CASES_BY_ID["x-mixed-media"], count=3)
+        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["x-mixed-media"]).status)
+
+    def test_passing_known_cases_are_flagged_for_issue_review(self):
+        outcomes = dict(REFERENCE_OUTCOMES)
+        for name in report.KNOWN_ISSUES:
+            outcomes[name] = report.Outcome(True, "as expected")
+            self.assertEqual("PASS", report.classify(CASES_BY_ID[name], outcomes[name]).status)
+        markdown = report.render(REFERENCE_CASES, outcomes)
+        self.assertIn("Known issues now passing (3)", markdown)
+        for number in [37, 38, 39]:
+            self.assertIn(f"review [#{number}]({report.ISSUES_URL}{number}) for closure", markdown)
+        self.assertEqual({"PASS": 53, "BLOCKED": 8, "KNOWN": 0, "FAIL": 1},
+                         report.counts_for(REFERENCE_CASES, outcomes))
+
+    def test_selected_missing_case_is_a_failure(self):
+        case = CASES_BY_ID["pixiv-artwork"]
+        self.assertEqual({"PASS": 0, "BLOCKED": 0, "KNOWN": 0, "FAIL": 1}, report.counts_for([case], {}))
+        self.assertIn("selected case did not complete", report.render([case], {}))
+
+    def test_classification_uses_the_reason_beyond_the_display_limit(self):
+        reason = "diagnostic context " * 30 + REFERENCE_OUTCOMES["youtube-video"].reason
+        outcome = replace(REFERENCE_OUTCOMES["youtube-video"], reason=reason)
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            write_reference_run(folder, {"youtube-video": outcome})
+            parsed = report.read_results(folder)["youtube-video"]
+        self.assertEqual(reason, parsed.reason)
+        self.assertEqual("BLOCKED", report.classify(CASES_BY_ID["youtube-video"], parsed).status)
+
+
+def write_reference_run(folder, outcomes):
+    suite = ElementTree.Element("testsuite")
+    for name, outcome in outcomes.items():
+        case = ElementTree.SubElement(suite, "testcase", {
+            "classname": "io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest",
+            "name": f"extractsExpectedMediaOrReportsExpectedFailure[{name}]", "time": "1.0",
+        })
+        if not outcome.passed:
+            expectation = report.expectation(CASES_BY_ID[name])
+            ElementTree.SubElement(case, "failure").text = (
+                f"java.lang.AssertionError: {name}: expected [success: {expectation}] "
+                f"but observed [{outcome.observed}] ({outcome.problems})\nstack trace"
+            )
+        log = ""
+        if outcome.reason:
+            log += f"10-06 13:40:00.000  1714  1736 E YtDlpExtractor: Extraction failed (ExtractionException): {outcome.reason}\n"
+        log += f"10-06 13:40:01.000  1714  1736 I SocialLinksTest: {name}: {outcome.observed} in 1.0 s\n"
+        (folder / f"logcat-{name}.txt").write_text(log)
+    ElementTree.ElementTree(suite).write(folder / "TEST-results.xml", encoding="utf-8")
+
+
+class ReportGateTest(unittest.TestCase):
+    def invoke(self, outcomes, *, selected="", step="failure"):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            write_reference_run(folder, outcomes)
+            output = folder / "classified.json"
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                status = report.main(["--results", str(folder), "--link-ids", selected,
+                                      "--test-step-outcome", step, "--json-output", str(output)])
+            return status, json.loads(output.read_text()), stdout.getvalue()
+
+    def test_reference_run_preserves_the_unexpected_sign_in_failure(self):
+        status, data, markdown = self.invoke(REFERENCE_OUTCOMES)
+        self.assertEqual(1, status)
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "KNOWN": 3, "FAIL": 1}, data["counts"])
+        self.assertEqual([], data["run_problems"])
+        self.assertIn("**PASS 50 · BLOCKED 8 · KNOWN 3 · FAIL 1**", markdown)
+        self.assertIn("KNOWN (#37)", markdown)
+
+    def test_only_known_and_blocked_failures_do_not_fail_the_gate(self):
+        ids = [name for name in REFERENCE_OUTCOMES if name != "youtube-shorts-sign-in-fallback"]
+        status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected=",".join(ids))
+        self.assertEqual(0, status)
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "KNOWN": 3, "FAIL": 0}, data["counts"])
+
+    def test_failure_without_a_case_failure_is_an_infrastructure_error(self):
+        status, data, _ = self.invoke({"reddit-gallery": REFERENCE_OUTCOMES["reddit-gallery"]}, selected="reddit-gallery")
+        self.assertEqual(1, status)
+        self.assertEqual(1, data["counts"]["PASS"])
+        self.assertIn("failed without a recorded case failure", data["run_problems"][0])
+
+    def test_selected_pass_ignores_intentionally_unselected_cases(self):
+        status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected=" reddit-gallery ", step="success")
+        self.assertEqual(0, status)
+        self.assertEqual({"PASS": 1, "BLOCKED": 0, "KNOWN": 0, "FAIL": 0}, data["counts"])
+        self.assertEqual(1, len(data["cases"]))
+
+    def test_missing_reports_and_incomplete_runs_fail(self):
+        for outcomes, expected_failures in [({}, 62), ({"reddit-gallery": REFERENCE_OUTCOMES["reddit-gallery"]}, 61)]:
+            with self.subTest(results=len(outcomes)):
+                status, data, _ = self.invoke(outcomes)
+                self.assertEqual(1, status)
+                self.assertEqual(expected_failures, data["counts"]["FAIL"])
+
+    def test_skipped_or_cancelled_test_step_is_not_accepted(self):
+        for step in ["", "skipped", "cancelled"]:
+            with self.subTest(step=step):
+                status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected="reddit-video", step=step)
+                self.assertEqual(1, status)
+                self.assertTrue(data["run_problems"])
+
+    def test_unrecognized_failure_with_auth_log_stays_a_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            write_reference_run(folder, {"youtube-video": REFERENCE_OUTCOMES["youtube-video"]})
+            path = folder / "TEST-results.xml"
+            tree = ElementTree.parse(path)
+            tree.find(".//failure").text = "org.junit.runners.model.TestTimedOutException: test timed out"
+            tree.write(path)
+            outcome = report.read_results(folder)["youtube-video"]
+        self.assertEqual("AuthenticationRequired", outcome.observed)
+        self.assertEqual("FAIL", report.classify(CASES_BY_ID["youtube-video"], outcome).status)
+
+    def test_invalid_selection_fails_fixture_check(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(1, report.main(["--check", "--link-ids", "not-a-fixture-id"]))
 
 
 if __name__ == "__main__":

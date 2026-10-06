@@ -1,0 +1,439 @@
+{
+  "source_run": "https://github.com/originalRecipe1/unfurlit/actions/runs/37472226940",
+  "outcomes": {
+    "youtube-video": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 11.4,
+      "reason": "AuthenticationRequired | ERROR: [youtube] eRsGyueVLvQ: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication. See <url> for how to manually pass cookies. Also see <url> for tips on effectively exporting YouTube cookies"
+    },
+    "youtube-short-link": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 9.5,
+      "reason": "AuthenticationRequired | ERROR: [youtube] jNQXAC9IVRw: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication. See <url> for how to manually pass cookies. Also see <url> for tips on effectively exporting YouTube cookies"
+    },
+    "youtube-big-buck-bunny": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 8.8,
+      "reason": "AuthenticationRequired | ERROR: [youtube] aqz-KE-bpKQ: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication. See <url> for how to manually pass cookies. Also see <url> for tips on effectively exporting YouTube cookies"
+    },
+    "youtube-shorts": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 10.1,
+      "reason": "AuthenticationRequired | ERROR: [youtube] 18NGQq7p3LY: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication. See <url> for how to manually pass cookies. Also see <url> for tips on effectively exporting YouTube cookies"
+    },
+    "youtube-shorts-sign-in-fallback": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 10.0,
+      "reason": "AuthenticationRequired | ERROR: [youtube] x2zTi8aEjsA: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See <url> for how to manually pass cookies. Also see <url> for tips on effectively exporting YouTube cookies"
+    },
+    "vimeo-video": {
+      "passed": true,
+      "observed": "success: 1 video (Hls, separate audio), from Vimeo",
+      "problems": "",
+      "seconds": 6.2,
+      "reason": null
+    },
+    "vimeo-player": {
+      "passed": true,
+      "observed": "success: 1 video (Hls, separate audio), from Vimeo",
+      "problems": "",
+      "seconds": 5.1,
+      "reason": null
+    },
+    "vimeo-unlisted": {
+      "passed": true,
+      "observed": "success: 1 video (Hls), from Vimeo",
+      "problems": "",
+      "seconds": 5.1,
+      "reason": null
+    },
+    "reddit-video": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 11.9,
+      "reason": "AuthenticationRequired | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+    },
+    "reddit-native-video": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 12.2,
+      "reason": "AuthenticationRequired | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+    },
+    "x-video": {
+      "passed": true,
+      "observed": "success: 1 video (Hls, separate audio), from Twitter",
+      "problems": "",
+      "seconds": 5.6,
+      "reason": null
+    },
+    "x-second-video": {
+      "passed": true,
+      "observed": "success: 1 video (Hls), from Twitter",
+      "problems": "",
+      "seconds": 4.9,
+      "reason": null
+    },
+    "x-animated-gif": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from Twitter",
+      "problems": "",
+      "seconds": 4.6,
+      "reason": null
+    },
+    "instagram-post": {
+      "passed": true,
+      "observed": "success: 3 videos (Progressive), from Instagram",
+      "problems": "",
+      "seconds": 6.1,
+      "reason": null
+    },
+    "instagram-reel": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from Instagram",
+      "problems": "",
+      "seconds": 4.8,
+      "reason": null
+    },
+    "instagram-video-carousel": {
+      "passed": true,
+      "observed": "success: 2 videos (Progressive), from Instagram",
+      "problems": "",
+      "seconds": 6.5,
+      "reason": null
+    },
+    "tiktok-video": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from TikTok",
+      "problems": "",
+      "seconds": 4.8,
+      "reason": null
+    },
+    "tiktok-second-video": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from TikTok",
+      "problems": "",
+      "seconds": 5.8,
+      "reason": null
+    },
+    "bluesky-video": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from Bluesky",
+      "problems": "",
+      "seconds": 6.9,
+      "reason": null
+    },
+    "imgur-gifv": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from Imgur",
+      "problems": "",
+      "seconds": 4.3,
+      "reason": null
+    },
+    "peertube-video": {
+      "passed": true,
+      "observed": "success: 1 video (Hls), from PeerTube",
+      "problems": "",
+      "seconds": 5.7,
+      "reason": null
+    },
+    "dailymotion-video": {
+      "passed": true,
+      "observed": "success: 1 video (Hls), from Dailymotion",
+      "problems": "",
+      "seconds": 5.9,
+      "reason": null
+    },
+    "twitch-clip": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from TwitchClips",
+      "problems": "",
+      "seconds": 3.2,
+      "reason": null
+    },
+    "direct-video-file": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from Generic",
+      "problems": "",
+      "seconds": 4.6,
+      "reason": null
+    },
+    "instagram-photo-carousel": {
+      "passed": true,
+      "observed": "success: 11 images, from Instagram",
+      "problems": "",
+      "seconds": 1.8,
+      "reason": null
+    },
+    "instagram-eight-photo-post": {
+      "passed": true,
+      "observed": "success: 8 images, from Instagram",
+      "problems": "",
+      "seconds": 1.5,
+      "reason": null
+    },
+    "instagram-single-photo": {
+      "passed": true,
+      "observed": "success: 1 image, from Instagram",
+      "problems": "",
+      "seconds": 1.2,
+      "reason": null
+    },
+    "tiktok-photos-with-audio": {
+      "passed": true,
+      "observed": "success: 3 images, soundtrack, from TikTok",
+      "problems": "",
+      "seconds": 4.2,
+      "reason": null
+    },
+    "tiktok-photo-link": {
+      "passed": true,
+      "observed": "success: 16 images, soundtrack, from TikTok",
+      "problems": "",
+      "seconds": 1.9,
+      "reason": null
+    },
+    "tiktok-single-photo": {
+      "passed": true,
+      "observed": "success: 1 image, soundtrack, from TikTok",
+      "problems": "",
+      "seconds": 3.0,
+      "reason": null
+    },
+    "reddit-image-post": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 11.1,
+      "reason": null
+    },
+    "reddit-gallery": {
+      "passed": true,
+      "observed": "success: 3 images, from Reddit",
+      "problems": "",
+      "seconds": 8.7,
+      "reason": null
+    },
+    "reddit-gallery-comments": {
+      "passed": true,
+      "observed": "success: 3 images, from Reddit",
+      "problems": "",
+      "seconds": 12.4,
+      "reason": null
+    },
+    "reddit-gallery-share": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 5.6,
+      "reason": "AuthenticationRequired | gallery-dl HttpError 403: '403 Blocked' for '<url>"
+    },
+    "reddit-gallery-short": {
+      "passed": true,
+      "observed": "success: 3 images, from Reddit",
+      "problems": "",
+      "seconds": 12.7,
+      "reason": null
+    },
+    "reddit-external-imgur": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from Reddit",
+      "problems": "",
+      "seconds": 12.1,
+      "reason": null
+    },
+    "reddit-external-streamable": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 11.4,
+      "reason": "AuthenticationRequired | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+    },
+    "reddit-direct-image": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 5.9,
+      "reason": null
+    },
+    "reddit-preview-image": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 5.2,
+      "reason": null
+    },
+    "reddit-image-link-wrapper": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 5.1,
+      "reason": null
+    },
+    "reddit-mirror-post": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 10.6,
+      "reason": null
+    },
+    "x-photo-post": {
+      "passed": true,
+      "observed": "success: 4 images, from X/Twitter",
+      "problems": "",
+      "seconds": 7.9,
+      "reason": null
+    },
+    "x-mixed-media": {
+      "passed": false,
+      "observed": "success: 1 video (Progressive), from Twitter",
+      "problems": "missing image; 1 item instead of 2",
+      "seconds": 5.5,
+      "reason": null
+    },
+    "bluesky-image": {
+      "passed": true,
+      "observed": "success: 1 image, from Bluesky",
+      "problems": "",
+      "seconds": 5.4,
+      "reason": null
+    },
+    "imgur-image": {
+      "passed": true,
+      "observed": "success: 1 image, from Imgur",
+      "problems": "",
+      "seconds": 4.4,
+      "reason": null
+    },
+    "imgur-album": {
+      "passed": true,
+      "observed": "success: 19 images, from Imgur",
+      "problems": "",
+      "seconds": 4.3,
+      "reason": null
+    },
+    "flickr-photo": {
+      "passed": true,
+      "observed": "success: 1 image, from Flickr",
+      "problems": "",
+      "seconds": 15.2,
+      "reason": null
+    },
+    "tumblr-photo-post": {
+      "passed": false,
+      "observed": "NetworkFailure",
+      "problems": "wrong outcome",
+      "seconds": 5.2,
+      "reason": "NetworkFailure | ERROR: [Tumblr] 172687798174: Unable to download webpage: Remote end closed connection without response (caused by TransportError('Remote end closed connection without response'))"
+    },
+    "mastodon-photos": {
+      "passed": true,
+      "observed": "success: 4 images, from Mastodon.social",
+      "problems": "",
+      "seconds": 10.6,
+      "reason": null
+    },
+    "pixiv-artwork": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 10.8,
+      "reason": "AuthenticationRequired | gallery-dl AuthenticationError 0: 'refresh-token' required. Run `gallery-dl oauth:pixiv` to get one."
+    },
+    "pinterest-pin": {
+      "passed": true,
+      "observed": "success: 1 image, from Pinterest",
+      "problems": "",
+      "seconds": 6.0,
+      "reason": null
+    },
+    "wikimedia-commons-file": {
+      "passed": true,
+      "observed": "success: 1 image, from Wikimedia",
+      "problems": "",
+      "seconds": 3.5,
+      "reason": null
+    },
+    "direct-image-file": {
+      "passed": true,
+      "observed": "success: 1 image, from Generic",
+      "problems": "",
+      "seconds": 3.5,
+      "reason": null
+    },
+    "soundcloud-track": {
+      "passed": true,
+      "observed": "success: 1 audio (Hls), from Soundcloud",
+      "problems": "",
+      "seconds": 7.9,
+      "reason": null
+    },
+    "bandcamp-track": {
+      "passed": true,
+      "observed": "success: 1 audio (Progressive), from Bandcamp",
+      "problems": "",
+      "seconds": 9.4,
+      "reason": null
+    },
+    "mixcloud-show": {
+      "passed": true,
+      "observed": "success: 1 audio (Dash), from Mixcloud",
+      "problems": "",
+      "seconds": 5.8,
+      "reason": null
+    },
+    "direct-audio-file": {
+      "passed": true,
+      "observed": "success: 1 audio (Progressive), from Generic",
+      "problems": "",
+      "seconds": 2.9,
+      "reason": null
+    },
+    "non-media-page": {
+      "passed": true,
+      "observed": "UnsupportedUrl",
+      "problems": "",
+      "seconds": 8.9,
+      "reason": null
+    },
+    "missing-page": {
+      "passed": true,
+      "observed": "MediaUnavailable",
+      "problems": "",
+      "seconds": 2.8,
+      "reason": null
+    },
+    "imgur-missing-image": {
+      "passed": true,
+      "observed": "MediaUnavailable",
+      "problems": "",
+      "seconds": 3.0,
+      "reason": null
+    },
+    "invalid-scheme": {
+      "passed": true,
+      "observed": "UnsupportedUrl",
+      "problems": "",
+      "seconds": 0.0,
+      "reason": null
+    },
+    "private-address": {
+      "passed": true,
+      "observed": "UnsupportedUrl",
+      "problems": "",
+      "seconds": 0.0,
+      "reason": null
+    }
+  }
+}

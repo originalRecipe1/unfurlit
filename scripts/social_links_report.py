@@ -3,7 +3,8 @@
 
 Reads app/src/socialLinks/assets/social-links.json and the JUnit XML and logcat files of
 an instrumented SocialLinksTest run, and prints a Markdown report grouped by media kind
-(for example into $GITHUB_STEP_SUMMARY). With --check it only validates the fixture.
+(for example into $GITHUB_STEP_SUMMARY). Exits nonzero for unexpected failures or
+incomplete runs. With --check it only validates the fixture and case selection.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import json
 import re
 import sys
 import xml.etree.ElementTree as ElementTree
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -47,6 +49,16 @@ GROUPS = (
     ("other", "Any media"),
     ("error", "Error handling"),
 )
+STATUSES = ("PASS", "BLOCKED", "KNOWN", "FAIL")
+ISSUES_URL = "https://github.com/originalRecipe1/unfurlit/issues/"
+# Literal upstream messages, including the curly apostrophe in run 37472226940.
+# "Please sign in", private videos, and other authentication failures are NOT blocks.
+RUNNER_BLOCK_MESSAGES = tuple(re.compile(r"(?<!\w)" + re.escape(message) + r"(?!\w)") for message in (
+    "Sign in to confirm you're not a bot",
+    "Sign in to confirm you’re not a bot",
+    "blocked by network security",
+    "403 Blocked",
+))
 
 
 @dataclass
@@ -56,6 +68,90 @@ class Outcome:
     problems: str = ""
     seconds: float | None = None
     reason: str | None = None
+
+
+@dataclass(frozen=True)
+class KnownIssue:
+    number: int
+    expected: str
+    observed: str
+    problems: str
+    reason: str | None = None
+
+
+# These exceptions belong to reporting, never to the public fixture's expectations.
+# Match the recorded failure, not just its case ID or broad error category.
+KNOWN_ISSUES = {
+    "x-mixed-media": KnownIssue(
+        37, "2 video+image", "success: 1 video (Progressive), from Twitter",
+        "missing image; 1 item instead of 2",
+    ),
+    "tumblr-photo-post": KnownIssue(
+        38, "4 images", "NetworkFailure", "wrong outcome",
+        "NetworkFailure | ERROR: [Tumblr] 172687798174: Unable to download webpage: "
+        "Remote end closed connection without response "
+        "(caused by TransportError('Remote end closed connection without response'))",
+    ),
+    "pixiv-artwork": KnownIssue(
+        39, "1 image", "AuthenticationRequired", "wrong outcome",
+        "AuthenticationRequired | gallery-dl AuthenticationError 0: 'refresh-token' required. "
+        "Run `gallery-dl oauth:pixiv` to get one.",
+    ),
+}
+
+
+@dataclass(frozen=True)
+class Classification:
+    status: str
+    issue: int | None = None
+
+    @property
+    def label(self) -> str:
+        if self.issue is None:
+            return self.status
+        url = f"{ISSUES_URL}{self.issue}"
+        if self.status == "PASS":
+            return f"PASS — [#{self.issue} now passing]({url})"
+        return f"[KNOWN (#{self.issue})]({url})"
+
+
+def classify(case: dict, outcome: Outcome) -> Classification:
+    issue = KNOWN_ISSUES.get(case["id"])
+    same_expectation = issue is not None and case.get("expected") == SUCCESS and expectation(case) == issue.expected
+    if outcome.passed:
+        return Classification("PASS", issue.number if same_expectation else None)
+    # Only a normal expectation assertion can be excused. A timeout/crash with
+    # an authentication message elsewhere in logcat must remain a failure.
+    if (outcome.observed == "AuthenticationRequired" and outcome.problems == "wrong outcome"
+            and outcome.reason and any(message.search(outcome.reason) for message in RUNNER_BLOCK_MESSAGES)):
+        return Classification("BLOCKED")
+    if (same_expectation and outcome.observed == issue.observed
+            and outcome.problems == issue.problems and outcome.reason == issue.reason):
+        return Classification("KNOWN", issue.number)
+    return Classification("FAIL")
+
+
+def complete_outcomes(cases: list[dict], outcomes: dict[str, Outcome]) -> dict[str, Outcome]:
+    return {
+        case["id"]: outcomes.get(case["id"], Outcome(False, "no test result", "selected case did not complete"))
+        for case in cases
+    }
+
+
+def counts_for(cases: list[dict], outcomes: dict[str, Outcome]) -> dict[str, int]:
+    complete = complete_outcomes(cases, outcomes)
+    counts = Counter(classify(case, complete[case["id"]]).status for case in cases)
+    return {status: counts[status] for status in STATUSES}
+
+
+def select_cases(cases: list[dict], link_ids: str) -> list[dict]:
+    if not link_ids.strip():
+        return cases
+    selected = {name.strip() for name in link_ids.split(",")}
+    unknown = selected - {case["id"] for case in cases}
+    if unknown:
+        raise ValueError(f"Unknown link IDs: {', '.join(sorted(unknown))}")
+    return [case for case in cases if case["id"] in selected]
 
 
 def error_names(source: Path = ERRORS) -> set[str]:
@@ -154,7 +250,7 @@ def read_results(directory: Path) -> dict[str, Outcome]:
                 continue
             line = failure_line(failure)
             parsed = MESSAGE.match(line)
-            if parsed:
+            if parsed and parsed["id"] == match.group(1):
                 outcomes[match.group(1)] = Outcome(False, parsed["observed"], parsed["problems"], seconds)
             else:
                 outcomes[match.group(1)] = Outcome(False, line or "failed", seconds=seconds)
@@ -173,7 +269,8 @@ def read_results(directory: Path) -> dict[str, Outcome]:
                 outcome.observed = logged["observed"]
                 outcome.seconds = float(logged["seconds"])
                 if not outcome.passed and reason:
-                    outcome.reason = reason[:MAX_REASON]
+                    # Classify the complete redacted message; truncate only for display.
+                    outcome.reason = reason
             if logged:
                 reason = None
     return outcomes
@@ -205,38 +302,52 @@ def cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
-def render(cases: list[dict], outcomes: dict[str, Outcome]) -> str:
-    ran = [case for case in cases if case["id"] in outcomes]
+def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[str] | None = None) -> str:
+    complete = complete_outcomes(cases, outcomes)
+    classifications = {case["id"]: classify(case, complete[case["id"]]) for case in cases}
+    counts = counts_for(cases, outcomes)
     lines = ["## Live social links", ""]
-    if not ran:
+    if not outcomes:
         lines.append(f"No {TEST_CLASS} results were found; the run may have failed before testing.")
-        return "\n".join(lines) + "\n"
-    passed = sum(outcomes[case["id"]].passed for case in ran)
-    lines.append(f"**{passed} of {len(ran)} cases passed.** Media URLs and credentials are never reported.")
-    if skipped := len(cases) - len(ran):
-        lines.append(f"{skipped} fixture cases did not run.")
-    lines += ["", "| Media | Passed |", "| --- | --- |"]
-    groups = [(key, title, [case for case in ran if group_of(case) == key]) for key, title in GROUPS]
+    lines.append("**" + " · ".join(f"{status} {counts[status]}" for status in STATUSES) + "**")
+    lines.append(f"{len(cases)} selected cases. BLOCKED and KNOWN are not passes. Media URLs and credentials are never reported.")
+    if missing := sum(case["id"] not in outcomes for case in cases):
+        lines.append(f"{missing} selected cases did not complete and count as FAIL.")
+    if run_problems:
+        lines += ["", "### Test-run failures", "", *[f"- {cell(problem)}" for problem in run_problems]]
+    lines += ["", "| Outcome | Count |", "| --- | ---: |"]
+    lines += [f"| {status} | {counts[status]} |" for status in STATUSES]
+    recovered = [case for case in cases if classifications[case["id"]].status == "PASS" and classifications[case["id"]].issue]
+    lines += ["", f"### Known issues now passing ({len(recovered)})", ""]
+    if recovered:
+        for case in recovered:
+            issue = classifications[case["id"]].issue
+            lines.append(f"- `{case['id']}`: PASS; review [#{issue}]({ISSUES_URL}{issue}) for closure.")
+    else:
+        lines.append("None.")
+    lines += ["", "| Media | PASS | BLOCKED | KNOWN | FAIL |", "| --- | ---: | ---: | ---: | ---: |"]
+    groups = [(key, title, [case for case in cases if group_of(case) == key]) for key, title in GROUPS]
     for _, title, members in groups:
         if members:
-            count = sum(outcomes[case["id"]].passed for case in members)
-            lines.append(f"| {title} | {count} of {len(members)} |")
+            group_counts = counts_for(members, outcomes)
+            lines.append(f"| {title} | " + " | ".join(str(group_counts[status]) for status in STATUSES) + " |")
     for _, title, members in groups:
         if not members:
             continue
-        lines += ["", f"### {title}", "", "| | Case | Expected | Observed | Time |", "| --- | --- | --- | --- | --- |"]
+        lines += ["", f"### {title}", "", "| Outcome | Case | Expected | Observed | Time |", "| --- | --- | --- | --- | --- |"]
         for case in members:
-            outcome = outcomes[case["id"]]
+            outcome = complete[case["id"]]
             link = f"`{case['id']}`" if group_of(case) == "error" else f"[{case['id']}]({case['url']})"
             observed = outcome.observed + (f" — {outcome.problems}" if outcome.problems else "")
             seconds = f"{outcome.seconds:.1f} s" if outcome.seconds is not None else ""
-            mark = "✅" if outcome.passed else "❌"
+            mark = classifications[case["id"]].label
             lines.append(f"| {mark} | {link} | {cell(expectation(case))} | {cell(observed)} | {seconds} |")
-    reasons = [(case["id"], outcomes[case["id"]].reason) for case in ran if outcomes[case["id"]].reason]
+    reasons = [(case["id"], complete[case["id"]].reason) for case in cases if complete[case["id"]].reason]
     if reasons:
         lines += ["", "### Failure details", "", "The app's redacted extraction log for each failed case:", ""]
         # Keep SafeLog's <url> placeholders visible instead of letting Markdown drop them as tags.
-        lines += [f"- `{name}`: {reason.replace('<', '&lt;').replace('>', '&gt;')}" for name, reason in reasons]
+        lines += [f"- `{name}` ({classifications[name].status}): {reason[:MAX_REASON].replace('<', '&lt;').replace('>', '&gt;')}"
+                  for name, reason in reasons]
     return "\n".join(lines) + "\n"
 
 
@@ -245,20 +356,52 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--fixture", type=Path, default=FIXTURE)
     parser.add_argument("--results", type=Path, default=RESULTS, help="Directory searched for test reports")
     parser.add_argument("--check", action="store_true", help="Only validate the fixture")
+    parser.add_argument("--link-ids", default="", help="Comma-separated selected case IDs; empty means all cases")
+    parser.add_argument("--test-step-outcome", choices=("success", "failure", "skipped", "cancelled", ""),
+                        help="GitHub outcome of the Gradle test step; detect failures outside case assertions")
+    parser.add_argument("--json-output", type=Path, help="Also save classified results as JSON")
     args = parser.parse_args(argv)
 
     cases = load_cases(args.fixture)
     problems = validate(cases, error_names())
+    if not problems:
+        try:
+            selected = select_cases(cases, args.link_ids)
+        except ValueError as error:
+            problems.append(str(error))
     if args.check or problems:
         for problem in problems:
             print(problem, file=sys.stderr)
         if problems:
             return 1
-        print(f"{len(cases)} social-link cases are valid.")
+        print(f"{len(cases)} social-link cases are valid; {len(selected)} selected.")
         return 0
     outcomes = read_results(args.results) if args.results.is_dir() else {}
-    sys.stdout.write(render(cases, outcomes))
-    return 0
+    run_problems = []
+    if unknown := set(outcomes) - {case["id"] for case in cases}:
+        run_problems.append(f"Results contain unknown case IDs: {', '.join(sorted(unknown))}")
+    if args.test_step_outcome is not None:
+        if args.test_step_outcome not in {"success", "failure"}:
+            run_problems.append(f"The test step did not complete: {args.test_step_outcome or 'not run'}")
+        elif args.test_step_outcome == "failure" and not any(
+                not outcomes[case["id"]].passed for case in selected if case["id"] in outcomes):
+            run_problems.append("The test step failed without a recorded case failure; inspect the Gradle/emulator log.")
+    counts = counts_for(selected, outcomes)
+    if args.json_output:
+        complete = complete_outcomes(selected, outcomes)
+        payload = {"counts": counts, "run_problems": run_problems, "cases": []}
+        for case in selected:
+            outcome = complete[case["id"]]
+            classification = classify(case, outcome)
+            payload["cases"].append({
+                "id": case["id"], "status": classification.status, "issue": classification.issue,
+                "expected": expectation(case), "observed": outcome.observed, "problems": outcome.problems,
+                "seconds": outcome.seconds, "reason": outcome.reason,
+            })
+        args.json_output.parent.mkdir(parents=True, exist_ok=True)
+        args.json_output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    sys.stdout.write(render(selected, outcomes, run_problems))
+    return int(counts["FAIL"] > 0 or bool(run_problems))
 
 
 if __name__ == "__main__":

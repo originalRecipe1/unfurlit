@@ -51,31 +51,51 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-30;aosp_atd;x86_64"
 
       - name: Check the link fixture
-        run: python3 scripts/social_links_report.py --check
-
-      - name: Test public social links
         env:
           LINK_IDS: ${{ inputs.link_ids }}
+        run: python3 scripts/social_links_report.py --check --link-ids "$LINK_IDS"
+
+      - name: Build the release extractor from source
+        id: extractor
         run: |
           ./scripts/build_yt_dlp_from_source.sh
           source_file="$PWD/build/yt-dlp-source/yt-dlp"
           source_sha="$(sha256sum "$source_file" | awk '{ print $1 }')"
+          echo "file=$source_file" >> "$GITHUB_OUTPUT"
+          echo "sha256=$source_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Test public social links
+        id: live_tests
+        # Keep the raw JUnit failures; the report gates the job on their classification.
+        continue-on-error: true
+        env:
+          LINK_IDS: ${{ inputs.link_ids }}
+        run: |
           selection=()
           if [ -n "${LINK_IDS// /}" ]; then
             selection=("-Pandroid.testInstrumentationRunnerArguments.linkId=${LINK_IDS// /}")
           fi
           ./gradlew --no-daemon pixel2Api30DebugAndroidTest \
             -Punfurlit.ci.x86_64=true \
-            -Punfurlit.ytdlp.file="$source_file" \
-            -Punfurlit.ytdlp.sha256="$source_sha" \
+            -Punfurlit.ytdlp.file="${{ steps.extractor.outputs.file }}" \
+            -Punfurlit.ytdlp.sha256="${{ steps.extractor.outputs.sha256 }}" \
             -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
             -Pandroid.testInstrumentationRunnerArguments.liveLinks=true \
             -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest \
             "${selection[@]}"
 
-      - name: Summarize results by media type
+      - name: Classify results and fail on unexpected problems
         if: always()
-        run: python3 scripts/social_links_report.py | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash
+        env:
+          LINK_IDS: ${{ inputs.link_ids }}
+        run: |
+          mkdir -p app/build/reports/social-links
+          python3 scripts/social_links_report.py \
+            --link-ids "$LINK_IDS" \
+            --test-step-outcome "${{ steps.live_tests.outcome }}" \
+            --json-output app/build/reports/social-links/results.json \
+            | tee -a "$GITHUB_STEP_SUMMARY" app/build/reports/social-links/summary.md
 
       - name: Upload per-link test reports
         if: always()
@@ -85,4 +105,5 @@ jobs:
           path: |
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
+            app/build/reports/social-links/
           retention-days: 14
