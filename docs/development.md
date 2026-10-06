@@ -349,6 +349,19 @@ selected case, grouped by media type, to the workflow's job summary. It reports
 
 The report determines the job result: unexpected failures, incomplete runs,
 and test-run errors fail the job. The source build is also required to succeed.
+After the full test pass, the workflow selects every completed `NetworkFailure`
+case for one extra pass, including Tumblr's KNOWN failure. No other outcome is
+retried, and the extra pass never schedules another retry. The first pass's raw
+reports are preserved before retrying.
+
+A successful retry is shown as **PASS (retried)** and counts as PASS for gating.
+The summary separately counts retried cases and retried passes, and retains the
+original error. If the retry fails, its outcome is classified normally and both
+errors are shown: two network failures remain FAIL unless the retry matches a
+KNOWN signature (such as Tumblr #38), or the case is LOCAL-ONLY on the runner.
+A different retry outcome can be BLOCKED, KNOWN, or FAIL; it never becomes a pass
+without a successful test result. JSON includes both attempts for each retried case.
+
 Reports, classified JSON, and logcat are uploaded even on failure, including
 the app's redacted extraction messages. Review failures for site changes and
 deleted fixtures before changing an expectation. No cookies or accounts are used.

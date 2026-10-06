@@ -84,17 +84,60 @@ jobs:
             -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest \
             "${selection[@]}"
 
+      - name: Preserve the first pass and select network retries
+        id: retry_cases
+        if: always()
+        env:
+          LINK_IDS: ${{ inputs.link_ids }}
+        run: |
+          first=app/build/reports/social-links/first-attempt
+          mkdir -p "$first"
+          if [ -d app/build/outputs/androidTest-results ]; then
+            mv app/build/outputs/androidTest-results "$first/results"
+          fi
+          if [ -d app/build/reports/androidTests ]; then
+            mv app/build/reports/androidTests "$first/reports"
+          fi
+          retry_ids="$(python3 scripts/social_links_report.py \
+            --results "$first/results" --link-ids "$LINK_IDS" --retry-link-ids)"
+          echo "link_ids=$retry_ids" >> "$GITHUB_OUTPUT"
+
+      - name: Retry NetworkFailure cases once
+        id: retry_tests
+        if: ${{ !cancelled() && steps.retry_cases.outcome == 'success' && steps.retry_cases.outputs.link_ids != '' }}
+        continue-on-error: true
+        env:
+          LINK_IDS: ${{ steps.retry_cases.outputs.link_ids }}
+        run: |
+          # One extra pass only; never select retries from this pass's results.
+          ./gradlew --no-daemon pixel2Api30DebugAndroidTest \
+            -Punfurlit.ci.x86_64=true \
+            -Punfurlit.ytdlp.file="${{ steps.extractor.outputs.file }}" \
+            -Punfurlit.ytdlp.sha256="${{ steps.extractor.outputs.sha256 }}" \
+            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            -Pandroid.testInstrumentationRunnerArguments.liveLinks=true \
+            -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest \
+            "-Pandroid.testInstrumentationRunnerArguments.linkId=$LINK_IDS"
+
       - name: Classify results and fail on unexpected problems
         if: always()
         shell: bash
         env:
           LINK_IDS: ${{ inputs.link_ids }}
+          RETRY_IDS: ${{ steps.retry_cases.outputs.link_ids }}
         run: |
           mkdir -p app/build/reports/social-links
+          retry=()
+          if [ -n "$RETRY_IDS" ]; then
+            retry=(--retry-results app/build/outputs/androidTest-results
+              --retry-step-outcome "${{ steps.retry_tests.outcome }}")
+          fi
           python3 scripts/social_links_report.py \
             --runner \
+            --results app/build/reports/social-links/first-attempt/results \
             --link-ids "$LINK_IDS" \
             --test-step-outcome "${{ steps.live_tests.outcome }}" \
+            "${retry[@]}" \
             --json-output app/build/reports/social-links/results.json \
             | tee -a "$GITHUB_STEP_SUMMARY" app/build/reports/social-links/summary.md
 
