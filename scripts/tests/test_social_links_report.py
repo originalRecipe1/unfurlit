@@ -310,16 +310,24 @@ def write_reference_run(folder, outcomes):
 
 
 class ReportGateTest(unittest.TestCase):
-    def invoke(self, outcomes, *, selected="", step="failure", runner=False):
+    def invoke(self, outcomes, *, selected="", step="failure", runner=False, retries=None, retry_step="success"):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
-            write_reference_run(folder, outcomes)
+            initial = folder / "initial"
+            initial.mkdir()
+            write_reference_run(initial, outcomes)
+            retry_args = []
+            if retries is not None:
+                retry = folder / "retry"
+                retry.mkdir()
+                write_reference_run(retry, retries)
+                retry_args = ["--retry-results", str(retry), "--retry-step-outcome", retry_step]
             output = folder / "classified.json"
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
-                status = report.main(["--results", str(folder), "--link-ids", selected,
+                status = report.main(["--results", str(initial), "--link-ids", selected,
                                       "--test-step-outcome", step, "--json-output", str(output)]
-                                     + (["--runner"] if runner else []))
+                                     + (["--runner"] if runner else []) + retry_args)
             return status, json.loads(output.read_text()), stdout.getvalue()
 
     def test_reference_run_preserves_the_unexpected_sign_in_failure(self):
@@ -417,6 +425,131 @@ class ReportGateTest(unittest.TestCase):
     def test_invalid_selection_fails_fixture_check(self):
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(1, report.main(["--check", "--link-ids", "not-a-fixture-id"]))
+
+    def test_retried_pass_counts_as_pass_and_preserves_the_original_error(self):
+        initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
+        retry = report.Outcome(True, "success: 1 audio, from Mixcloud")
+        status, data, markdown = self.invoke({"mixcloud-show": initial}, selected="mixcloud-show", runner=True,
+                                             retries={"mixcloud-show": retry})
+        self.assertEqual(0, status)
+        self.assertEqual({"PASS": 1, "BLOCKED": 0, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 0}, data["counts"])
+        self.assertEqual({"retried": 1, "passed": 1}, data["retries"])
+        self.assertIn("PASS (retried)", markdown)
+        self.assertIn("Retried: **1** cases; **1 PASS (retried)**", markdown)
+        self.assertIn("`mixcloud-show` (PASS, initial): timeout", markdown)
+        self.assertTrue(data["cases"][0]["retried"])
+        attempts = data["cases"][0]["attempts"]
+        self.assertEqual("timeout", attempts[0]["reason"])
+        self.assertFalse(attempts[0]["passed"])
+        self.assertTrue(attempts[1]["passed"])
+
+    def test_two_network_failures_remain_fail_with_both_errors(self):
+        initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
+        retry = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="DNS lookup failed")
+        status, data, markdown = self.invoke({"mixcloud-show": initial}, selected="mixcloud-show", runner=True,
+                                             retries={"mixcloud-show": retry}, retry_step="failure")
+        self.assertEqual(1, status)
+        self.assertEqual(1, data["counts"]["FAIL"])
+        self.assertEqual({"retried": 1, "passed": 0}, data["retries"])
+        self.assertEqual(["timeout", "DNS lookup failed"], [a["reason"] for a in data["cases"][0]["attempts"]])
+        self.assertIn("`mixcloud-show` (FAIL, initial): timeout", markdown)
+        self.assertIn("`mixcloud-show` (FAIL, retry): DNS lookup failed", markdown)
+
+    def test_different_retry_failure_is_classified_normally_without_counting_as_pass(self):
+        for name, retry, expected in [
+            ("reddit-video", replace(REFERENCE_OUTCOMES["reddit-video"], reason=REDDIT_AUTH_REASON), "BLOCKED"),
+            ("pixiv-artwork", REFERENCE_OUTCOMES["pixiv-artwork"], "KNOWN"),
+            ("mixcloud-show", report.Outcome(False, "MediaUnavailable", "wrong outcome", reason="Stream deleted"), "FAIL"),
+        ]:
+            with self.subTest(name=name):
+                initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
+                status, data, markdown = self.invoke({name: initial}, selected=name, runner=True,
+                                                     retries={name: retry}, retry_step="failure")
+                self.assertEqual(int(expected == "FAIL"), status)
+                self.assertEqual(expected, data["cases"][0]["status"])
+                self.assertEqual(0, data["counts"]["PASS"])
+                self.assertEqual({"retried": 1, "passed": 0}, data["retries"])
+                self.assertIn(f"`{name}` ({expected}, initial): timeout", markdown)
+                self.assertEqual(retry.reason, data["cases"][0]["attempts"][1]["reason"])
+
+    def test_tumblr_network_failure_remains_known_when_retry_matches_issue_38(self):
+        name = "tumblr-photo-post"
+        initial = REFERENCE_OUTCOMES[name]
+        self.assertEqual([name], report.network_retry_ids([CASES_BY_ID[name]], {name: initial}))
+        status, data, markdown = self.invoke({name: initial}, selected=name, runner=True,
+                                             retries={name: initial}, retry_step="failure")
+        self.assertEqual(0, status)
+        self.assertEqual(1, data["counts"]["KNOWN"])
+        self.assertEqual(0, data["counts"]["FAIL"])
+        self.assertEqual(38, data["cases"][0]["issue"])
+        self.assertEqual({"retried": 1, "passed": 0}, data["retries"])
+        self.assertEqual([initial.reason, initial.reason], [a["reason"] for a in data["cases"][0]["attempts"]])
+        self.assertIn("KNOWN (#38)", markdown)
+
+    def test_recovered_known_case_is_flagged_even_when_it_needed_a_retry(self):
+        name = "tumblr-photo-post"
+        status, data, markdown = self.invoke({name: REFERENCE_OUTCOMES[name]}, selected=name, runner=True,
+                                             retries={name: report.Outcome(True, "success: 4 images, from Tumblr")})
+        self.assertEqual(0, status)
+        self.assertEqual(1, data["counts"]["PASS"])
+        self.assertIn("PASS (retried) — [#38 now passing]", markdown)
+        self.assertIn("review [#38]", markdown)
+
+    def test_missing_retry_result_fails_instead_of_accepting_the_initial_result(self):
+        initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
+        status, data, markdown = self.invoke({"mixcloud-show": initial}, selected="mixcloud-show", runner=True, retries={})
+        self.assertEqual(1, status)
+        self.assertEqual(1, data["counts"]["FAIL"])
+        self.assertEqual("no retry result", data["cases"][0]["observed"])
+        self.assertIn("timeout", markdown)
+
+    def test_retry_of_another_outcome_is_rejected_and_cannot_replace_it(self):
+        name = "youtube-video"
+        status, data, _ = self.invoke({name: REFERENCE_OUTCOMES[name]}, selected=name, runner=True,
+                                      retries={name: report.Outcome(True, "success: 1 video")})
+        self.assertEqual(1, status)
+        self.assertEqual(1, data["counts"]["BLOCKED"])
+        self.assertEqual(0, data["counts"]["PASS"])
+        self.assertIn("not selected for a network retry", data["run_problems"][0])
+
+    def test_retry_pass_does_not_hide_a_gradle_failure_outside_case_assertions(self):
+        initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
+        status, data, _ = self.invoke({"mixcloud-show": initial}, selected="mixcloud-show", runner=True,
+                                      retries={"mixcloud-show": report.Outcome(True, "success: 1 audio")}, retry_step="failure")
+        self.assertEqual(1, status)
+        self.assertEqual(1, data["counts"]["PASS"])
+        self.assertIn("retry step failed without a recorded case failure", data["run_problems"][0])
+
+
+class RetrySelectionTest(unittest.TestCase):
+    def test_selector_includes_known_network_failures_but_no_other_outcome(self):
+        outcomes = dict(REFERENCE_OUTCOMES)
+        outcomes["mixcloud-show"] = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
+        outcomes["youtube-shorts-sign-in-fallback"] = report.Outcome(False, "NetworkFailure", "wrong outcome")
+        self.assertEqual(["youtube-shorts-sign-in-fallback", "tumblr-photo-post", "mixcloud-show"],
+                         report.network_retry_ids(REFERENCE_CASES, outcomes))
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            write_reference_run(folder, outcomes)
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                status = report.main(["--results", str(folder), "--retry-link-ids",
+                                      "--link-ids", "tumblr-photo-post,mixcloud-show,youtube-video"])
+        self.assertEqual(0, status)
+        self.assertEqual("tumblr-photo-post,mixcloud-show\n", stdout.getvalue())
+
+    def test_a_retry_is_never_selected_for_another_retry(self):
+        name = "tumblr-photo-post"
+        original = {name: REFERENCE_OUTCOMES[name]}
+        merged, problems = report.merge_retries([CASES_BY_ID[name]], original, original)
+        self.assertEqual([], problems)
+        self.assertEqual([], report.network_retry_ids([CASES_BY_ID[name]], merged))
+
+    def test_test_crash_with_a_network_log_is_not_selected(self):
+        name = "mixcloud-show"
+        self.assertEqual([], report.network_retry_ids([CASES_BY_ID[name]], {
+            name: report.Outcome(False, "NetworkFailure", reason="timeout"),
+        }))
 
 
 if __name__ == "__main__":

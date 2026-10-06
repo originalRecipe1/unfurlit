@@ -15,7 +15,7 @@ import re
 import sys
 import xml.etree.ElementTree as ElementTree
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 
@@ -77,6 +77,7 @@ class Outcome:
     problems: str = ""
     seconds: float | None = None
     reason: str | None = None
+    initial: Outcome | None = None
 
 
 @dataclass(frozen=True)
@@ -113,14 +114,16 @@ KNOWN_ISSUES = {
 class Classification:
     status: str
     issue: int | None = None
+    retried: bool = False
 
     @property
     def label(self) -> str:
+        status = "PASS (retried)" if self.status == "PASS" and self.retried else self.status
         if self.issue is None:
-            return self.status
+            return status
         url = f"{ISSUES_URL}{self.issue}"
         if self.status == "PASS":
-            return f"PASS — [#{self.issue} now passing]({url})"
+            return f"{status} — [#{self.issue} now passing]({url})"
         return f"[KNOWN (#{self.issue})]({url})"
 
 
@@ -130,7 +133,7 @@ def classify(case: dict, outcome: Outcome, *, runner: bool = False) -> Classific
     issue = KNOWN_ISSUES.get(case["id"])
     same_expectation = issue is not None and case.get("expected") == SUCCESS and expectation(case) == issue.expected
     if outcome.passed:
-        return Classification("PASS", issue.number if same_expectation else None)
+        return Classification("PASS", issue.number if same_expectation else None, outcome.initial is not None)
     # Only a normal expectation assertion can be excused. A timeout/crash with
     # an authentication message elsewhere in logcat must remain a failure.
     if (outcome.observed == "AuthenticationRequired" and outcome.problems == "wrong outcome"
@@ -153,6 +156,40 @@ def counts_for(cases: list[dict], outcomes: dict[str, Outcome], *, runner: bool 
     complete = complete_outcomes(cases, outcomes)
     counts = Counter(classify(case, complete[case["id"]], runner=runner).status for case in cases)
     return {status: counts[status] for status in STATUSES}
+
+
+def network_retry_ids(cases: list[dict], outcomes: dict[str, Outcome]) -> list[str]:
+    """Select completed NetworkFailure observations from the first pass only."""
+    return [case["id"] for case in cases if (outcome := outcomes.get(case["id"])) is not None
+            and outcome.initial is None and outcome.observed == "NetworkFailure"
+            # A test crash with a NetworkFailure log is not a network outcome.
+            and (outcome.passed or outcome.problems == "wrong outcome")]
+
+
+def merge_retries(cases: list[dict], initial: dict[str, Outcome], retries: dict[str, Outcome]) -> tuple[dict[str, Outcome], list[str]]:
+    eligible = network_retry_ids(cases, initial)
+    outcomes = dict(initial)
+    problems = []
+    if unexpected := set(retries) - set(eligible):
+        problems.append(f"Retry results contain cases not selected for a network retry: {', '.join(sorted(unexpected))}")
+    for name in eligible:
+        retry = retries.get(name, Outcome(False, "no retry result", "network-failure retry did not complete"))
+        outcomes[name] = replace(retry, initial=initial[name])
+    return outcomes, problems
+
+
+def retry_counts(cases: list[dict], outcomes: dict[str, Outcome], *, runner: bool = False) -> dict[str, int]:
+    retried = [case for case in cases if case["id"] in outcomes and outcomes[case["id"]].initial is not None]
+    return {"retried": len(retried), "passed": counts_for(retried, outcomes, runner=runner)["PASS"]}
+
+
+def test_step_problems(step: str | None, cases: list[dict], outcomes: dict[str, Outcome], label: str = "test") -> list[str]:
+    if step is not None:
+        if step not in {"success", "failure"}:
+            return [f"The {label} step did not complete: {step or 'not run'}"]
+        if step == "failure" and not any(not outcomes[case["id"]].passed for case in cases if case["id"] in outcomes):
+            return [f"The {label} step failed without a recorded case failure; inspect the Gradle/emulator log."]
+    return []
 
 
 def select_cases(cases: list[dict], link_ids: str) -> list[dict]:
@@ -313,6 +350,14 @@ def cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
+def observation(outcome: Outcome) -> str:
+    return outcome.observed + (f" — {outcome.problems}" if outcome.problems else "")
+
+
+def attempt_data(outcome: Outcome) -> dict:
+    return {key: getattr(outcome, key) for key in ("passed", "observed", "problems", "seconds", "reason")}
+
+
 def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[str] | None = None,
            *, runner: bool = False) -> str:
     complete = complete_outcomes(cases, outcomes)
@@ -322,6 +367,8 @@ def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[s
     if not outcomes:
         lines.append(f"No {TEST_CLASS} results were found; the run may have failed before testing.")
     lines.append("**" + " · ".join(f"{status} {counts[status]}" for status in STATUSES) + "**")
+    retries = retry_counts(cases, outcomes, runner=runner)
+    lines.append(f"Retried: **{retries['retried']}** cases; **{retries['passed']} PASS (retried)**, included in PASS above.")
     lines.append(f"{len(cases)} selected cases. BLOCKED, LOCAL-ONLY, and KNOWN are not passes. Media URLs and credentials are never reported.")
     if runner:
         lines.append("LOCAL-ONLY cases never gate CI; validate them and YouTube coverage in a local pre-release run.")
@@ -337,7 +384,8 @@ def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[s
     if recovered:
         for case in recovered:
             issue = classifications[case["id"]].issue
-            lines.append(f"- `{case['id']}`: PASS; review [#{issue}]({ISSUES_URL}{issue}) for closure.")
+            label = "PASS (retried)" if classifications[case["id"]].retried else "PASS"
+            lines.append(f"- `{case['id']}`: {label}; review [#{issue}]({ISSUES_URL}{issue}) for closure.")
     else:
         lines.append("None.")
     lines += ["", "| Media | " + " | ".join(STATUSES) + " |", "| --- | " + " | ".join("---:" for _ in STATUSES) + " |"]
@@ -353,16 +401,29 @@ def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[s
         for case in members:
             outcome = complete[case["id"]]
             link = f"`{case['id']}`" if group_of(case) == "error" else f"[{case['id']}]({case['url']})"
-            observed = outcome.observed + (f" — {outcome.problems}" if outcome.problems else "")
+            observed = observation(outcome)
             seconds = f"{outcome.seconds:.1f} s" if outcome.seconds is not None else ""
+            if outcome.initial is not None:
+                observed = f"Initial: {observation(outcome.initial)}; retry: {observed}"
+                initial_seconds = f"{outcome.initial.seconds:.1f} s" if outcome.initial.seconds is not None else "?"
+                seconds = f"{initial_seconds} + {seconds or '?'}"
             mark = classifications[case["id"]].label
             lines.append(f"| {mark} | {link} | {cell(expectation(case))} | {cell(observed)} | {seconds} |")
-    reasons = [(case["id"], complete[case["id"]].reason) for case in cases if complete[case["id"]].reason]
+    reasons = []
+    for case in cases:
+        name = case["id"]
+        outcome = complete[name]
+        if outcome.initial is not None:
+            for label, attempt in (("initial", outcome.initial), ("retry", outcome)):
+                if not attempt.passed:
+                    reasons.append((name, f"{classifications[name].status}, {label}", attempt.reason or observation(attempt)))
+        elif outcome.reason:
+            reasons.append((name, classifications[name].status, outcome.reason))
     if reasons:
-        lines += ["", "### Failure details", "", "The app's redacted extraction log for each failed case:", ""]
+        lines += ["", "### Failure details", "", "Redacted errors, including the initial error for every retried case:", ""]
         # Keep SafeLog's <url> placeholders visible instead of letting Markdown drop them as tags.
-        lines += [f"- `{name}` ({classifications[name].status}): {reason[:MAX_REASON].replace('<', '&lt;').replace('>', '&gt;')}"
-                  for name, reason in reasons]
+        lines += [f"- `{name}` ({label}): {reason[:MAX_REASON].replace('<', '&lt;').replace('>', '&gt;')}"
+                  for name, label, reason in reasons]
     return "\n".join(lines) + "\n"
 
 
@@ -374,8 +435,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--link-ids", default="", help="Comma-separated selected case IDs; empty means all cases")
     parser.add_argument("--runner", action="store_true",
                         help="Report mapped LOCAL-ONLY cases without gating CI; omit for local pre-release validation")
+    retry_mode = parser.add_mutually_exclusive_group()
+    retry_mode.add_argument("--retry-link-ids", action="store_true",
+                            help="Print the first pass's NetworkFailure IDs for one extra test pass")
+    retry_mode.add_argument("--retry-results", type=Path, help="Results of the single NetworkFailure retry pass")
     parser.add_argument("--test-step-outcome", choices=("success", "failure", "skipped", "cancelled", ""),
                         help="GitHub outcome of the Gradle test step; detect failures outside case assertions")
+    parser.add_argument("--retry-step-outcome", choices=("success", "failure", "skipped", "cancelled", ""),
+                        help="GitHub outcome of the extra test pass")
     parser.add_argument("--json-output", type=Path, help="Also save classified results as JSON")
     args = parser.parse_args(argv)
 
@@ -394,19 +461,26 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(cases)} social-link cases are valid; {len(selected)} selected.")
         return 0
     outcomes = read_results(args.results) if args.results.is_dir() else {}
+    if args.retry_link_ids:
+        print(",".join(network_retry_ids(selected, outcomes)))
+        return 0
     run_problems = []
     if unknown := set(outcomes) - {case["id"] for case in cases}:
         run_problems.append(f"Results contain unknown case IDs: {', '.join(sorted(unknown))}")
-    if args.test_step_outcome is not None:
-        if args.test_step_outcome not in {"success", "failure"}:
-            run_problems.append(f"The test step did not complete: {args.test_step_outcome or 'not run'}")
-        elif args.test_step_outcome == "failure" and not any(
-                not outcomes[case["id"]].passed for case in selected if case["id"] in outcomes):
-            run_problems.append("The test step failed without a recorded case failure; inspect the Gradle/emulator log.")
+    # Check each pass against its own raw results, before a retry can replace a failure.
+    run_problems += test_step_problems(args.test_step_outcome, selected, outcomes)
+    if args.retry_results is not None:
+        retry_ids = network_retry_ids(selected, outcomes)
+        retry_cases = [case for case in selected if case["id"] in retry_ids]
+        retries = read_results(args.retry_results) if args.retry_results.is_dir() else {}
+        run_problems += test_step_problems(args.retry_step_outcome, retry_cases, retries, "retry")
+        outcomes, retry_problems = merge_retries(selected, outcomes, retries)
+        run_problems += retry_problems
     counts = counts_for(selected, outcomes, runner=args.runner)
     if args.json_output:
         complete = complete_outcomes(selected, outcomes)
-        payload = {"runner": args.runner, "counts": counts, "run_problems": run_problems, "cases": []}
+        payload = {"runner": args.runner, "counts": counts, "retries": retry_counts(selected, outcomes, runner=args.runner),
+                   "run_problems": run_problems, "cases": []}
         for case in selected:
             outcome = complete[case["id"]]
             classification = classify(case, outcome, runner=args.runner)
@@ -414,6 +488,8 @@ def main(argv: list[str] | None = None) -> int:
                 "id": case["id"], "status": classification.status, "issue": classification.issue,
                 "expected": expectation(case), "observed": outcome.observed, "problems": outcome.problems,
                 "seconds": outcome.seconds, "reason": outcome.reason,
+                "retried": outcome.initial is not None,
+                "attempts": [attempt_data(attempt) for attempt in (outcome.initial, outcome) if attempt is not None],
             })
         args.json_output.parent.mkdir(parents=True, exist_ok=True)
         args.json_output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
