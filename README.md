@@ -11,7 +11,7 @@ Paste a link or share it to Unfurlit to open its media without using the officia
 
 ## Features
 
-- Open public links from **YouTube, Instagram, TikTok, Reddit, X/Twitter, PeerTube**, and more.
+- Open public links from **YouTube, Vimeo, Instagram, TikTok, Reddit, X/Twitter, PeerTube, Bandcamp**, and more.
 - Watch fullscreen videos and audio, zoom into photos, with gallery/carousel support.
 - Revisit media in **local history**.
 
@@ -20,17 +20,21 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 
 ## Supported links and media
 
-- YouTube: videos.
-- Instagram: Reels, photos and carousels (no photo-post soundtracks).
+- YouTube: videos and Shorts.
+- Vimeo: videos, including page links and unlisted links with an access hash.
+- Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
 - TikTok: videos and photo posts, including available photo soundtracks.
-- Reddit and X/Twitter: videos, photos and galleries.
+- Reddit: videos, photos and galleries, including gallery posts opened from share,
+  comments and `redd.it` short links.
+- X/Twitter: videos, photos and galleries; mixed video-and-photo posts can omit photos.
 - PeerTube: videos.
+- Bandcamp: audio tracks.
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
 Photos and galleries outside Instagram and TikTok come from the bundled
 [gallery-dl](https://github.com/mikf/gallery-dl) engine, used when a post has no
-video. In a live run on 2026-09-25, 21 of 23 photo and gallery links opened;
-see the [detailed results](docs/social-link-baseline.md#media-types-on-the-ci-runner).
+video. Direct image links also open. See the
+[dated test results](docs/social-link-baseline.md) for the links and media checked.
 
 Other sites may work too; audio and galleries depend on the source. Availability varies by post,
 region and platform changes. Private, login-gated or restricted posts may not
@@ -38,20 +42,16 @@ open; signing in is not available.
 
 ## Site compatibility
 
-**Last checked: 2026-09-17** · Two initial public links per site, plus additional Instagram and TikTok photo posts; without signing in.
+On **2026-10-06**, the full local emulator run of **1.3.1** passed **57/62
+cases**, including 5 expected-error checks. Media cases check extraction, image
+rendering and short playback samples. Known issues are
+[missing photos in X mixed-media posts (#37)](https://github.com/originalRecipe1/unfurlit/issues/37),
+[Tumblr connection failures (#38)](https://github.com/originalRecipe1/unfurlit/issues/38),
+and [Pixiv's unsupported refresh-token requirement (#39)](https://github.com/originalRecipe1/unfurlit/issues/39).
+Two Imgur cases also failed with DNS errors; both passed a separate retry.
 
-| Results for tested links | Sites | Notes |
-| --- | --- | --- |
-| Working | Reddit, Instagram videos/reels | Both links extracted successfully on each site. |
-| Working | Instagram photos | The 11-photo and eight-photo examples opened successfully. Photo-post soundtracks are not supported. |
-| Working | TikTok photos with audio | One post checked: three swipeable photos and a playing soundtrack. |
-| Sometimes troublesome | YouTube, X/Twitter, TikTok videos | One of two links worked on each site. The other YouTube video was unavailable; X and TikTok had extraction failures. |
-| Troublesome | Vimeo | Neither link worked: one required sign-in, the other was blocked by the site. |
-
-These are checks on an Android emulator, not site-wide guarantees. The initial
-cases check extraction; the photo posts had image display and swiping checked, and the TikTok post
-also had audio playback checked. Other sites, including PeerTube, were not checked in this
-run. See the [detailed results](docs/social-link-baseline.md) and
-[live test pipeline](docs/development.md#social-link-regression-pipeline).
+See the [dated results and per-case outcomes](docs/social-link-baseline.md#131--2026-10-06)
+for the test environment and limitations. These results describe the tested
+links on that date; availability can change.
 
 [Report a bug](https://github.com/originalRecipe1/unfurlit/issues) · [Build from source](docs/development.md#build) · [GPL-3.0-only](LICENSE)
