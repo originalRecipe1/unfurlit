@@ -34,10 +34,8 @@ branch of the `originalRecipe1/fdroiddata` fork. `org.peek.app` is the retained
 branch name; the proposed metadata has not been merged into official `fdroiddata`.
 
 The local candidate is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
-It now targets Unfurlit `1.3.1`, version code 12, at release
-[PR #34](https://github.com/originalRecipe1/unfurlit/pull/34)'s head
-`f206f5fc4f162ad69b06ac8d06746a5a5170fbab`. Re-pin it to the tagged commit after
-merge and repeat the release comparison before submission. The MR still targets
+It targets Unfurlit `1.3.1`, version code 12, pinned to tag `v1.3.1` at commit
+`c76c789b78605bf7caa1da122f1761217c68b5e9`. The MR still targets
 `1.3.0` (`1d22c3f`); the owner will update it and reply to the reviewer.
 The candidate retains the `Unfurlit-%v.apk` release filename. Its application ID is
 `io.github.originalrecipe1.unfurlit`, and its repository and release URLs point to
@@ -124,7 +122,7 @@ Official F-Droid metadata does not live in this repository. The proposed file is
 `metadata/io.github.originalrecipe1.unfurlit.yml` on the fork's `org.peek.app`
 branch, pending merge in !47809. The local Unfurlit candidate is
 [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml),
-which targets `1.3.1` at commit `f206f5f`. Use that file for the full metadata.
+which targets `1.3.1` at commit `c76c789`. Use that file for the full metadata.
 Its `sudo` commands install `git make nodejs npm python3 tar zip` from Debian.
 Its build block uses the current property names:
 

@@ -18,7 +18,7 @@ Binaries:
 Builds:
   - versionName: 1.3.1
     versionCode: 12
-    commit: f206f5fc4f162ad69b06ac8d06746a5a5170fbab
+    commit: c76c789b78605bf7caa1da122f1761217c68b5e9
     subdir: app
     submodules: true
     sudo:
