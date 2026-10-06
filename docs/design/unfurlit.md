@@ -105,10 +105,9 @@ exploration board, not a specification of app behavior or a release screenshot.
   The four store screenshots show the actual app: light home, playback,
   history, and dark home. The existing film attribution is retained.
 - With the new application ID, all 17 UI tests and live TikTok playback
-  passed on the emulator. The new Pixel preview installed and launched while
-  both old applications remained installed. Its initial media request timed out
-  before extraction. Playback was not confirmed on retry, and the app was no
-  longer running at the final check; phone playback under this ID is unconfirmed.
+  passed on the emulator. A preview build installed and launched on a physical
+  ARM64 phone, but its initial media request timed out before extraction;
+  playback under this ID was not confirmed.
 - The prepared F-Droid recipe passed `fdroid lint` and `fdroid rewritemeta`
   using official F-Droid category/anti-feature definitions. Full F-Droid source
   scanning and signed-binary reproducibility verification await the new release.

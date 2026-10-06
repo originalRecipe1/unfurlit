@@ -11,8 +11,8 @@ for this run.
   commit `c76c789b78605bf7caa1da122f1761217c68b5e9`, version code 12.
 - Fixture: all 62 entries in the release's
   [social-links.json](https://github.com/originalRecipe1/unfurlit/blob/c76c789b78605bf7caa1da122f1761217c68b5e9/app/src/socialLinks/assets/social-links.json).
-- Environment: local API 36 Google APIs x86_64 emulator, using the workstation's
-  connection and anonymous access. This was not run on a GitHub Actions runner.
+- Environment: API 36 Google APIs x86_64 emulator, a residential connection,
+  anonymous access. This was not run on a GitHub Actions runner.
 - Engines: yt-dlp 2026.08.19 with EJS 0.8.0, and gallery-dl 1.32.13. The test APK's
   two bundled engine resources were hash-checked against the published release.
 - Method: a local diagnostic link-check build opens each fixture from History
@@ -370,6 +370,6 @@ media extraction. Direct image URLs still retain the default extractors.
 An external host supported only by GenericIE can be affected by disabling it;
 unlisted hosts have not been verified.
 
-These checks verify extraction, media types and counts. The owner confirmed the
-initial explicit-gallery fix on a physical phone; playback and rendering with
-this follow-up APK have not yet been verified on a physical device.
+These checks verify extraction, media types and counts. Confirmed on a physical
+ARM64 phone: the initial explicit-gallery fix. Playback and rendering with this
+follow-up APK have not yet been verified on a physical device.

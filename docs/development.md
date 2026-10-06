@@ -37,16 +37,16 @@ local x86_64 emulator testing. Release APKs always contain only `arm64-v8a`,
 even when this option is set. Live extraction tests run in a separate weekly/manual workflow so
 platform rate limits and datacenter blocking cannot make pull requests flaky.
 
-On this Fedora host, the API 36 emulator's SwiftShader renderer crashed before
-Android finished booting. A cold boot using host graphics worked:
+If the API 36 emulator's software renderer crashes during boot, cold-boot it
+with `-gpu host -feature -Vulkan -no-snapshot`:
 
 ```bash
-"$ANDROID_HOME/emulator/emulator" @unfurlit-review -no-window -no-audio -no-snapshot -gpu host -feature -Vulkan
-ANDROID_SERIAL=emulator-5554 ./gradlew connectedDebugAndroidTest -Punfurlit.ci.x86_64=true
+"$ANDROID_HOME/emulator/emulator" -avd "<avd-name>" -no-window -no-audio -gpu host -feature -Vulkan -no-snapshot
+ANDROID_SERIAL="<emulator-serial>" ./gradlew connectedDebugAndroidTest -Punfurlit.ci.x86_64=true
 ```
 
-Use the AVD name and emulator serial available on your machine. This is a local
-workaround; CI retains its existing software renderer configuration.
+Replace the placeholders with the selected AVD name and the serial reported by
+`adb devices`. CI uses its configured software renderer.
 
 Release builds use R8 code optimization and resource shrinking, including the
 optimized resource shrinker for AGP 8.13. CI also builds the release APK so
@@ -55,6 +55,10 @@ or keep rules with playback in a signed release build; debug tests do not run
 the optimized code. Keep `app/build/outputs/mapping/release/mapping.txt` with
 each release to decode obfuscated crash traces. The release workflow attaches
 this mapping file alongside the signed APK and checksum.
+
+In historical ARM64 measurements on 2026-09-14, R8 and optimized resource
+shrinking reduced the unsigned release APK from 29,972,943 to 20,079,981 bytes
+and uncompressed DEX code from 30,492,864 to 3,995,044 bytes.
 
 For daily testing on a development phone and for judging scrolling performance,
 use `localRelease`. It has release optimizations and no debugger/tooling overhead,
@@ -72,7 +76,7 @@ timings on the same phone, with the same history and scrolling sequence, after
 force-stopping and relaunching the app. Debug timings are not representative of
 release performance.
 
-A local Pixel 7 sanity check (2026-09-18), using the same saved history,
+A sanity check on a physical ARM64 phone (2026-09-18), using the same saved history,
 process restart, History navigation, and eight alternating 450 ms vertical swipes,
 reported the following through `adb shell dumpsys gfxinfo
 io.github.originalrecipe1.unfurlit framestats`:
@@ -91,9 +95,14 @@ The cached AAR transform in `buildSrc` trims the bundled Python runtime for all
 builds, including x86_64 CI tests. Its exact removal list contains only the
 static QuickJS build archive and seven CPython test extension modules. Retained
 file contents, compressed payloads, Unix permissions, and symlink targets are
-preserved. Gradle runs in UTC to keep rewritten ZIP headers reproducible. The
-downloaded Maven artifact and its dependency metadata remain unchanged; a
-runtime layout change fails the transform and requires review of the list.
+preserved. ZIP timestamps are normalized to UTC in code, independently of the
+build's default timezone. The downloaded Maven artifact and its dependency
+metadata remain unchanged; a runtime layout change fails the transform and
+requires review of the list.
+
+In historical ARM64 measurements on 2026-09-15, trimming reduced expanded
+runtime files from 41,680,927 to 34,880,897 bytes and the release APK from
+20,079,981 to 18,282,669 bytes.
 
 Run `./gradlew :buildSrc:test` for the archive preservation tests. Instrumented
 tests also start the trimmed Python/yt-dlp engine with `--version`, without
@@ -240,6 +249,8 @@ The app exports yt-dlp's scoped cookies separately from its HTTP headers and
 uses an in-memory cookie jar per video/audio source. Cookie domain, path, secure
 flags, and expiry are checked for each request, including redirects. History
 stores display metadata and small thumbnail copies, never playback credentials.
+Preserving these scoped cookies and decoding Python-quoted values fixed TikTok
+media URLs returning HTTP 403 without requiring browser impersonation.
 
 ## Network safety
 
