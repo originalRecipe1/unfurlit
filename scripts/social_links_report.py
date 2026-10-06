@@ -49,16 +49,25 @@ GROUPS = (
     ("other", "Any media"),
     ("error", "Error handling"),
 )
-STATUSES = ("PASS", "BLOCKED", "KNOWN", "FAIL")
+STATUSES = ("PASS", "BLOCKED", "LOCAL-ONLY", "KNOWN", "FAIL")
 ISSUES_URL = "https://github.com/originalRecipe1/unfurlit/issues/"
 # Literal upstream messages, including the curly apostrophe in run 37472226940.
 # "Please sign in", private videos, and other authentication failures are NOT blocks.
-RUNNER_BLOCK_MESSAGES = tuple(re.compile(r"(?<!\w)" + re.escape(message) + r"(?!\w)") for message in (
-    "Sign in to confirm you're not a bot",
-    "Sign in to confirm you’re not a bot",
-    "blocked by network security",
-    "403 Blocked",
-))
+RUNNER_BLOCK_MESSAGES = (
+    *(re.compile(r"(?<!\w)" + re.escape(message) + r"(?!\w)") for message in (
+        "Sign in to confirm you're not a bot",
+        "Sign in to confirm you’re not a bot",
+        "blocked by network security",
+        "403 Blocked",
+    )),
+    # Pinned yt-dlp's reddit.py:307-313 raises this only when anonymous and the
+    # .json response isn't JSON. Require the Reddit extractor prefix and post ID;
+    # the same authentication phrase from another extractor is not a runner block.
+    re.compile(r"\[Reddit\] [0-9a-z]+: Account authentication is required(?!\w)"),
+)
+# "Please sign in" is the 1.3.0 regression signature, not a runner-block pattern.
+# CI reports this case without gating; local runs still check it for that regression.
+LOCAL_ONLY_CASES = {"youtube-shorts-sign-in-fallback"}
 
 
 @dataclass
@@ -115,7 +124,9 @@ class Classification:
         return f"[KNOWN (#{self.issue})]({url})"
 
 
-def classify(case: dict, outcome: Outcome) -> Classification:
+def classify(case: dict, outcome: Outcome, *, runner: bool = False) -> Classification:
+    if runner and case["id"] in LOCAL_ONLY_CASES:
+        return Classification("LOCAL-ONLY")
     issue = KNOWN_ISSUES.get(case["id"])
     same_expectation = issue is not None and case.get("expected") == SUCCESS and expectation(case) == issue.expected
     if outcome.passed:
@@ -138,9 +149,9 @@ def complete_outcomes(cases: list[dict], outcomes: dict[str, Outcome]) -> dict[s
     }
 
 
-def counts_for(cases: list[dict], outcomes: dict[str, Outcome]) -> dict[str, int]:
+def counts_for(cases: list[dict], outcomes: dict[str, Outcome], *, runner: bool = False) -> dict[str, int]:
     complete = complete_outcomes(cases, outcomes)
-    counts = Counter(classify(case, complete[case["id"]]).status for case in cases)
+    counts = Counter(classify(case, complete[case["id"]], runner=runner).status for case in cases)
     return {status: counts[status] for status in STATUSES}
 
 
@@ -302,17 +313,21 @@ def cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
-def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[str] | None = None) -> str:
+def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[str] | None = None,
+           *, runner: bool = False) -> str:
     complete = complete_outcomes(cases, outcomes)
-    classifications = {case["id"]: classify(case, complete[case["id"]]) for case in cases}
-    counts = counts_for(cases, outcomes)
+    classifications = {case["id"]: classify(case, complete[case["id"]], runner=runner) for case in cases}
+    counts = counts_for(cases, outcomes, runner=runner)
     lines = ["## Live social links", ""]
     if not outcomes:
         lines.append(f"No {TEST_CLASS} results were found; the run may have failed before testing.")
     lines.append("**" + " · ".join(f"{status} {counts[status]}" for status in STATUSES) + "**")
-    lines.append(f"{len(cases)} selected cases. BLOCKED and KNOWN are not passes. Media URLs and credentials are never reported.")
-    if missing := sum(case["id"] not in outcomes for case in cases):
-        lines.append(f"{missing} selected cases did not complete and count as FAIL.")
+    lines.append(f"{len(cases)} selected cases. BLOCKED, LOCAL-ONLY, and KNOWN are not passes. Media URLs and credentials are never reported.")
+    if runner:
+        lines.append("LOCAL-ONLY cases never gate CI; validate them and YouTube coverage in a local pre-release run.")
+    if missing := [case for case in cases if case["id"] not in outcomes]:
+        missing_failures = sum(classifications[case["id"]].status == "FAIL" for case in missing)
+        lines.append(f"{len(missing)} selected cases did not complete ({missing_failures} FAIL).")
     if run_problems:
         lines += ["", "### Test-run failures", "", *[f"- {cell(problem)}" for problem in run_problems]]
     lines += ["", "| Outcome | Count |", "| --- | ---: |"]
@@ -325,11 +340,11 @@ def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[s
             lines.append(f"- `{case['id']}`: PASS; review [#{issue}]({ISSUES_URL}{issue}) for closure.")
     else:
         lines.append("None.")
-    lines += ["", "| Media | PASS | BLOCKED | KNOWN | FAIL |", "| --- | ---: | ---: | ---: | ---: |"]
+    lines += ["", "| Media | " + " | ".join(STATUSES) + " |", "| --- | " + " | ".join("---:" for _ in STATUSES) + " |"]
     groups = [(key, title, [case for case in cases if group_of(case) == key]) for key, title in GROUPS]
     for _, title, members in groups:
         if members:
-            group_counts = counts_for(members, outcomes)
+            group_counts = counts_for(members, outcomes, runner=runner)
             lines.append(f"| {title} | " + " | ".join(str(group_counts[status]) for status in STATUSES) + " |")
     for _, title, members in groups:
         if not members:
@@ -357,6 +372,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--results", type=Path, default=RESULTS, help="Directory searched for test reports")
     parser.add_argument("--check", action="store_true", help="Only validate the fixture")
     parser.add_argument("--link-ids", default="", help="Comma-separated selected case IDs; empty means all cases")
+    parser.add_argument("--runner", action="store_true",
+                        help="Report mapped LOCAL-ONLY cases without gating CI; omit for local pre-release validation")
     parser.add_argument("--test-step-outcome", choices=("success", "failure", "skipped", "cancelled", ""),
                         help="GitHub outcome of the Gradle test step; detect failures outside case assertions")
     parser.add_argument("--json-output", type=Path, help="Also save classified results as JSON")
@@ -386,13 +403,13 @@ def main(argv: list[str] | None = None) -> int:
         elif args.test_step_outcome == "failure" and not any(
                 not outcomes[case["id"]].passed for case in selected if case["id"] in outcomes):
             run_problems.append("The test step failed without a recorded case failure; inspect the Gradle/emulator log.")
-    counts = counts_for(selected, outcomes)
+    counts = counts_for(selected, outcomes, runner=args.runner)
     if args.json_output:
         complete = complete_outcomes(selected, outcomes)
-        payload = {"counts": counts, "run_problems": run_problems, "cases": []}
+        payload = {"runner": args.runner, "counts": counts, "run_problems": run_problems, "cases": []}
         for case in selected:
             outcome = complete[case["id"]]
-            classification = classify(case, outcome)
+            classification = classify(case, outcome, runner=args.runner)
             payload["cases"].append({
                 "id": case["id"], "status": classification.status, "issue": classification.issue,
                 "expected": expectation(case), "observed": outcome.observed, "problems": outcome.problems,
@@ -400,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
             })
         args.json_output.parent.mkdir(parents=True, exist_ok=True)
         args.json_output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    sys.stdout.write(render(selected, outcomes, run_problems))
+    sys.stdout.write(render(selected, outcomes, run_problems, runner=args.runner))
     return int(counts["FAIL"] > 0 or bool(run_problems))
 
 
