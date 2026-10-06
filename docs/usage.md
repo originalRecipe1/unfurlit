@@ -37,18 +37,23 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 ## Sites and access
 
 - YouTube: videos and Shorts.
+- Vimeo: videos, including page links and unlisted links with an access hash.
 - Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
 - TikTok: videos and photo posts, including available photo soundtracks.
-- Reddit and X/Twitter: videos, photos and galleries.
+- Reddit: videos, photos and galleries, including gallery posts opened from share,
+  comments and `redd.it` short links.
+- X/Twitter: videos, photos and galleries; mixed video-and-photo posts can omit photos.
 - PeerTube: videos.
+- Bandcamp: audio tracks.
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
-Photos and galleries outside Instagram and TikTok come from the bundled
-gallery-dl engine: when yt-dlp finds no video in a post, Unfurlit tries
-gallery-dl, which supports image posts on hundreds of sites. Direct links to an
-image also open. In a live run on 2026-09-25, 21 of 23 photo and gallery links
-opened; see the [detailed results](social-link-baseline.md#media-types-on-the-ci-runner).
-Pixiv needs a sign-in, so Pixiv links do not open.
+TikTok and Instagram photo posts use Unfurlit's own extractors (TikTok including
+the post's soundtrack). Instagram falls back to the bundled gallery-dl engine
+if that fails, as do photos and galleries on other sites. Direct links to an
+image also open. See the [dated test results](social-link-baseline.md) for the
+links and media checked. Pixiv's extractor requires a refresh token that Unfurlit
+cannot currently accept, so those links do not open; see
+[issue #39](https://github.com/originalRecipe1/unfurlit/issues/39).
 
 Reddit posts shared from alternative front ends such as eddrit or Redlib, Reddit
 "copy image link" links (`reddit.com/media?url=…`), and resized
@@ -61,7 +66,7 @@ region and platform changes. Private, login-gated or restricted posts may not
 open; signing in is not available.
 
 Tap **Supported links and media** on Home for this list in the app. See the
-[compatibility results](experiment-results.md) for tested links.
+[dated test results](social-link-baseline.md) for tested links.
 
 Private, login-gated, age-restricted, or region-restricted posts may not open.
 Importing login cookies, choosing quality manually, and saving media are not

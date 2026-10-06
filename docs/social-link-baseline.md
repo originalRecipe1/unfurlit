@@ -1,4 +1,187 @@
-# Social-link extraction baseline
+# Social-link baseline
+
+## 1.3.1 — 2026-10-06
+
+**Verified: 57/62 cases passed; 5 failed.** This includes
+52/57 media cases and 5/5 expected-error checks. Every fixture ran once in the full run;
+failed media expectations remain failures. No fixture was removed or changed
+for this run.
+
+- Source: [v1.3.1](https://github.com/originalRecipe1/unfurlit/tree/c76c789b78605bf7caa1da122f1761217c68b5e9),
+  commit `c76c789b78605bf7caa1da122f1761217c68b5e9`, version code 12.
+- Fixture: all 62 entries in the release's
+  [social-links.json](https://github.com/originalRecipe1/unfurlit/blob/c76c789b78605bf7caa1da122f1761217c68b5e9/app/src/socialLinks/assets/social-links.json).
+- Environment: local API 36 Google APIs x86_64 emulator, using the workstation's
+  connection and anonymous access. This was not run on a GitHub Actions runner.
+- Engines: yt-dlp 2026.08.19 with EJS 0.8.0, and gallery-dl 1.32.13. The test APK's
+  two bundled engine resources were hash-checked against the published release.
+- Method: a local diagnostic link-check build opens each fixture from History
+  in a fresh app process. Observers record image decoding/drawing, player frames
+  and audio progress; the diagnostic changes are not part of the app release or PR.
+
+A media case passes only when its expected types, count and soundtrack (when
+the case specifies one) match and its media renders or plays. Every returned
+gallery item is visited for a passing case. Video must render a frame and advance at least three seconds;
+selected audio must also advance. Images must decode and draw on the active
+page. An expected-error case passes only when its specified error screen appears.
+
+**Not verified:** complete playback of each track/video, audible output from
+physical speakers, device-specific codec support, and availability from other
+connections or regions. These are short emulator checks of individual links,
+not site-wide guarantees or a substitute for physical-phone testing.
+
+| Media | Passed | Failed |
+| --- | ---: | ---: |
+| Video | 25/26 | 1 |
+| Photos and galleries | 23/26 | 3 |
+| Audio | 4/4 | 0 |
+| Mixed media | 0/1 | 1 |
+| Error handling | 5/5 | 0 |
+
+Failures observed in this run:
+
+- `imgur-gifv`: returned an image (`format_id: "0"`) instead of the expected
+  video, then failed to resolve `i.imgur.com` when loading that image. The DNS
+  error explains the failed image load, not the wrong media type; its cause is
+  not verified.
+- `x-mixed-media` ([#37](https://github.com/originalRecipe1/unfurlit/issues/37)):
+  the video played, but the expected second item, a photo, was missing.
+- `imgur-image`: extracted an image URL, but its viewer failed to resolve `i.imgur.com`.
+- `tumblr-photo-post` ([#38](https://github.com/originalRecipe1/unfurlit/issues/38)):
+  `NetworkFailure`; yt-dlp reported that the remote end closed the connection
+  without a response. None of the four expected images opened.
+- `pixiv-artwork` ([#39](https://github.com/originalRecipe1/unfurlit/issues/39)):
+  `AuthenticationRequired`; gallery-dl reported that a `refresh-token` is required.
+
+**Verified separate retry:** both Imgur cases passed afterward with the same APK,
+each in a fresh app process on a freshly started emulator. `imgur-gifv` extracted
+and played one progressive video (`format_id: "twitter"`, 15.5 s total);
+`imgur-image` decoded and drew one image (10.9 s). The full-run count stays
+**57/62**. The 19-image Imgur album
+and the Reddit post linking to an Imgur video also passed during the full run.
+**Not verified:** why `imgur-gifv` returned the wrong media type in the full run,
+and the cause of the temporary DNS lookup failures.
+
+All five YouTube cases, all three Vimeo cases, all 13 Reddit cases, and all four
+audio cases passed during the full run. Bandcamp selected the lossy `vorbis`
+format and audio playback advanced successfully.
+
+Per-case results follow. A **PASS** for media includes the rendering/playback
+checks above; the observed column describes what extraction returned. Elapsed
+times include History navigation and viewer checks, so they are not extraction
+benchmarks.
+
+| Case | Expected | Result | Observed | Seconds |
+| --- | --- | --- | --- | ---: |
+| `youtube-video` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 30.1 |
+| `youtube-short-link` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 21.7 |
+| `youtube-big-buck-bunny` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 19.8 |
+| `youtube-shorts` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 31.7 |
+| `youtube-shorts-sign-in-fallback` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 24.1 |
+| `vimeo-video` | success: 1 video | **PASS** | success: 1 video (Hls, separate audio), from Vimeo | 14.9 |
+| `vimeo-player` | success: 1 video | **PASS** | success: 1 video (Hls, separate audio), from Vimeo | 13.6 |
+| `vimeo-unlisted` | success: 1 video | **PASS** | success: 1 video (Hls), from Vimeo | 13.6 |
+| `reddit-video` | success: 1 video | **PASS** | success: 1 video (Hls/Progressive, separate audio), from Reddit | 16.4 |
+| `reddit-native-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from Reddit | 17.0 |
+| `x-video` | success: 1 video | **PASS** | success: 1 video (Hls, separate audio), from Twitter | 14.1 |
+| `x-second-video` | success: 1 video | **PASS** | success: 1 video (Hls), from Twitter | 14.0 |
+| `x-animated-gif` | success: 1 video | **PASS** | success: 1 video (Progressive), from Twitter | 8.8 |
+| `instagram-post` | success: 3 videos | **PASS** | success: 3 videos (Progressive), from Instagram | 21.1 |
+| `instagram-reel` | success: 1 video | **PASS** | success: 1 video (Progressive), from Instagram | 13.4 |
+| `instagram-video-carousel` | success: 2 videos | **PASS** | success: 2 videos (Progressive), from Instagram | 17.2 |
+| `tiktok-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from TikTok | 10.8 |
+| `tiktok-second-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from TikTok | 10.3 |
+| `bluesky-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from Bluesky | 15.7 |
+| `imgur-gifv` | success: 1 video | **FAIL** | success: 1 image, from Imgur; unexpected image; missing video; DNS lookup for i.imgur.com failed | 7.6 |
+| `peertube-video` | success: 1 video | **PASS** | success: 1 video (Hls), from PeerTube | 11.1 |
+| `dailymotion-video` | success: 1 video | **PASS** | success: 1 video (Hls), from Dailymotion | 15.0 |
+| `twitch-clip` | success: 1 video | **PASS** | success: 1 video (Progressive), from TwitchClips | 10.8 |
+| `direct-video-file` | success: 1 video | **PASS** | success: 1 video (Progressive), from Generic | 9.4 |
+| `instagram-photo-carousel` | success: 11 images | **PASS** | success: 11 images, from Instagram | 7.7 |
+| `instagram-eight-photo-post` | success: 8 images | **PASS** | success: 8 images, from Instagram | 6.6 |
+| `instagram-single-photo` | success: 1 image | **PASS** | success: 1 image, from Instagram | 4.3 |
+| `tiktok-photos-with-audio` | success: 3 images, with soundtrack | **PASS** | success: 3 images, soundtrack, from TikTok | 9.5 |
+| `tiktok-photo-link` | success: 16 images, with soundtrack | **PASS** | success: 16 images, soundtrack, from TikTok | 9.2 |
+| `tiktok-single-photo` | success: 1 image | **PASS** | success: 1 image, soundtrack, from TikTok | 7.5 |
+| `reddit-image-post` | success: 1 image | **PASS** | success: 1 image, from Reddit | 15.3 |
+| `reddit-gallery` | success: 3 images | **PASS** | success: 3 images, from Reddit | 12.2 |
+| `reddit-gallery-comments` | success: 3 images | **PASS** | success: 3 images, from Reddit | 19.5 |
+| `reddit-gallery-share` | success: 4 images | **PASS** | success: 4 images, from Reddit | 17.4 |
+| `reddit-gallery-short` | success: 3 images | **PASS** | success: 3 images, from Reddit | 19.9 |
+| `reddit-external-imgur` | success: 1 video | **PASS** | success: 1 video (Progressive), from Imgur | 18.0 |
+| `reddit-external-streamable` | success: 1 video | **PASS** | success: 1 video (Progressive), from Streamable | 15.5 |
+| `reddit-direct-image` | success: 1 image | **PASS** | success: 1 image, from Reddit | 11.4 |
+| `reddit-preview-image` | success: 1 image | **PASS** | success: 1 image, from Reddit | 11.8 |
+| `reddit-image-link-wrapper` | success: 1 image | **PASS** | success: 1 image, from Reddit | 11.7 |
+| `reddit-mirror-post` | success: 1 image | **PASS** | success: 1 image, from Reddit | 15.1 |
+| `x-photo-post` | success: 4 images | **PASS** | success: 4 images, from X/Twitter | 15.1 |
+| `x-mixed-media` | success: 2 video+image | **FAIL** | success: 1 video (Progressive), from Twitter; missing image; 1 item instead of 2 | 12.5 |
+| `bluesky-image` | success: 1 image | **PASS** | success: 1 image, from Bluesky | 11.9 |
+| `imgur-image` | success: 1 image | **FAIL** | success: 1 image, from Imgur; DNS lookup for i.imgur.com failed | 8.8 |
+| `imgur-album` | success: 19 images | **PASS** | success: 19 images, from Imgur | 13.9 |
+| `flickr-photo` | success: 1 image | **PASS** | success: 1 image, from Flickr | 16.3 |
+| `tumblr-photo-post` | success: 4 images | **FAIL** | NetworkFailure; wrong outcome | 8.4 |
+| `mastodon-photos` | success: 4 images | **PASS** | success: 4 images, from Mastodon.social | 14.1 |
+| `pixiv-artwork` | success: 1 image | **FAIL** | AuthenticationRequired; wrong outcome | 12.8 |
+| `pinterest-pin` | success: 1 image | **PASS** | success: 1 image, from Pinterest | 10.4 |
+| `wikimedia-commons-file` | success: 1 image | **PASS** | success: 1 image, from Wikimedia | 7.8 |
+| `direct-image-file` | success: 1 image | **PASS** | success: 1 image, from Generic | 5.8 |
+| `soundcloud-track` | success: 1 audio | **PASS** | success: 1 audio (Hls), from Soundcloud | 18.6 |
+| `bandcamp-track` | success: 1 audio | **PASS** | success: 1 audio (Progressive), from Bandcamp | 23.6 |
+| `mixcloud-show` | success: 1 audio | **PASS** | success: 1 audio (Dash), from Mixcloud | 15.4 |
+| `direct-audio-file` | success: 1 audio | **PASS** | success: 1 audio (Progressive), from Generic | 9.2 |
+| `non-media-page` | UnsupportedUrl | **PASS** | UnsupportedUrl | 10.0 |
+| `missing-page` | MediaUnavailable | **PASS** | MediaUnavailable | 5.7 |
+| `imgur-missing-image` | MediaUnavailable | **PASS** | MediaUnavailable | 7.0 |
+| `invalid-scheme` | UnsupportedUrl | **PASS** | UnsupportedUrl | 2.1 |
+| `private-address` | UnsupportedUrl | **PASS** | UnsupportedUrl | 2.1 |
+
+### Imgur GIFV follow-up — 2026-10-06
+
+**Verified:** five further local API 36 emulator attempts all extracted and
+played the MP4 video, `format_id: "twitter"`. Full yt-dlp JSON, the JSON passed
+to Unfurlit's parser, stderr and viewer results were saved for every attempt.
+These used the same 1.3.1 source and release engine with extra local diagnostic
+output enabled. They do not change the full-run **57/62** count.
+
+| Attempt | Selected format | Parser result | Playback | Total seconds |
+| --- | --- | --- | --- | ---: |
+| 1 | `twitter` / MP4 | Video | **PASS** | 14.6 |
+| 2 | `twitter` / MP4 | Video | **PASS** | 10.9 |
+| 3 | `twitter` / MP4 | Video | **PASS** | 9.6 |
+| 4 | `twitter` / MP4 | Video | **PASS** | 7.7 |
+| 5 | `twitter` / MP4 | Video | **PASS** | 10.4 |
+
+Each raw JSON dump also lists an unselected GIF format `0`. A separate capture
+of Imgur's current API response identifies that asset as `type: "image"`,
+`ext: "gif"`, with `is_animated: true`. In the pinned
+[ImgurIE](https://github.com/yt-dlp/yt-dlp/blob/3a08beaf031ab68f966401ead017ac81fe8486cf/yt_dlp/extractor/imgur.py#L115),
+`_real_extract` accepts animated images and adds this API format without a
+format ID. Its `.gifv` webpage request is nonfatal; the webpage supplies the
+`twitter` MP4 candidate. If that page provides no video, only the API GIF remains.
+[yt-dlp's format processing](https://github.com/yt-dlp/yt-dlp/blob/3a08beaf031ab68f966401ead017ac81fe8486cf/yt_dlp/YoutubeDL.py#L3000)
+assigns `"0"` to the first format without an ID.
+
+**Verified controlled replay:** using the captured API response and simulating
+an unavailable `.gifv` page produces a single GIF format `0` with Unfurlit's
+release format selector. Restoring the captured page selects the MP4 `twitter`
+format. This reproduces a path to the wrong media type, not the original failure.
+
+**Verified parser behavior:** the unchanged release `YtDlpJsonParser` classifies
+`.gif` as Image through `looksLikeImage()` before considering video codecs.
+A local diagnostic test parsed all five live JSON outputs as Video and the
+two replay outputs as Video (`twitter`) and Image (`0`), respectively. The
+parser therefore supplies the Image classification; it does not invent format
+`0` or turn an MP4 into an image in these checks.
+
+**Not verified:** why the original full-run extraction lacked the MP4 candidate.
+That attempt did not save raw JSON or yt-dlp warnings, so a failed `.gifv`
+request or a different page response remains unconfirmed. The later viewer DNS
+error alone does not establish the extraction cause.
+
+Earlier dated runs are retained below as historical results.
+
+## Initial local run — 2026-09-17
 
 Initial local run: 2026-09-17, Android API 36 x86_64 emulator, bundled yt-dlp
 2026.08.19, anonymous access. These results describe this environment and time;

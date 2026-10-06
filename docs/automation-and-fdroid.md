@@ -35,8 +35,9 @@ branch name; the proposed metadata has not been merged into official `fdroiddata
 
 The local candidate is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
 It targets Unfurlit `1.3.1`, version code 12, pinned to tag `v1.3.1` at commit
-`c76c789b78605bf7caa1da122f1761217c68b5e9`. The MR still targets
-`1.3.0` (`1d22c3f`); the owner will update it and reply to the reviewer.
+`c76c789b78605bf7caa1da122f1761217c68b5e9`. The MR targets the same `1.3.1`
+release and is waiting on the reviewer's gallery-dl answer; see
+[issue #40](https://github.com/originalRecipe1/unfurlit/issues/40).
 The candidate retains the `Unfurlit-%v.apk` release filename. Its application ID is
 `io.github.originalrecipe1.unfurlit`, and its repository and release URLs point to
 `originalRecipe1/unfurlit`. The signing certificate, extractor version, and
@@ -104,9 +105,9 @@ configure all four Actions secrets:
 The workflow builds yt-dlp from the pinned source submodule, passes that artifact
 to Gradle, aligns the unsigned release APK, and signs/verifies it with Android
 Build Tools 34.0.0. F-Droid must reproduce the unsigned APK before it can copy the
-upstream signature. The 1.3.1 candidate produces the same unsigned APK as CI,
-but the tagged, signed release comparison remains outstanding. All four secrets
-are required; a missing or partial configuration
+upstream signature. The 1.3.1 candidate passed the tagged, signed release
+comparison at `c76c789`, including the allowlisted signing-certificate check.
+All four secrets are required; a missing or partial configuration
 fails before a tag or GitHub release can be created.
 
 Keep the original keystore and credentials backed up securely outside GitHub;
@@ -162,9 +163,9 @@ F-Droid can then update
 its build metadata from release tags and queue new builds. Publication is
 asynchronous and remains controlled by F-Droid.
 
-The 1.3.0 build proposed on !47809 lacks `yt_dlp_ejs` and has the YouTube
-regression fixed for 1.3.1. The owner will test the 1.3.1 ARM64 link-check APK on
-a physical phone before release; that test is not yet verified.
+The earlier 1.3.0 candidate on !47809 lacked `yt_dlp_ejs` and had the YouTube
+regression fixed in 1.3.1. Playback checks are recorded separately in the
+[social-link baseline](social-link-baseline.md).
 
 ### EJS dependency choice and 1.3.1 validation
 
@@ -207,10 +208,17 @@ Java 21, and Android SDK 36.
   the unsigned APK from [CI run 37355691393](https://github.com/originalRecipe1/unfurlit/actions/runs/37355691393)
   at that same commit. Both entire APKs have SHA-256
   `4594cd0ce23ba3a6112a63f7ed5d8a5606f3d0ea43c78d1e899983d56b436d7e`.
-- **Not verified:** the final `Binaries` check could not download the unpublished
-  1.3.1 release (HTTP 404), so the overall `fdroid build` command returned exit 1
-  after successfully building the APK. Tagged/signed release verification,
-  an offline build of this candidate, and F-Droid acceptance remain outstanding.
+- **Verified after publication on 2026-10-05:** the recipe was re-pinned to the
+  `v1.3.1` tag at `c76c789` and the same `fdroid build` command exited 0. It
+  downloaded the published APK, successfully verified the rebuilt APK using
+  the upstream signature, and accepted the allowlisted signing certificate.
+  This resolves the pre-publication `Binaries` HTTP 404. The unsigned rebuild
+  SHA-256 is `07f3f08d749cb0915f6a0206c4955de9f4ada87ae96aba1d8cca167d6793ba72`;
+  the published signed APK SHA-256 is
+  `185d020bd664ffbe7c062c6e37f6970bb4747dc134dd0ad1ba5edb8566cc7ef4`.
+- **Not verified:** a network-isolated offline build of this candidate and
+  F-Droid dependency acceptance remain outstanding. Successful reproducibility
+  does not resolve the scanner's prebuilt-dependency findings.
 
 The full source-built yt-dlp hash is
 `1d641a354c1f2cca803ad8c6d841f5ab65ffcd0eb99ce6b358fc08c7d309ae86`
@@ -225,7 +233,9 @@ rejects checksum or version mismatches. The youtubedl-android runtime is resolve
 from Maven Central, a trusted Maven repository; it contains the native Python and
 QuickJS runtimes documented in `THIRD_PARTY_NOTICES.md`.
 
-Merge request !47809 originally proposed Peek v5 and now proposes Unfurlit 1.3.0.
+Merge request !47809 originally proposed Peek v5 and now proposes Unfurlit 1.3.1
+at `c76c789`, pending the reviewer's gallery-dl answer tracked in
+[issue #40](https://github.com/originalRecipe1/unfurlit/issues/40).
 Official F-Droid acceptance and publication remain pending. GitHub Actions cannot
 publish directly into the official repository; F-Droid detects tags and controls
 its own build and signing queue.
