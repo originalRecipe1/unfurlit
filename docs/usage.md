@@ -47,9 +47,9 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - Bandcamp: audio tracks.
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
-Photos and galleries outside Instagram and TikTok come from the bundled
-gallery-dl engine: when yt-dlp finds no video in a post, Unfurlit tries
-gallery-dl, which supports image posts on hundreds of sites. Direct links to an
+TikTok and Instagram photo posts use Unfurlit's own extractors (TikTok including
+the post's soundtrack). Instagram falls back to the bundled gallery-dl engine
+if that fails, as do photos and galleries on other sites. Direct links to an
 image also open. See the [dated test results](social-link-baseline.md) for the
 links and media checked. Pixiv's extractor requires a refresh token that Unfurlit
 cannot currently accept, so those links do not open; see

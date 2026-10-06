@@ -31,9 +31,10 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 - Bandcamp: audio tracks.
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
-Photos and galleries outside Instagram and TikTok come from the bundled
-[gallery-dl](https://github.com/mikf/gallery-dl) engine, used when a post has no
-video. Direct image links also open. See the
+TikTok and Instagram photo posts use Unfurlit's own extractors (TikTok including
+the post's soundtrack). Instagram falls back to the bundled
+[gallery-dl](https://github.com/mikf/gallery-dl) engine if that fails, as do photos
+and galleries on other sites. Direct image links also open. See the
 [dated test results](docs/social-link-baseline.md) for the links and media checked.
 
 Other sites may work too; audio and galleries depend on the source. Availability varies by post,
@@ -48,7 +49,9 @@ rendering and short playback samples. Known issues are
 [missing photos in X mixed-media posts (#37)](https://github.com/originalRecipe1/unfurlit/issues/37),
 [Tumblr connection failures (#38)](https://github.com/originalRecipe1/unfurlit/issues/38),
 and [Pixiv's unsupported refresh-token requirement (#39)](https://github.com/originalRecipe1/unfurlit/issues/39).
-Two Imgur cases also failed with DNS errors; both passed a separate retry.
+`imgur-gifv` returned the wrong media type (an image), then failed to load that
+image because of a DNS error; the cause of the wrong media type is not verified.
+`imgur-image` also failed on DNS. Both passed a separate retry.
 
 See the [dated results and per-case outcomes](docs/social-link-baseline.md#131--2026-10-06)
 for the test environment and limitations. These results describe the tested
