@@ -290,7 +290,7 @@ The **Live social links** workflow runs weekly and on manual dispatch, using the
 same source-built extractor as release APKs. It exercises
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
 gallery-dl engines and JSON normalization, with native page-data adapters for TikTok
-and Instagram photo posts. The 61 cases in
+and Instagram photo posts. The cases in
 `app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
 - **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit (native video
@@ -331,12 +331,29 @@ media URLs, headers or cookies. Each case also logs this observation and its ext
 time under the `SocialLinksTest` logcat tag.
 
 After the tests, `scripts/social_links_report.py` writes a Markdown table of every
-case, grouped by media type, to the workflow's job summary, followed by the app's
-redacted failure log line for each failed case. Reports and logcat are
-uploaded even on failure. Review failures for site changes, deleted fixtures and CI
-blocking before changing an expectation. No cookies or accounts are used. This checks
-extraction; playback, seeking and image rendering still need the manual viewer checks
-above.
+selected case, grouped by media type, to the workflow's job summary. It reports
+**PASS**, **BLOCKED**, **KNOWN**, and **FAIL** counts separately:
+
+- **BLOCKED** requires `AuthenticationRequired` and the exact upstream message
+  "Sign in to confirm you're not a bot" (including the curly-apostrophe spelling),
+  "blocked by network security", or "403 Blocked". Other sign-in messages,
+  including "Please sign in", remain failures.
+- **KNOWN** requires the recorded failure signature for X mixed media
+  ([#37](https://github.com/originalRecipe1/unfurlit/issues/37)), Tumblr
+  ([#38](https://github.com/originalRecipe1/unfurlit/issues/38)), or Pixiv
+  ([#39](https://github.com/originalRecipe1/unfurlit/issues/39)). The mapping is
+  in the report script; fixture expectations and JUnit assertions stay strict.
+  A passing case from this mapping is flagged for review of the corresponding issue.
+- **FAIL** covers unexpected failures and selected cases without a completed
+  result. Neither BLOCKED nor KNOWN counts as a pass.
+
+The report determines the job result: unexpected failures, incomplete runs,
+and test-run errors fail the job. The source build is also required to succeed.
+Reports, classified JSON, and logcat are uploaded even on failure, including
+the app's redacted extraction messages. Review failures for site changes and
+deleted fixtures before changing an expectation. No cookies or accounts are used.
+This checks extraction; playback, seeking and image rendering still need the
+manual viewer checks above.
 
 To rerun selected cases, start the workflow manually with comma-separated case IDs in
 **link_ids**. Against a connected x86_64 emulator:
@@ -347,6 +364,10 @@ To rerun selected cases, start the workflow manually with comma-separated case I
   -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest
 python3 scripts/social_links_report.py
 ```
+
+When selecting cases with the instrumentation `linkId` argument, pass the same
+comma-separated IDs to the report's `--link-ids` option so unselected cases are
+not mistaken for missing results.
 
 Without `liveLinks=true`, these cases are skipped. The normal CI suite covers
 error classification and the failure screen's recovery actions without contacting
