@@ -158,22 +158,22 @@ def counts_for(cases: list[dict], outcomes: dict[str, Outcome], *, runner: bool 
     return {status: counts[status] for status in STATUSES}
 
 
-def network_retry_ids(cases: list[dict], outcomes: dict[str, Outcome]) -> list[str]:
-    """Select completed NetworkFailure observations from the first pass only."""
+def retry_case_ids(cases: list[dict], outcomes: dict[str, Outcome]) -> list[str]:
+    """Select completed NetworkFailure or Timeout observations from the first pass only."""
     return [case["id"] for case in cases if (outcome := outcomes.get(case["id"])) is not None
-            and outcome.initial is None and outcome.observed == "NetworkFailure"
-            # A test crash with a NetworkFailure log is not a network outcome.
+            and outcome.initial is None and outcome.observed in {"NetworkFailure", "Timeout"}
+            # A test crash with an extraction error in logcat is not a completed observation.
             and (outcome.passed or outcome.problems == "wrong outcome")]
 
 
 def merge_retries(cases: list[dict], initial: dict[str, Outcome], retries: dict[str, Outcome]) -> tuple[dict[str, Outcome], list[str]]:
-    eligible = network_retry_ids(cases, initial)
+    eligible = retry_case_ids(cases, initial)
     outcomes = dict(initial)
     problems = []
     if unexpected := set(retries) - set(eligible):
-        problems.append(f"Retry results contain cases not selected for a network retry: {', '.join(sorted(unexpected))}")
+        problems.append(f"Retry results contain cases not selected for a retry: {', '.join(sorted(unexpected))}")
     for name in eligible:
-        retry = retries.get(name, Outcome(False, "no retry result", "network-failure retry did not complete"))
+        retry = retries.get(name, Outcome(False, "no retry result", "retry did not complete"))
         outcomes[name] = replace(retry, initial=initial[name])
     return outcomes, problems
 
@@ -437,8 +437,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Report mapped LOCAL-ONLY cases without gating CI; omit for local pre-release validation")
     retry_mode = parser.add_mutually_exclusive_group()
     retry_mode.add_argument("--retry-link-ids", action="store_true",
-                            help="Print the first pass's NetworkFailure IDs for one extra test pass")
-    retry_mode.add_argument("--retry-results", type=Path, help="Results of the single NetworkFailure retry pass")
+                            help="Print the first pass's NetworkFailure/Timeout IDs for one extra test pass")
+    retry_mode.add_argument("--retry-results", type=Path, help="Results of the single NetworkFailure/Timeout retry pass")
     parser.add_argument("--test-step-outcome", choices=("success", "failure", "skipped", "cancelled", ""),
                         help="GitHub outcome of the Gradle test step; detect failures outside case assertions")
     parser.add_argument("--retry-step-outcome", choices=("success", "failure", "skipped", "cancelled", ""),
@@ -462,7 +462,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     outcomes = read_results(args.results) if args.results.is_dir() else {}
     if args.retry_link_ids:
-        print(",".join(network_retry_ids(selected, outcomes)))
+        print(",".join(retry_case_ids(selected, outcomes)))
         return 0
     run_problems = []
     if unknown := set(outcomes) - {case["id"] for case in cases}:
@@ -470,7 +470,7 @@ def main(argv: list[str] | None = None) -> int:
     # Check each pass against its own raw results, before a retry can replace a failure.
     run_problems += test_step_problems(args.test_step_outcome, selected, outcomes)
     if args.retry_results is not None:
-        retry_ids = network_retry_ids(selected, outcomes)
+        retry_ids = retry_case_ids(selected, outcomes)
         retry_cases = [case for case in selected if case["id"] in retry_ids]
         retries = read_results(args.retry_results) if args.retry_results.is_dir() else {}
         run_problems += test_step_problems(args.retry_step_outcome, retry_cases, retries, "retry")

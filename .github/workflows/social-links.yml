@@ -84,7 +84,7 @@ jobs:
             -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest \
             "${selection[@]}"
 
-      - name: Preserve the first pass and select network retries
+      - name: Preserve the first pass and select retries
         id: retry_cases
         if: always()
         env:
@@ -102,7 +102,7 @@ jobs:
             --results "$first/results" --link-ids "$LINK_IDS" --retry-link-ids)"
           echo "link_ids=$retry_ids" >> "$GITHUB_OUTPUT"
 
-      - name: Retry NetworkFailure cases once
+      - name: Retry NetworkFailure and Timeout cases once
         id: retry_tests
         if: ${{ !cancelled() && steps.retry_cases.outcome == 'success' && steps.retry_cases.outputs.link_ids != '' }}
         continue-on-error: true
