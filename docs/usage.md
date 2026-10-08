@@ -47,15 +47,15 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - X/Twitter: videos, photos and galleries; mixed video-and-photo posts can omit photos.
 - PeerTube: videos.
 - Bandcamp: audio tracks.
+- Pixiv: public illustrations and multi-page artwork (no Ugoira animations).
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
-TikTok, Instagram and Tumblr photo posts use Unfurlit's own extractors (TikTok including
+TikTok, Instagram, Tumblr and Pixiv photo posts use Unfurlit's own extractors (TikTok including
 the post's soundtrack). Instagram falls back to the bundled gallery-dl engine
 if that fails, as do photos and galleries on other sites. Direct links to an
 image also open. See the [dated test results](social-link-baseline.md) for the
-links and media checked. Pixiv's extractor requires a refresh token that Unfurlit
-cannot currently accept, so those links do not open; see
-[issue #39](https://github.com/originalRecipe1/unfurlit/issues/39).
+links and media checked. Pixiv artwork uses its anonymous web data; no refresh
+token is needed. Login-only artwork and Ugoira frame animations are not supported.
 
 Reddit posts shared from alternative front ends such as eddrit or Redlib, Reddit
 "copy image link" links (`reddit.com/media?url=…`), and resized

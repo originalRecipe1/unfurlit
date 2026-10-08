@@ -91,13 +91,7 @@ class KnownIssue:
 
 # These exceptions belong to reporting, never to the public fixture's expectations.
 # Match the recorded failure, not just its case ID or broad error category.
-KNOWN_ISSUES = {
-    "pixiv-artwork": KnownIssue(
-        39, "1 image", "AuthenticationRequired", "wrong outcome",
-        "AuthenticationRequired | gallery-dl AuthenticationError 0: 'refresh-token' required. "
-        "Run `gallery-dl oauth:pixiv` to get one.",
-    ),
-}
+KNOWN_ISSUES: dict[str, KnownIssue] = {}
 
 
 @dataclass(frozen=True)

@@ -2,6 +2,8 @@ package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlJsonParser
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlRunner
+import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkExtractor
+import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParser
 import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
@@ -56,6 +58,7 @@ class YtDlpMediaExtractor(
         val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
             ?.let(RedditLinks::normalize)
             ?.let { TumblrPhotoParser.canonicalPage(it) ?: it }
+            ?.let { PixivArtworkParser.canonicalPage(it) ?: it }
             ?.let(UrlValidator::toHttpsUrl)
         if (secureInputUrl == null) {
             throw ExtractionException(ExtractionError.UnsupportedUrl)
@@ -69,6 +72,9 @@ class YtDlpMediaExtractor(
             }
             RedditLinks.galleryUrl(secureInputUrl, extractionUrl)?.let { galleryUrl ->
                 return runGalleryDl(url, galleryUrl)
+            }
+            PixivArtworkParser.canonicalPage(extractionUrl)?.let { pageUrl ->
+                return PixivArtworkExtractor().extract(url, pageUrl)
             }
             TumblrPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 TumblrPhotoExtractor().extract(url, pageUrl)?.let { return it }

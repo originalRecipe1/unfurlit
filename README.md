@@ -29,9 +29,10 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 - X/Twitter: videos, photos and galleries; mixed video-and-photo posts can omit photos.
 - PeerTube: videos.
 - Bandcamp: audio tracks.
+- Pixiv: public illustrations and multi-page artwork (no Ugoira animations).
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
-TikTok, Instagram and Tumblr photo posts use Unfurlit's own extractors (TikTok including
+TikTok, Instagram, Tumblr and Pixiv photo posts use Unfurlit's own extractors (TikTok including
 the post's soundtrack). Instagram falls back to the bundled
 [gallery-dl](https://github.com/mikf/gallery-dl) engine if that fails, as do photos
 and galleries on other sites. Direct image links also open. See the
