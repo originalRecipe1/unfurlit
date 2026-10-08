@@ -6,6 +6,7 @@ import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
+import io.github.originalrecipe1.unfurlit.data.extractor.twitter.TwitterPhotoSupplement
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoParser
 import android.content.Context
@@ -74,7 +75,13 @@ class YtDlpMediaExtractor(
                 InstagramPhotoExtractor().extract(url, pageUrl)?.let { return it }
             }
             val ytDlpFailure = try {
-                return extractWithYtDlp(url, extractionUrl)
+                val result = extractWithYtDlp(url, extractionUrl)
+                return TwitterPhotoSupplement.appendPhotos(
+                    extractionUrl,
+                    result,
+                    extractGallery = { postUrl -> runGalleryDl(url, postUrl) },
+                    onFailure = ::logFailure,
+                )
             } catch (error: ExtractionException) {
                 error
             } catch (error: TimeoutCancellationException) {
