@@ -168,7 +168,7 @@ class ClassifierTest(unittest.TestCase):
         return report.classify(CASES_BY_ID[name], outcome, runner=runner)
 
     def test_exact_reference_run_messages(self):
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 3, "FAIL": 1},
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 2, "FAIL": 2},
                          report.counts_for(REFERENCE_CASES, REFERENCE_OUTCOMES))
         blocked = {name for name, outcome in REFERENCE_OUTCOMES.items()
                    if report.classify(CASES_BY_ID[name], outcome).status == "BLOCKED"}
@@ -179,9 +179,14 @@ class ClassifierTest(unittest.TestCase):
         # The generic sign-in prompt remains a failure during local validation.
         self.assertIn("Please sign in.", REFERENCE_OUTCOMES["youtube-shorts-sign-in-fallback"].reason)
         self.assertEqual("FAIL", self.classify("youtube-shorts-sign-in-fallback").status)
-        for name, number in [("x-mixed-media", 37), ("tumblr-photo-post", 38), ("pixiv-artwork", 39)]:
+        for name, number in [("tumblr-photo-post", 38), ("pixiv-artwork", 39)]:
             with self.subTest(name=name):
                 self.assertEqual(report.Classification("KNOWN", number), self.classify(name))
+
+    def test_fixed_x_mixed_media_is_no_longer_a_known_exception(self):
+        self.assertEqual(report.Classification("FAIL"), self.classify("x-mixed-media"))
+        self.assertEqual(report.Classification("PASS"), self.classify("x-mixed-media", passed=True,
+                         observed="success: 1 video (Progressive) + 1 image, from Twitter", problems=""))
 
     def test_both_bot_message_apostrophes_match(self):
         original = REFERENCE_OUTCOMES["youtube-video"].reason
@@ -253,12 +258,12 @@ class ClassifierTest(unittest.TestCase):
         for name, fields in changes:
             with self.subTest(name=name, fields=fields):
                 self.assertEqual("FAIL", self.classify(name, **fields).status)
-        case = dict(CASES_BY_ID["x-mixed-media"], id="different-mixed-media")
-        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["x-mixed-media"]).status)
+        case = dict(CASES_BY_ID["tumblr-photo-post"], id="different-tumblr-post")
+        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["tumblr-photo-post"]).status)
 
     def test_known_mapping_does_not_excuse_changed_expectations(self):
-        case = dict(CASES_BY_ID["x-mixed-media"], count=3)
-        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["x-mixed-media"]).status)
+        case = dict(CASES_BY_ID["tumblr-photo-post"], count=5)
+        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["tumblr-photo-post"]).status)
 
     def test_passing_known_cases_are_flagged_for_issue_review(self):
         outcomes = dict(REFERENCE_OUTCOMES)
@@ -266,10 +271,10 @@ class ClassifierTest(unittest.TestCase):
             outcomes[name] = report.Outcome(True, "as expected")
             self.assertEqual("PASS", report.classify(CASES_BY_ID[name], outcomes[name]).status)
         markdown = report.render(REFERENCE_CASES, outcomes)
-        self.assertIn("Known issues now passing (3)", markdown)
-        for number in [37, 38, 39]:
+        self.assertIn("Known issues now passing (2)", markdown)
+        for number in [38, 39]:
             self.assertIn(f"review [#{number}]({report.ISSUES_URL}{number}) for closure", markdown)
-        self.assertEqual({"PASS": 53, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 1},
+        self.assertEqual({"PASS": 52, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 2},
                          report.counts_for(REFERENCE_CASES, outcomes))
 
     def test_selected_missing_case_is_a_failure(self):
@@ -330,29 +335,37 @@ class ReportGateTest(unittest.TestCase):
                                      + (["--runner"] if runner else []) + retry_args)
             return status, json.loads(output.read_text()), stdout.getvalue()
 
-    def test_reference_run_preserves_the_unexpected_sign_in_failure(self):
+    def test_reference_run_reports_sign_in_and_the_fixed_x_regression_as_failures(self):
         status, data, markdown = self.invoke(REFERENCE_OUTCOMES)
         self.assertEqual(1, status)
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 3, "FAIL": 1}, data["counts"])
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 2, "FAIL": 2}, data["counts"])
         self.assertEqual([], data["run_problems"])
-        self.assertIn("**PASS 50 · BLOCKED 8 · LOCAL-ONLY 0 · KNOWN 3 · FAIL 1**", markdown)
-        self.assertIn("KNOWN (#37)", markdown)
+        self.assertIn("**PASS 50 · BLOCKED 8 · LOCAL-ONLY 0 · KNOWN 2 · FAIL 2**", markdown)
+        self.assertNotIn("KNOWN (#37)", markdown)
+        self.assertEqual("FAIL", next(case for case in data["cases"] if case["id"] == "x-mixed-media")["status"])
+
+    def test_missing_x_photo_fails_the_runner_gate(self):
+        status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected="x-mixed-media", runner=True)
+        self.assertEqual(1, status)
+        self.assertEqual(1, data["counts"]["FAIL"])
+        self.assertEqual(0, data["counts"]["KNOWN"])
 
     def test_only_known_and_blocked_failures_do_not_fail_the_gate(self):
-        ids = [name for name in REFERENCE_OUTCOMES if name != "youtube-shorts-sign-in-fallback"]
+        ids = [name for name in REFERENCE_OUTCOMES if name not in ("youtube-shorts-sign-in-fallback", "x-mixed-media")]
         status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected=",".join(ids))
         self.assertEqual(0, status)
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 3, "FAIL": 0}, data["counts"])
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 2, "FAIL": 0}, data["counts"])
 
     def test_runner_gate_accepts_reddit_auth_block_and_reports_local_only_separately(self):
         outcomes = dict(REFERENCE_OUTCOMES)
         outcomes["reddit-video"] = replace(outcomes["reddit-video"], reason=REDDIT_AUTH_REASON)
+        outcomes["x-mixed-media"] = report.Outcome(True, "success: 1 video (Progressive) + 1 image, from Twitter")
         status, data, markdown = self.invoke(outcomes, runner=True)
         self.assertEqual(0, status)
         self.assertTrue(data["runner"])
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 1, "KNOWN": 3, "FAIL": 0}, data["counts"])
+        self.assertEqual({"PASS": 51, "BLOCKED": 8, "LOCAL-ONLY": 1, "KNOWN": 2, "FAIL": 0}, data["counts"])
         self.assertEqual([], data["run_problems"])
-        self.assertIn("**PASS 50 · BLOCKED 8 · LOCAL-ONLY 1 · KNOWN 3 · FAIL 0**", markdown)
+        self.assertIn("**PASS 51 · BLOCKED 8 · LOCAL-ONLY 1 · KNOWN 2 · FAIL 0**", markdown)
         local = next(case for case in data["cases"] if case["status"] == "LOCAL-ONLY")
         self.assertEqual("youtube-shorts-sign-in-fallback", local["id"])
         self.assertIn("Please sign in.", local["reason"])
@@ -372,6 +385,7 @@ class ReportGateTest(unittest.TestCase):
     def test_other_generic_sign_in_failures_still_gate_on_the_runner(self):
         outcomes = dict(REFERENCE_OUTCOMES)
         outcomes["youtube-video"] = replace(outcomes["youtube-video"], reason="Please sign in.")
+        outcomes["x-mixed-media"] = report.Outcome(True, "success: 1 video (Progressive) + 1 image, from Twitter")
         status, data, _ = self.invoke(outcomes, runner=True)
         self.assertEqual(1, status)
         self.assertEqual(1, data["counts"]["FAIL"])

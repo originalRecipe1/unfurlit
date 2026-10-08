@@ -358,12 +358,12 @@ selected case, grouped by media type, to the workflow's job summary. It reports
   `--runner`, this case is judged normally: "Please sign in" still fails the report.
   This regression case, and YouTube coverage in general, depend on the local
   pre-release run: runner results cannot establish that YouTube works.
-- **KNOWN** requires the recorded failure signature for X mixed media
-  ([#37](https://github.com/originalRecipe1/unfurlit/issues/37)), Tumblr
+- **KNOWN** requires the recorded failure signature for Tumblr
   ([#38](https://github.com/originalRecipe1/unfurlit/issues/38)), or Pixiv
   ([#39](https://github.com/originalRecipe1/unfurlit/issues/39)). The mapping is
   in the report script; fixture expectations and JUnit assertions stay strict.
   A passing case from this mapping is flagged for review of the corresponding issue.
+  X mixed media (#37) is fixed and judged normally; a missing photo now fails the job.
 - **FAIL** covers unexpected failures and selected cases without a completed
   result, except runner-only LOCAL-ONLY cases. BLOCKED, LOCAL-ONLY, and KNOWN
   do not count as passes.
