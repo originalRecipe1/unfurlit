@@ -244,15 +244,25 @@ Do not use private links, cookies, or credentials in committed test fixtures. Un
 
 ### Pre-release phone checklist
 
-Run these checks on a physical ARM64 phone using the
-[link-check APK](#checking-links-by-hand). Concurrent X extraction has been checked
-on an emulator; these phone checks remain pending.
+Run the final pass on a physical ARM64 phone using the actual release APK, with
+R8 code shrinking and optimization enabled. The
+[link-check APK](#checking-links-by-hand) may be used for content checks beforehand,
+but its `linkCheck` build type inherits from `debug` and is not minified or
+optimized. It cannot verify behavior after release optimization. These phone
+checks remain pending.
 
 - [ ] Open `x-mixed-media` and confirm that both the video and the photo appear.
-- [ ] Open `x-video` and confirm that it does not feel slower than in v1.3.1.
+- [ ] Open `x-video` and confirm that it does not feel slower compared with the
+  previous release.
 - [ ] Open several X links in a row and watch for the app being killed or freezing.
   X posts briefly run two Python processes at once, so check on a lower-end ARM64
   phone if one is available.
+- [ ] Open the [direct rotating-Earth GIF](https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif)
+  used in the #45 live check and confirm that it animates in the viewer.
+- [ ] In a gallery containing an animated GIF, confirm that animation stops when
+  swiping away and restarts when swiping back.
+- [ ] Pinch-zoom the GIF and confirm that it keeps animating.
+- [ ] Return to History and confirm that the GIF's thumbnail is still.
 
 ## Architecture
 
