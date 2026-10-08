@@ -248,21 +248,24 @@ Run the final pass on a physical ARM64 phone using the actual release APK, with
 R8 code shrinking and optimization enabled. The
 [link-check APK](#checking-links-by-hand) may be used for content checks beforehand,
 but its `linkCheck` build type inherits from `debug` and is not minified or
-optimized. It cannot verify behavior after release optimization. These phone
-checks remain pending.
+optimized. It cannot verify behavior after release optimization. Copy this
+reusable checklist into each release's test record and record the APK revision,
+test date and outcomes there.
 
-- [ ] Open `x-mixed-media` and confirm that both the video and the photo appear.
-- [ ] Open `x-video` and confirm that it does not feel slower compared with the
+- Open `x-mixed-media` and confirm that both the video and the photo appear.
+- Open `x-video` and confirm that it does not feel slower compared with the
   previous release.
-- [ ] Open several X links in a row and watch for the app being killed or freezing.
+- Open several X links in a row and watch for the app being killed or freezing.
   X posts briefly run two Python processes at once, so check on a lower-end ARM64
   phone if one is available.
-- [ ] Open the [direct rotating-Earth GIF](https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif)
+- Open the [direct rotating-Earth GIF](https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif)
   used in the #45 live check and confirm that it animates in the viewer.
-- [ ] In a gallery containing an animated GIF, confirm that animation stops when
-  swiping away and restarts when swiping back.
-- [ ] Pinch-zoom the GIF and confirm that it keeps animating.
-- [ ] Return to History and confirm that the GIF's thumbnail is still.
+- Open the [Tumblr GIF-and-photo gallery](https://www.tumblr.com/k-eke/768588119781130240).
+  Confirm that animation stops when swiping to the still image and restarts when
+  swiping back. Its two assets were checked on 2026-10-08: one GIF with 760 frames
+  and one still image. Recheck availability before the phone test.
+- Pinch-zoom the GIF and confirm that it keeps animating.
+- Return to History and confirm that the GIF's thumbnail is still.
 
 ## Architecture
 
@@ -327,8 +330,8 @@ The application is licensed under [GPL-3.0-only](../LICENSE). Keep the
 The **Live social links** workflow runs weekly and on manual dispatch, using the
 same source-built extractor as release APKs. It exercises
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
-gallery-dl engines and JSON normalization, with native page-data adapters for TikTok
-and Instagram photo posts. The cases in
+gallery-dl engines and JSON normalization, with native page-data adapters for TikTok,
+Instagram and Tumblr photo posts. The cases in
 `app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
 - **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit (native video
@@ -386,12 +389,12 @@ selected case, grouped by media type, to the workflow's job summary. It reports
   `--runner`, this case is judged normally: "Please sign in" still fails the report.
   This regression case, and YouTube coverage in general, depend on the local
   pre-release run: runner results cannot establish that YouTube works.
-- **KNOWN** requires the recorded failure signature for Tumblr
-  ([#38](https://github.com/originalRecipe1/unfurlit/issues/38)), or Pixiv
+- **KNOWN** requires the recorded failure signature for Pixiv
   ([#39](https://github.com/originalRecipe1/unfurlit/issues/39)). The mapping is
   in the report script; fixture expectations and JUnit assertions stay strict.
   A passing case from this mapping is flagged for review of the corresponding issue.
-  X mixed media (#37) is fixed and judged normally; a missing photo now fails the job.
+  X mixed media (#37) and Tumblr photos (#38) are fixed and judged normally;
+  a missing X photo or failed Tumblr gallery now fails the job.
 - **FAIL** covers unexpected failures and selected cases without a completed
   result, except runner-only LOCAL-ONLY cases. BLOCKED, LOCAL-ONLY, and KNOWN
   do not count as passes.
@@ -399,7 +402,7 @@ selected case, grouped by media type, to the workflow's job summary. It reports
 The report determines the job result: unexpected failures, incomplete runs,
 and test-run errors fail the job. The source build is also required to succeed.
 After the full test pass, the workflow selects every completed `NetworkFailure`
-or `Timeout` case for one extra pass, including Tumblr's KNOWN failure. No other
+or `Timeout` case for one extra pass. No other
 outcome is retried, and the extra pass never schedules another retry. Raw reports
 from the first pass are preserved before retrying.
 
@@ -407,7 +410,7 @@ A successful retry is shown as **PASS (retried)** and counts as PASS for gating.
 The summary separately counts retried cases and retried passes, and retains the
 original error. If the retry fails, its outcome is classified normally and both
 errors are shown: repeated network failures or timeouts remain FAIL unless the
-retry matches a KNOWN signature (such as Tumblr #38), or the case is LOCAL-ONLY
+retry matches a KNOWN signature, or the case is LOCAL-ONLY
 on the runner.
 A different retry outcome can be BLOCKED, KNOWN, or FAIL; it never becomes a pass
 without a successful test result. JSON includes both attempts for each retried case.
@@ -489,10 +492,23 @@ Instagram `/p/` links first check the public post data for photos. The adapter
 matches the requested shortcode, preserves all carousel items in order, and uses
 safe image candidates rather than page thumbnails. Pure video posts fall through
 to yt-dlp. Mixed carousels can retain direct video formats alongside photos.
-Both native adapters share a cancellable, bounded page loader with public-only
+The native photo adapters share a cancellable, bounded page loader with public-only
 DNS and safe redirect handling. Instagram photo-post soundtracks are not supported;
 the adapter makes no additional media-info request for audio. Instagram videos
 retain their audio. TikTok photo soundtracks remain supported.
 
 The Instagram photo case is `instagram-photo-carousel` and requires 11 photos.
 `linkId` also accepts comma-separated IDs for focused regression runs.
+
+Tumblr photo posts use the anonymous `www.tumblr.com/<blog>/<id>` permalink page.
+Legacy blog `/post/` and `/image/` links and dashboard `/blog/view/` links are
+normalized before the usual URL safety preflight; History keeps the original URL.
+The adapter reads only the matching post from `___INITIAL_STATE___`, preserves
+reblog and row-layout order, prefers the largest uncropped image candidates over
+avatars or still GIF posters, and limits responses to 4 MiB and 50 images.
+Video, audio, mixed posts and unrecognized page layouts retain the existing
+yt-dlp/gallery-dl route. Real page-load network errors remain network failures.
+No cookies, account credentials or Tumblr API key are needed for the photo route.
+Row and reblog order follow [Tumblr's NPF specification](https://github.com/tumblr/docs/blob/master/npf-spec.md).
+The `tumblr-photo-post` live fixture still requires all four images; it is no
+longer exempted as a KNOWN failure in the report.

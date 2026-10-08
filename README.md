@@ -31,7 +31,7 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 - Bandcamp: audio tracks.
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
-TikTok and Instagram photo posts use Unfurlit's own extractors (TikTok including
+TikTok, Instagram and Tumblr photo posts use Unfurlit's own extractors (TikTok including
 the post's soundtrack). Instagram falls back to the bundled
 [gallery-dl](https://github.com/mikf/gallery-dl) engine if that fails, as do photos
 and galleries on other sites. Direct image links also open. See the
@@ -45,7 +45,7 @@ open; signing in is not available.
 
 On **2026-10-06**, the full local emulator run of **1.3.1** passed **57/62
 cases**, including 5 expected-error checks. Media cases check extraction, image
-rendering and short playback samples. Known issues are
+rendering and short playback samples. Known issues in that release were
 [missing photos in X mixed-media posts (#37)](https://github.com/originalRecipe1/unfurlit/issues/37),
 [Tumblr connection failures (#38)](https://github.com/originalRecipe1/unfurlit/issues/38),
 and [Pixiv's unsupported refresh-token requirement (#39)](https://github.com/originalRecipe1/unfurlit/issues/39).

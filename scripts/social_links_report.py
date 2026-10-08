@@ -92,12 +92,6 @@ class KnownIssue:
 # These exceptions belong to reporting, never to the public fixture's expectations.
 # Match the recorded failure, not just its case ID or broad error category.
 KNOWN_ISSUES = {
-    "tumblr-photo-post": KnownIssue(
-        38, "4 images", "NetworkFailure", "wrong outcome",
-        "NetworkFailure | ERROR: [Tumblr] 172687798174: Unable to download webpage: "
-        "Remote end closed connection without response "
-        "(caused by TransportError('Remote end closed connection without response'))",
-    ),
     "pixiv-artwork": KnownIssue(
         39, "1 image", "AuthenticationRequired", "wrong outcome",
         "AuthenticationRequired | gallery-dl AuthenticationError 0: 'refresh-token' required. "

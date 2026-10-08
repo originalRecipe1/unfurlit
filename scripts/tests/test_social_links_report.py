@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ElementTree
 
 spec = importlib.util.spec_from_file_location(
@@ -168,7 +169,7 @@ class ClassifierTest(unittest.TestCase):
         return report.classify(CASES_BY_ID[name], outcome, runner=runner)
 
     def test_exact_reference_run_messages(self):
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 2, "FAIL": 2},
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 1, "FAIL": 3},
                          report.counts_for(REFERENCE_CASES, REFERENCE_OUTCOMES))
         blocked = {name for name, outcome in REFERENCE_OUTCOMES.items()
                    if report.classify(CASES_BY_ID[name], outcome).status == "BLOCKED"}
@@ -179,7 +180,7 @@ class ClassifierTest(unittest.TestCase):
         # The generic sign-in prompt remains a failure during local validation.
         self.assertIn("Please sign in.", REFERENCE_OUTCOMES["youtube-shorts-sign-in-fallback"].reason)
         self.assertEqual("FAIL", self.classify("youtube-shorts-sign-in-fallback").status)
-        for name, number in [("tumblr-photo-post", 38), ("pixiv-artwork", 39)]:
+        for name, number in [("pixiv-artwork", 39)]:
             with self.subTest(name=name):
                 self.assertEqual(report.Classification("KNOWN", number), self.classify(name))
 
@@ -187,6 +188,11 @@ class ClassifierTest(unittest.TestCase):
         self.assertEqual(report.Classification("FAIL"), self.classify("x-mixed-media"))
         self.assertEqual(report.Classification("PASS"), self.classify("x-mixed-media", passed=True,
                          observed="success: 1 video (Progressive) + 1 image, from Twitter", problems=""))
+
+    def test_fixed_tumblr_photo_post_is_no_longer_a_known_exception(self):
+        self.assertEqual(report.Classification("FAIL"), self.classify("tumblr-photo-post"))
+        self.assertEqual(report.Classification("PASS"), self.classify("tumblr-photo-post", passed=True,
+                         observed="success: 4 images, from Tumblr", problems=""))
 
     def test_both_bot_message_apostrophes_match(self):
         original = REFERENCE_OUTCOMES["youtube-video"].reason
@@ -262,8 +268,8 @@ class ClassifierTest(unittest.TestCase):
         self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["tumblr-photo-post"]).status)
 
     def test_known_mapping_does_not_excuse_changed_expectations(self):
-        case = dict(CASES_BY_ID["tumblr-photo-post"], count=5)
-        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["tumblr-photo-post"]).status)
+        case = dict(CASES_BY_ID["pixiv-artwork"], count=2)
+        self.assertEqual("FAIL", report.classify(case, REFERENCE_OUTCOMES["pixiv-artwork"]).status)
 
     def test_passing_known_cases_are_flagged_for_issue_review(self):
         outcomes = dict(REFERENCE_OUTCOMES)
@@ -271,10 +277,10 @@ class ClassifierTest(unittest.TestCase):
             outcomes[name] = report.Outcome(True, "as expected")
             self.assertEqual("PASS", report.classify(CASES_BY_ID[name], outcomes[name]).status)
         markdown = report.render(REFERENCE_CASES, outcomes)
-        self.assertIn("Known issues now passing (2)", markdown)
-        for number in [38, 39]:
+        self.assertIn("Known issues now passing (1)", markdown)
+        for number in [39]:
             self.assertIn(f"review [#{number}]({report.ISSUES_URL}{number}) for closure", markdown)
-        self.assertEqual({"PASS": 52, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 2},
+        self.assertEqual({"PASS": 51, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 3},
                          report.counts_for(REFERENCE_CASES, outcomes))
 
     def test_selected_missing_case_is_a_failure(self):
@@ -335,12 +341,12 @@ class ReportGateTest(unittest.TestCase):
                                      + (["--runner"] if runner else []) + retry_args)
             return status, json.loads(output.read_text()), stdout.getvalue()
 
-    def test_reference_run_reports_sign_in_and_the_fixed_x_regression_as_failures(self):
+    def test_reference_run_reports_sign_in_and_fixed_regressions_as_failures(self):
         status, data, markdown = self.invoke(REFERENCE_OUTCOMES)
         self.assertEqual(1, status)
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 2, "FAIL": 2}, data["counts"])
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 1, "FAIL": 3}, data["counts"])
         self.assertEqual([], data["run_problems"])
-        self.assertIn("**PASS 50 · BLOCKED 8 · LOCAL-ONLY 0 · KNOWN 2 · FAIL 2**", markdown)
+        self.assertIn("**PASS 50 · BLOCKED 8 · LOCAL-ONLY 0 · KNOWN 1 · FAIL 3**", markdown)
         self.assertNotIn("KNOWN (#37)", markdown)
         self.assertEqual("FAIL", next(case for case in data["cases"] if case["id"] == "x-mixed-media")["status"])
 
@@ -351,21 +357,23 @@ class ReportGateTest(unittest.TestCase):
         self.assertEqual(0, data["counts"]["KNOWN"])
 
     def test_only_known_and_blocked_failures_do_not_fail_the_gate(self):
-        ids = [name for name in REFERENCE_OUTCOMES if name not in ("youtube-shorts-sign-in-fallback", "x-mixed-media")]
+        ids = [name for name in REFERENCE_OUTCOMES if name not in
+               ("youtube-shorts-sign-in-fallback", "x-mixed-media", "tumblr-photo-post")]
         status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected=",".join(ids))
         self.assertEqual(0, status)
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 2, "FAIL": 0}, data["counts"])
+        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 1, "FAIL": 0}, data["counts"])
 
     def test_runner_gate_accepts_reddit_auth_block_and_reports_local_only_separately(self):
         outcomes = dict(REFERENCE_OUTCOMES)
         outcomes["reddit-video"] = replace(outcomes["reddit-video"], reason=REDDIT_AUTH_REASON)
         outcomes["x-mixed-media"] = report.Outcome(True, "success: 1 video (Progressive) + 1 image, from Twitter")
+        outcomes["tumblr-photo-post"] = report.Outcome(True, "success: 4 images, from Tumblr")
         status, data, markdown = self.invoke(outcomes, runner=True)
         self.assertEqual(0, status)
         self.assertTrue(data["runner"])
-        self.assertEqual({"PASS": 51, "BLOCKED": 8, "LOCAL-ONLY": 1, "KNOWN": 2, "FAIL": 0}, data["counts"])
+        self.assertEqual({"PASS": 52, "BLOCKED": 8, "LOCAL-ONLY": 1, "KNOWN": 1, "FAIL": 0}, data["counts"])
         self.assertEqual([], data["run_problems"])
-        self.assertIn("**PASS 51 · BLOCKED 8 · LOCAL-ONLY 1 · KNOWN 2 · FAIL 0**", markdown)
+        self.assertIn("**PASS 52 · BLOCKED 8 · LOCAL-ONLY 1 · KNOWN 1 · FAIL 0**", markdown)
         local = next(case for case in data["cases"] if case["status"] == "LOCAL-ONLY")
         self.assertEqual("youtube-shorts-sign-in-fallback", local["id"])
         self.assertIn("Please sign in.", local["reason"])
@@ -386,6 +394,7 @@ class ReportGateTest(unittest.TestCase):
         outcomes = dict(REFERENCE_OUTCOMES)
         outcomes["youtube-video"] = replace(outcomes["youtube-video"], reason="Please sign in.")
         outcomes["x-mixed-media"] = report.Outcome(True, "success: 1 video (Progressive) + 1 image, from Twitter")
+        outcomes["tumblr-photo-post"] = report.Outcome(True, "success: 4 images, from Tumblr")
         status, data, _ = self.invoke(outcomes, runner=True)
         self.assertEqual(1, status)
         self.assertEqual(1, data["counts"]["FAIL"])
@@ -516,28 +525,42 @@ class ReportGateTest(unittest.TestCase):
                 self.assertIn(f"`{name}` ({expected}, initial): timeout", markdown)
                 self.assertEqual(retry.reason, data["cases"][0]["attempts"][1]["reason"])
 
-    def test_tumblr_network_failure_remains_known_when_retry_matches_issue_38(self):
+    def test_tumblr_network_failure_twice_now_fails_the_gate(self):
         name = "tumblr-photo-post"
         initial = REFERENCE_OUTCOMES[name]
         self.assertEqual([name], report.retry_case_ids([CASES_BY_ID[name]], {name: initial}))
         status, data, markdown = self.invoke({name: initial}, selected=name, runner=True,
                                              retries={name: initial}, retry_step="failure")
-        self.assertEqual(0, status)
-        self.assertEqual(1, data["counts"]["KNOWN"])
-        self.assertEqual(0, data["counts"]["FAIL"])
-        self.assertEqual(38, data["cases"][0]["issue"])
+        self.assertEqual(1, status)
+        self.assertEqual(0, data["counts"]["KNOWN"])
+        self.assertEqual(1, data["counts"]["FAIL"])
+        self.assertIsNone(data["cases"][0]["issue"])
         self.assertEqual({"retried": 1, "passed": 0}, data["retries"])
         self.assertEqual([initial.reason, initial.reason], [a["reason"] for a in data["cases"][0]["attempts"]])
-        self.assertIn("KNOWN (#38)", markdown)
+        self.assertNotIn("KNOWN (#38)", markdown)
+
+    def test_network_retry_still_honors_a_matching_known_issue(self):
+        name = "mixcloud-show"
+        initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="recorded test failure")
+        # A synthetic mapping keeps this contract covered after Tumblr is fixed.
+        known = report.KnownIssue(999, "1 audio", initial.observed, initial.problems, initial.reason)
+        with patch.dict(report.KNOWN_ISSUES, {name: known}):
+            status, data, _ = self.invoke({name: initial}, selected=name, runner=True,
+                                         retries={name: initial}, retry_step="failure")
+        self.assertEqual(0, status)
+        self.assertEqual(1, data["counts"]["KNOWN"])
+        self.assertEqual(999, data["cases"][0]["issue"])
+        self.assertEqual([initial.reason, initial.reason], [a["reason"] for a in data["cases"][0]["attempts"]])
 
     def test_recovered_known_case_is_flagged_even_when_it_needed_a_retry(self):
-        name = "tumblr-photo-post"
-        status, data, markdown = self.invoke({name: REFERENCE_OUTCOMES[name]}, selected=name, runner=True,
-                                             retries={name: report.Outcome(True, "success: 4 images, from Tumblr")})
+        name = "pixiv-artwork"
+        initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
+        status, data, markdown = self.invoke({name: initial}, selected=name, runner=True,
+                                             retries={name: report.Outcome(True, "success: 1 image, from Pixiv")})
         self.assertEqual(0, status)
         self.assertEqual(1, data["counts"]["PASS"])
-        self.assertIn("PASS (retried) — [#38 now passing]", markdown)
-        self.assertIn("review [#38]", markdown)
+        self.assertIn("PASS (retried) — [#39 now passing]", markdown)
+        self.assertIn("review [#39]", markdown)
 
     def test_missing_retry_result_fails_instead_of_accepting_the_initial_result(self):
         initial = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
