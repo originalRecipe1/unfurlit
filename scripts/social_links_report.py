@@ -92,10 +92,6 @@ class KnownIssue:
 # These exceptions belong to reporting, never to the public fixture's expectations.
 # Match the recorded failure, not just its case ID or broad error category.
 KNOWN_ISSUES = {
-    "x-mixed-media": KnownIssue(
-        37, "2 video+image", "success: 1 video (Progressive), from Twitter",
-        "missing image; 1 item instead of 2",
-    ),
     "tumblr-photo-post": KnownIssue(
         38, "4 images", "NetworkFailure", "wrong outcome",
         "NetworkFailure | ERROR: [Tumblr] 172687798174: Unable to download webpage: "
