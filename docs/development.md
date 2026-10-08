@@ -242,6 +242,18 @@ run separately with `python3 -m unittest discover -s scripts/tests`.
 
 Do not use private links, cookies, or credentials in committed test fixtures. Unfurlit's own success log records only the extractor name and media count. Failures emit a length-limited diagnostic with URLs and common secret fields redacted; direct media URLs, headers, cookies, and raw yt-dlp output are never deliberately logged.
 
+### Pre-release phone checklist
+
+Run these checks on a physical ARM64 phone using the
+[link-check APK](#checking-links-by-hand). Concurrent X extraction has been checked
+on an emulator; these phone checks remain pending.
+
+- [ ] Open `x-mixed-media` and confirm that both the video and the photo appear.
+- [ ] Open `x-video` and confirm that it does not feel slower than in v1.3.1.
+- [ ] Open several X links in a row and watch for the app being killed or freezing.
+  X posts briefly run two Python processes at once, so check on a lower-end ARM64
+  phone if one is available.
+
 ## Architecture
 
 The project intentionally has one Gradle app module. Package boundaries keep the replaceable pieces explicit:
