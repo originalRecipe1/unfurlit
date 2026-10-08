@@ -252,6 +252,13 @@ stores display metadata and small thumbnail copies, never playback credentials.
 Preserving these scoped cookies and decoding Python-quoted values fixed TikTok
 media URLs returning HTTP 403 without requiring browser impersonation.
 
+The image loader includes Coil's GIF decoders: `AnimatedImageDecoder` on API 28+
+and `GifDecoder` on API 24–27. The viewer stops animation on inactive gallery
+pages and when its lifecycle stops. History explicitly decodes a still first
+frame before saving its JPEG thumbnail. `AnimatedImageTest` checks rendered
+frame changes with both decoders, paging, zoom, lifecycle, and thumbnails using
+authored fixtures without network access.
+
 ## Network safety
 
 Unfurlit treats submitted URLs and extractor output as untrusted. Before extraction,

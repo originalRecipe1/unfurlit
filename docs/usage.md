@@ -23,6 +23,8 @@ Opening the app alone does not start loading media.
   window when you leave the app or tap the picture-in-picture button. The window
   has a play/pause action; closing it pauses the video.
 - Photos support pinch-to-zoom and panning.
+- Animated GIFs play on the active gallery page while the app is in the foreground.
+  History thumbnails stay still.
 - Audio has playback controls.
 - Videos and audio keep playing in the background, for example with the screen
   off, with controls in the notification, on the lock screen, and on headsets.
