@@ -172,10 +172,16 @@ entry point runs gallery-dl's extractors without configuration files, cache, or
 downloads and prints one JSON object with the media URLs, the request headers
 their hosts expect (such as a Referer), and basic metadata. It is tried when
 yt-dlp reports no video or fails to extract, is limited to 60 seconds and 50
-items, and its output is validated like yt-dlp's. X/Twitter posts that return a
-video also use it to collect photos that yt-dlp omits. These photos are appended
-without duplicating videos or replacing their selected formats; if the extra
-lookup fails, the successful video result is retained. For Reddit posts it first
+items, and its output is validated like yt-dlp's. X/Twitter post URLs start
+gallery-dl concurrently with yt-dlp to collect photos that yt-dlp omits. After
+yt-dlp returns a video, the app waits at most five more seconds for photos, then
+cancels the gallery lookup and keeps the video. Photos are appended without
+duplicating videos or replacing their selected formats. A failed photo lookup
+also keeps the video; an eligible yt-dlp failure reuses the same gallery lookup
+for the normal fallback, with its original 60-second limit. Other sites retain
+the sequential fallback. Both processes share a locked runtime installation,
+use separate process environments, and disable disk caches; closing the request
+cancels both lookups. For Reddit posts it first
 loads `old.reddit.com` for the anonymous session cookie that Reddit's JSON pages
 expect (as yt-dlp does); if Reddit still answers with its network-security block
 page, it retries once through Reddit's OAuth API with gallery-dl's own client ID. Its pure Python logic is tested

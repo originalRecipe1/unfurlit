@@ -7,6 +7,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withTimeout
 import java.net.URI
 
 /** yt-dlp's Twitter extractor omits photos even when a post also has a video. */
@@ -16,13 +17,14 @@ internal object TwitterPhotoSupplement {
         result: ExtractionResult,
         extractGallery: suspend (String) -> ExtractionResult,
         onFailure: (Exception) -> Unit,
+        graceMillis: Long = PHOTO_GRACE_MILLIS,
     ): ExtractionResult {
         if (result.media.none { it is ExtractedMedia.Video } || result.media.size >= MAX_MEDIA_ENTRIES) {
             return result
         }
         val postUrl = postUrl(extractionUrl) ?: return result
         val gallery = try {
-            extractGallery(postUrl)
+            withTimeout(graceMillis) { extractGallery(postUrl) }
         } catch (error: TimeoutCancellationException) {
             // An optional lookup may time out, but cancellation of the whole request
             // (including an enclosing timeout) must still stop extraction.
@@ -46,7 +48,7 @@ internal object TwitterPhotoSupplement {
         return if (photos.isEmpty()) result else result.copy(media = result.media + photos)
     }
 
-    private fun postUrl(url: String): String? {
+    fun postUrl(url: String): String? {
         if (!UrlValidator.isAllowed(url)) return null
         val uri = runCatching { URI(url) }.getOrNull() ?: return null
         if (uri.rawUserInfo != null || uri.host?.lowercase()?.trimEnd('.') !in HOSTS) return null
@@ -56,6 +58,7 @@ internal object TwitterPhotoSupplement {
         return "https://x.com/i/web/status/${match.groupValues[1]}"
     }
 
+    const val PHOTO_GRACE_MILLIS = 5_000L
     private const val MAX_MEDIA_ENTRIES = 50
     private val HOSTS = setOf("x.com", "www.x.com", "mobile.x.com", "twitter.com", "www.twitter.com", "mobile.twitter.com", "m.twitter.com")
     private val POST_PATH = Regex("/(?:[A-Za-z0-9_]+/status|i/web/status|statuses)/([0-9]+)(?:/(?:photo|video)/[0-9]+)?/?")

@@ -6,7 +6,6 @@ import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
-import io.github.originalrecipe1.unfurlit.data.extractor.twitter.TwitterPhotoSupplement
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoParser
 import android.content.Context
@@ -74,26 +73,12 @@ class YtDlpMediaExtractor(
             InstagramPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 InstagramPhotoExtractor().extract(url, pageUrl)?.let { return it }
             }
-            val ytDlpFailure = try {
-                val result = extractWithYtDlp(url, extractionUrl)
-                return TwitterPhotoSupplement.appendPhotos(
-                    extractionUrl,
-                    result,
-                    extractGallery = { postUrl -> runGalleryDl(url, postUrl) },
-                    onFailure = ::logFailure,
-                )
-            } catch (error: ExtractionException) {
-                error
-            } catch (error: TimeoutCancellationException) {
-                throw ExtractionException(ExtractionError.Timeout, error)
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Throwable) {
-                ExtractionException(error.toDomainError(), error)
-            }
-            if (!ytDlpFailure.error.allowsGalleryDlFallback()) throw ytDlpFailure
-            // yt-dlp found no video here; the post may still have photos.
-            extractWithGalleryDl(url, extractionUrl, ytDlpFailure)
+            extractWithGalleryDlFallback(
+                extractionUrl,
+                extractYtDlp = { extractWithYtDlp(url, extractionUrl) },
+                extractGalleryDl = { galleryUrl -> runGalleryDl(url, galleryUrl) },
+                onFailure = ::logFailure,
+            )
         } catch (error: ExtractionException) {
             logFailure(error)
             throw error
@@ -145,29 +130,6 @@ class YtDlpMediaExtractor(
                 )
             }
         }
-    }
-
-    /**
-     * Tries the bundled gallery-dl engine, which covers image posts and galleries on
-     * many sites yt-dlp does not. Its failure only replaces yt-dlp's when it is more
-     * specific (see [preferredFailure]).
-     */
-    private suspend fun extractWithGalleryDl(
-        url: String,
-        extractionUrl: String,
-        ytDlpFailure: ExtractionException,
-    ): ExtractionResult = try {
-        runGalleryDl(url, extractionUrl)
-    } catch (error: ExtractionException) {
-        logFailure(error)
-        throw preferredFailure(ytDlpFailure, error)
-    } catch (error: TimeoutCancellationException) {
-        throw ytDlpFailure
-    } catch (error: CancellationException) {
-        throw error
-    } catch (error: Throwable) {
-        logFailure(error)
-        throw preferredFailure(ytDlpFailure, ExtractionException(error.toDomainError(), error))
     }
 
     private suspend fun runGalleryDl(url: String, extractionUrl: String): ExtractionResult =
