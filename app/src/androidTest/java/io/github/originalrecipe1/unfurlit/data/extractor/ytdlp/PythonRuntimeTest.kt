@@ -12,7 +12,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import java.io.File
 import java.util.UUID
-import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,19 +26,35 @@ class PythonRuntimeTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         BundledYtDlpInstaller(context).ensureCurrent()
         val directory = File(File(context.noBackupFilesDir, YoutubeDL.baseName), YoutubeDL.ytdlpDirName)
-        ZipFile(File(directory, YoutubeDL.ytdlpBin)).use { engine ->
-            // Checks whichever engine this APK packages: normally the official asset,
-            // or the source build when -Punfurlit.ytdlp.file is supplied. The source
-            // build script independently checks its output before Gradle packages it.
-            for (path in listOf(
-                "__init__.py", "_version.py", "yt/__init__.py", "yt/solver/__init__.py",
-                "yt/solver/core.min.js", "yt/solver/lib.min.js",
-            )) {
-                assertTrue("Missing YouTube solver file: $path", engine.getEntry("yt_dlp_ejs/$path") != null)
+        val solverFiles = mutableMapOf<String, Boolean>()
+        File(directory, YoutubeDL.ytdlpBin).inputStream().buffered().use { input ->
+            // ZipFile on API 36 rejects the executable prefix. Stream local ZIP entries
+            // after the known shebang without rewriting central-directory offsets.
+            // The installed executable stays unchanged for Python's zipimport.
+            for (expected in "#!/usr/bin/env python3\n") {
+                assertEquals("Unexpected yt-dlp executable header", expected.code, input.read())
             }
-            for (script in listOf("core.min.js", "lib.min.js")) {
-                assertTrue(engine.getEntry("yt_dlp_ejs/yt/solver/$script").size > 0)
+            ZipInputStream(input).use { engine ->
+                while (true) {
+                    val entry = engine.nextEntry ?: break
+                    if (entry.name.startsWith("yt_dlp_ejs/")) {
+                        solverFiles[entry.name.removePrefix("yt_dlp_ejs/")] = engine.read() != -1
+                    }
+                    engine.closeEntry()
+                }
             }
+        }
+        // Checks whichever engine this APK packages: normally the official asset,
+        // or the source build when -Punfurlit.ytdlp.file is supplied. The source
+        // build script independently checks its output before Gradle packages it.
+        for (path in listOf(
+            "__init__.py", "_version.py", "yt/__init__.py", "yt/solver/__init__.py",
+            "yt/solver/core.min.js", "yt/solver/lib.min.js",
+        )) {
+            assertTrue("Missing YouTube solver file: $path", solverFiles.containsKey(path))
+        }
+        for (script in listOf("core.min.js", "lib.min.js")) {
+            assertTrue("Empty YouTube solver script: $script", solverFiles["yt/solver/$script"] == true)
         }
     }
 
