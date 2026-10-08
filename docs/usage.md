@@ -44,7 +44,7 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - TikTok: videos and photo posts, including available photo soundtracks.
 - Reddit: videos, photos and galleries, including gallery posts opened from share,
   comments and `redd.it` short links.
-- X/Twitter: videos, photos and galleries; mixed video-and-photo posts can omit photos.
+- X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
 - Bandcamp: audio tracks.
 - Pixiv: public illustrations and multi-page artwork (no Ugoira animations).
