@@ -167,14 +167,16 @@ class TwitterPhotoSupplementTest {
     @Test
     fun cancellationIsPropagated() {
         val cancellation = CancellationException("Viewer closed")
-        assertSame(cancellation, assertThrows(CancellationException::class.java) {
+        val failure = assertThrows(CancellationException::class.java) {
             runBlocking {
                 TwitterPhotoSupplement.appendPhotos(POST, videoResult(),
                     extractGallery = { throw cancellation },
                     onFailure = { throw AssertionError("Cancellation was swallowed", it) },
                 )
             }
-        })
+        }
+        // Coroutine stack recovery can copy the exception across withTimeout.
+        assertEquals(cancellation.message, failure.message)
     }
 
     @Test
