@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.graphics.scale
 import coil3.SingletonImageLoader
+import coil3.decode.BitmapFactoryDecoder
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
 import coil3.request.CachePolicy
@@ -30,6 +31,8 @@ internal class HistoryThumbnailLoader(private val context: Context) {
         try {
             val request = ImageRequest.Builder(context)
                 .data(url)
+                // Save only the first frame of animated images as the existing still JPEG.
+                .decoderFactory(BitmapFactoryDecoder.Factory())
                 .size(192, 192)
                 .allowHardware(false)
                 .memoryCachePolicy(CachePolicy.DISABLED)

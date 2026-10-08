@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.ui.viewer
 
+import android.graphics.drawable.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -13,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -33,6 +35,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil3.DrawableImage
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
@@ -67,6 +73,28 @@ fun ZoomableImage(
     var loaded by remember(source) { mutableStateOf(false) }
     var loadFailed by remember(source) { mutableStateOf(false) }
     var viewReported by remember(source) { mutableStateOf(false) }
+    var animation by remember(source) { mutableStateOf<Animatable?>(null) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    // Coil stops animations on disposal, but a pager can keep inactive pages composed.
+    // Also stop while the app is in the background, even if this is still the active page.
+    DisposableEffect(animation, active, lifecycle) {
+        val drawable = animation
+        fun updateAnimation() {
+            if (active && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                drawable?.start()
+            } else {
+                drawable?.stop()
+            }
+        }
+        val observer = LifecycleEventObserver { _, _ -> updateAnimation() }
+        lifecycle.addObserver(observer)
+        updateAnimation()
+        onDispose {
+            lifecycle.removeObserver(observer)
+            drawable?.stop()
+        }
+    }
     val transformState = rememberTransformableState { zoomChange, panChange, _ ->
         val nextScale = (scale * zoomChange).coerceIn(MIN_SCALE, MAX_SCALE)
         val maxX = viewportSize.width * (nextScale - 1f) / 2f
@@ -104,6 +132,7 @@ fun ZoomableImage(
             contentDescription = contentDescription,
             contentScale = ContentScale.Fit,
             onSuccess = {
+                animation = (it.result.image as? DrawableImage)?.drawable as? Animatable
                 loaded = true
                 loadFailed = false
             },
