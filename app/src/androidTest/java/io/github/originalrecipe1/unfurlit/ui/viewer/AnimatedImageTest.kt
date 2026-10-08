@@ -26,6 +26,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.SdkSuppress
 import coil3.DrawableImage
 import coil3.ComponentRegistry
 import coil3.EventListener
@@ -62,7 +63,6 @@ class AnimatedImageTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private lateinit var originalLoader: ImageLoader
     private lateinit var loader: ImageLoader
-    private lateinit var fixtureComponents: ComponentRegistry
     private val results = ConcurrentHashMap<String, SuccessResult>()
     private val errors = ConcurrentHashMap<String, Throwable>()
     private val visible = mutableStateOf(true)
@@ -70,7 +70,7 @@ class AnimatedImageTest {
 
     @Before fun setUp() {
         originalLoader = SingletonImageLoader.get(context)
-        fixtureComponents = ComponentRegistry.Builder().apply {
+        val fixtureComponents = ComponentRegistry.Builder().apply {
             // Keep the application's real decoders; replace only the remote fixture bytes.
             originalLoader.components.decoderFactories.forEach { add(it) }
             add(Mapper<String, ByteBuffer> { data, _ ->
@@ -104,6 +104,9 @@ class AnimatedImageTest {
         loader.shutdown()
     }
 
+    // Compose cannot become idle while the legacy MovieDrawable is on screen.
+    // API 24-27 decoding and frame rendering are covered without Compose below.
+    @SdkSuppress(minSdkVersion = 28)
     @Test fun directGifAnimatesOnlyOnTheActivePageInTheForeground() {
         val active = mutableStateOf(true)
         val owner = object : LifecycleOwner {
@@ -131,6 +134,7 @@ class AnimatedImageTest {
         compose.runOnIdle { assertFalse("Disposed viewer must stop", animation.isRunning) }
     }
 
+    @SdkSuppress(minSdkVersion = 28)
     @Test fun imgurGifFallbackAnimatesWithoutChangingItsImageClassification() {
         val result = YtDlpJsonParser.parse("https://imgur.com/example", """
             {"extractor_key":"Imgur","title":"GIF fallback","url":"$GIF_URL",
@@ -180,6 +184,7 @@ class AnimatedImageTest {
         assertFalse(animation.isRunning)
     }
 
+    @SdkSuppress(minSdkVersion = 28)
     @Test fun inactivePageDoesNotStartWhenItsGifFinishesLoading() {
         compose.setContent {
             if (visible.value) UnfurlitTheme {
@@ -190,6 +195,7 @@ class AnimatedImageTest {
         compose.runOnIdle { assertFalse(animation.isRunning) }
     }
 
+    @SdkSuppress(minSdkVersion = 28)
     @Test fun gallerySwipesStopAndRestartGifAndZoomKeepsItAnimating() {
         val still = source.copy(url = STILL_URL, mediaMimeType = "image/png")
         val gallery = ExtractionResult(GIF_URL, null, "Gallery", null, null, null,
