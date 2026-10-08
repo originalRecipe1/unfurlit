@@ -49,7 +49,7 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - Bandcamp: audio tracks.
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
-TikTok and Instagram photo posts use Unfurlit's own extractors (TikTok including
+TikTok, Instagram and Tumblr photo posts use Unfurlit's own extractors (TikTok including
 the post's soundtrack). Instagram falls back to the bundled gallery-dl engine
 if that fails, as do photos and galleries on other sites. Direct links to an
 image also open. See the [dated test results](social-link-baseline.md) for the

@@ -6,6 +6,8 @@ import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
+import io.github.originalrecipe1.unfurlit.data.extractor.tumblr.TumblrPhotoExtractor
+import io.github.originalrecipe1.unfurlit.data.extractor.tumblr.TumblrPhotoParser
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoParser
 import android.content.Context
@@ -50,9 +52,10 @@ class YtDlpMediaExtractor(
     }
 
     private suspend fun extractMedia(url: String, requestUrl: String): ExtractionResult {
-        // Reddit mirrors and image wrappers are extracted from their canonical URL.
+        // Normalize supported wrappers/post links before the usual URL safety preflight.
         val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
             ?.let(RedditLinks::normalize)
+            ?.let { TumblrPhotoParser.canonicalPage(it) ?: it }
             ?.let(UrlValidator::toHttpsUrl)
         if (secureInputUrl == null) {
             throw ExtractionException(ExtractionError.UnsupportedUrl)
@@ -66,6 +69,9 @@ class YtDlpMediaExtractor(
             }
             RedditLinks.galleryUrl(secureInputUrl, extractionUrl)?.let { galleryUrl ->
                 return runGalleryDl(url, galleryUrl)
+            }
+            TumblrPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
+                TumblrPhotoExtractor().extract(url, pageUrl)?.let { return it }
             }
             TikTokPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 return TikTokPhotoExtractor().extract(url, pageUrl)
