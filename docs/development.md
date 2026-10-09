@@ -124,7 +124,7 @@ For a source build, initialize the pinned submodules and
 build the extractor first:
 
 ```bash
-git submodule update --init
+git submodule update --init --recursive
 ./scripts/build_yt_dlp_from_source.sh
 source_file="$PWD/build/yt-dlp-source/yt-dlp"
 source_sha="$(sha256sum "$source_file" | awk '{print $1}')"
@@ -148,8 +148,8 @@ downloading the upstream EJS wheel. PR CI builds a debug APK with the official
 asset, then verifies APK builds using the source-built extractor;
 the update workflow also compares its solver scripts byte for byte with the
 checksum-verified official release. Run `python3 scripts/update_yt_dlp_notices.py`
-after changing these pins; CI checks that the notices match. The F-Droid candidate
-has not been updated for EJS; see [the remaining build work](automation-and-fdroid.md#f-droid-auto-update-configuration).
+after changing these pins; CI checks that the notices match. The 1.3.1 F-Droid recipe builds EJS from source; see
+[the validation and remaining review work](automation-and-fdroid.md#f-droid-auto-update-configuration).
 
 YouTube requests also include the public embedded player client alongside yt-dlp's defaults, because
 some public Shorts ask the default clients to sign in while remaining embeddable.
@@ -157,14 +157,56 @@ This accepts an extra player API request for each YouTube extraction, including
 links that already work with the default clients. It avoids restarting extraction
 after a sign-in failure; playback remains native through Media3.
 
-The build also assembles a second engine for photos and galleries: gallery-dl
-`1.32.13` and the pure-Python requests stack it needs (requests, urllib3, idna,
-certifi, charset-normalizer). `preparePinnedGalleryDl` downloads the six pinned
-wheels from PyPI, verifies each SHA-256, and combines them with
-`app/gallery-dl/__main__.py` into a reproducible zip application (the
-`PythonZipApp` build logic sorts entries, fixes timestamps and drops install-time
-metadata). For offline builds, put the same wheel files in a directory and pass
-`-Punfurlit.gallerydl.wheels=/path/to/wheels`; their checksums are still verified.
+The build also assembles a second engine for photos and galleries from six
+release-tag submodules: gallery-dl, requests, urllib3, idna, certifi and
+charset-normalizer. Initialize submodules before any APK build. The versions,
+source directories, licenses, tags and commits are recorded in
+[`app/gallery-dl/sources.json`](../app/gallery-dl/sources.json).
+`preparePinnedGalleryDl` stages their package files with Python 3, generates
+urllib3's missing `_version.py`, and uses `PythonZipApp` to combine them with
+`app/gallery-dl/__main__.py`. Entries are sorted with fixed DOS timestamps,
+independent of the build timezone. Submodule files are never modified, and no
+Python packaging backend or wheel download runs during the APK build.
+
+Package data includes `certifi/cacert.pem`, typing markers and urllib3's
+JavaScript helper. LICENSE/NOTICE files are stored under `licenses/<package>/`.
+Compiled Python caches and charset-normalizer's optional `.pyx`/`.pxd` sources
+are excluded, as is all wheel-only metadata (`METADATA`, `WHEEL`, entry points,
+top-level lists and installation records). The old
+`unfurlit.gallerydl.wheels` build property is no longer used.
+
+CI runs `python3 scripts/check_gallery_dl.py` after building the engine. Only
+this verification downloads the manifest's hash-pinned pure-Python wheels.
+It compares every package file and license byte for byte, including generated
+version data and certificates, and rejects missing, changed or additional files.
+To verify with a pre-filled wheel directory, use:
+
+```bash
+./gradlew :app:preparePinnedGalleryDl
+python3 scripts/check_gallery_dl.py --offline --wheels /path/to/verification-wheels
+```
+
+There is no scheduled gallery-dl updater. `update-yt-dlp.yml` and
+`scripts/update_yt_dlp.py` cover yt-dlp, not gallery-dl. To change gallery-dl and
+its dependencies, start from a clean checkout and supply all six stable release
+tags to `scripts/update_gallery_dl.py`, including unchanged dependencies. For
+example, these tags reproduce the initial source pins:
+
+```bash
+python3 scripts/update_gallery_dl.py \
+  --gallery-dl v1.32.13 --requests v2.34.2 --urllib3 2.8.0 \
+  --idna v3.20 --certifi 2026.07.22 --charset-normalizer 3.5.1
+```
+
+The script fetches those tags, resolves their commits and pure-Python wheel
+hashes, checks out the submodules, updates the manifest, catalog and notice
+versions, builds the engine and runs the byte comparison. It refuses a changed
+immutable pin and rolls back pins/metadata and the previous engine if the build
+or comparison fails. It does not patch submodule contents, stage or commit
+changes, or advance the app version. Review the source/license changes and the
+full diff, run the offline runtime and live-link checks, then commit the pins
+with the manifest and notices. A changed package layout, generated-file format
+or dependency set needs an explicit build review; do not bypass the comparison.
 
 The engine runs as `libpython.so -S gallerydl.zip URL` on the Python runtime
 youtubedl-android installs, with the same environment it uses for yt-dlp. Its

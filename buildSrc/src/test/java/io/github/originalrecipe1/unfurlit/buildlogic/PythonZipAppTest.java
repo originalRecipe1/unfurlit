@@ -6,13 +6,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,36 +21,31 @@ import org.junit.rules.TemporaryFolder;
 public class PythonZipAppTest {
     @Rule public TemporaryFolder folder = new TemporaryFolder();
 
-    @Test public void combinesWheelsWithEntryPointAndDropsInstallMetadata() throws Exception {
-        Path output = assemble("out.zip", wheel("a.whl",
-            "pkg/__init__.py", "pkg/mod.py", "pkg-1.0.dist-info/METADATA",
-            "pkg-1.0.dist-info/RECORD", "pkg-1.0.dist-info/INSTALLER",
-            "pkg-1.0.dist-info/licenses/LICENSE", "pkg-1.0.data/scripts/pkg"),
-            wheel("b.whl", "dep/__init__.py"));
+    @Test public void packagesSourcesDataAndLicensesInSortedOrderWithFixedDosTimes() throws Exception {
+        Path sources = sources("a", "pkg/mod.py", "pkg/__init__.py", "licenses/pkg/LICENSE", "certifi/cacert.pem");
+        Path output = assemble("out.zip", sources);
         try (ZipFile zip = ZipFile.builder().setPath(output).get()) {
             List<String> names = new ArrayList<>();
             for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
                 names.add(entry.getName());
                 assertEquals(LocalDateTime.of(1980, 1, 2, 0, 0), entry.getTimeLocal());
             }
-            assertEquals(List.of("__main__.py", "dep/__init__.py", "pkg-1.0.dist-info/METADATA",
-                "pkg-1.0.dist-info/licenses/LICENSE", "pkg/__init__.py", "pkg/mod.py"), names);
+            assertEquals(List.of("__main__.py", "certifi/cacert.pem", "licenses/pkg/LICENSE", "pkg/__init__.py", "pkg/mod.py"), names);
             try (var main = zip.getInputStream(zip.getEntry("__main__.py"))) {
                 assertEquals("print('hi')\n", new String(main.readAllBytes(), StandardCharsets.UTF_8));
             }
         }
     }
 
-    @Test public void outputIsReproducibleRegardlessOfWheelOrder() throws Exception {
-        Path a = wheel("a.whl", "pkg/__init__.py", "pkg/z.py");
-        Path b = wheel("b.whl", "dep/__init__.py");
-        Path first = assemble("first.zip", a, b);
-        Path second = assemble("second.zip", b, a);
-        assertArrayEquals(Files.readAllBytes(first), Files.readAllBytes(second));
+    @Test public void outputIgnoresSourceCreationOrderAndTimestamps() throws Exception {
+        Path a = sources("a", "pkg/__init__.py", "pkg/z.py");
+        Path b = sources("b", "pkg/z.py", "pkg/__init__.py");
+        Files.setLastModifiedTime(b.resolve("pkg/z.py"), FileTime.fromMillis(0));
+        assertArrayEquals(Files.readAllBytes(assemble("first.zip", a)), Files.readAllBytes(assemble("second.zip", b)));
     }
 
     @Test public void outputIsReproducibleAcrossDefaultTimeZones() throws Exception {
-        Path input = wheel("input.whl", "pkg/__init__.py");
+        Path input = sources("input", "pkg/__init__.py");
         TimeZone original = TimeZone.getDefault();
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -63,48 +58,29 @@ public class PythonZipAppTest {
         }
     }
 
-    @Test public void rejectsDuplicatePaths() throws Exception {
-        assertAssemblyFails("Duplicate path", wheel("a.whl", "pkg/x.py"), wheel("b.whl", "pkg/x.py"));
+    @Test public void rejectsEntryPointOverridesAndSourceSymlinks() throws Exception {
+        Path override = sources("override", "__main__.py");
+        assertThrows(IOException.class, () -> assemble("override.zip", override));
+        Path linked = sources("linked", "pkg/__init__.py");
+        Files.createSymbolicLink(linked.resolve("escape.py"), override.resolve("__main__.py"));
+        assertThrows(IOException.class, () -> assemble("linked.zip", linked));
     }
 
-    @Test public void rejectsUnsafePathsAndEntryPointOverrides() throws Exception {
-        assertAssemblyFails("Unsafe path", wheel("a.whl", "../escape.py"));
-        assertAssemblyFails("Unsafe path", wheel("b.whl", "__main__.py"));
-    }
-
-    @Test public void recognizesInstallMetadata() {
-        assertTrue(PythonZipApp.isInstallMetadata("x-1.dist-info/RECORD"));
-        assertTrue(PythonZipApp.isInstallMetadata("x-1.data/scripts/x"));
-        assertFalse(PythonZipApp.isInstallMetadata("x-1.dist-info/licenses/RECORD"));
-        assertFalse(PythonZipApp.isInstallMetadata("x/RECORD"));
-    }
-
-    private void assertAssemblyFails(String message, Path... wheels) throws Exception {
-        try {
-            assemble("failed-" + wheels[0].getFileName() + ".zip", wheels);
-            fail("Expected assembly to fail");
-        } catch (IOException error) {
-            assertTrue(error.getMessage(), error.getMessage().startsWith(message));
-        }
-    }
-
-    private Path assemble(String name, Path... wheels) throws IOException {
+    private Path assemble(String name, Path sources) throws IOException {
         Path entryPoint = folder.getRoot().toPath().resolve("entry.py");
         Files.writeString(entryPoint, "print('hi')\n");
         Path output = folder.getRoot().toPath().resolve(name);
-        PythonZipApp.assemble(List.of(wheels), entryPoint, output);
+        PythonZipApp.assemble(sources, entryPoint, output);
         return output;
     }
 
-    private Path wheel(String name, String... paths) throws IOException {
-        Path wheel = folder.getRoot().toPath().resolve(name);
-        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(wheel)) {
-            for (String path : paths) {
-                zip.putArchiveEntry(new ZipArchiveEntry(path));
-                zip.write(("# " + path + "\n").getBytes(StandardCharsets.UTF_8));
-                zip.closeArchiveEntry();
-            }
+    private Path sources(String name, String... paths) throws IOException {
+        Path directory = folder.newFolder(name).toPath();
+        for (String path : paths) {
+            Path file = directory.resolve(path);
+            Files.createDirectories(file.getParent());
+            Files.writeString(file, "# " + path + "\n");
         }
-        return wheel;
+        return directory;
     }
 }

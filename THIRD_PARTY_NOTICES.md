@@ -50,7 +50,14 @@ The app itself is GPL-3.0-only; see `LICENSE`. The image engine
 is a separate program that the app starts as a process and reads JSON from; its
 entry point imports gallery-dl and is licensed GPL-2.0-or-later so that it stays
 compatible with gallery-dl's GPL-2.0-only license. Each package's license file
-is included in the engine zip. Maven coordinates and resolved
+is copied from its pinned source tag into `licenses/<package>/` in the engine zip,
+including Requests' NOTICE. All six packages are checked-out submodules described
+in `app/gallery-dl/sources.json`; no wheel is used to build the engine. urllib3's
+version file is generated without a packaging backend. Wheel URLs and hashes in
+the manifest are used only to verify package/license byte identity in CI.
+`scripts/update_gallery_dl.py` synchronizes their pins and notice versions;
+`check_gallery_dl.py` rejects stale versions and package differences.
+Maven coordinates and resolved
 versions can be audited with:
 
 ```bash
@@ -65,8 +72,12 @@ upstream projects and their source distributions:
 - <https://github.com/yt-dlp/ejs>
 - <https://github.com/davidbonnet/astring>
 - <https://github.com/meriyah/meriyah>
-- <https://github.com/mikf/gallery-dl>
+- <https://codeberg.org/mikf/gallery-dl>
 - <https://github.com/psf/requests>
+- <https://github.com/urllib3/urllib3>
+- <https://github.com/kjd/idna>
+- <https://github.com/certifi/python-certifi>
+- <https://github.com/jawah/charset_normalizer>
 - <https://github.com/FFmpeg/FFmpeg> (not included by Unfurlit's current dependency set)
 - <https://www.python.org/downloads/source/>
 - <https://bellard.org/quickjs/>
