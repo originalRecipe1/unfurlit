@@ -1,0 +1,4 @@
+- Animated GIFs play in the viewer.
+- X posts with a video and photos show both.
+- Tumblr photo posts and videos open.
+- Public Pixiv artwork and multi-page images open.
