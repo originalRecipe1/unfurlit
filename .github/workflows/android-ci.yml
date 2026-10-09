@@ -1,30 +1,40 @@
-name: Android CI
+name: Sign 1.4.0 phone APK
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: sign-1.4.0-phone-apk
+  cancel-in-progress: false
+
+env:
+  APP_SOURCE_REVISION: 666816e360cb8832ee18d7ccb567645eb84c9325
+  EXPECTED_SIGNER_SHA256: 3528e91676bde711bf40c70bce363f7c76a554ae9de91f221635b6e975400a3c
 
 jobs:
-  verify:
-    name: Unit tests, lint, and APKs
+  sign-phone-apk:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/ci/sign-1.4.0-phone'
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
-
+    timeout-minutes: 30
     steps:
-      - name: Check out Unfurlit
+      - name: Check out the reviewed release source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          submodules: true
+          ref: ${{ env.APP_SOURCE_REVISION }}
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Check source revision and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$APP_SOURCE_REVISION"
+          grep -q 'versionCode = 13' app/build.gradle.kts
+          grep -q 'versionName = "1.4.0"' app/build.gradle.kts
+          test "$(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | wc -l)" -eq 2
 
       - name: Set up Node.js 22
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -41,99 +51,87 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
 
-      - name: Test build and test-link scripts
-        run: python3 -m unittest discover -s scripts/tests
-
-      - name: Check extractor dependency notices
-        run: python3 scripts/update_yt_dlp_notices.py --check
-
-      - name: Build debug APK with the official extractor
-        run: ./gradlew --no-daemon assembleDebug
-
-      - name: Build the release extractor from source
-        id: extractor
+      - name: Build the optimized ARM64 release APK
         shell: bash
         run: |
           set -euo pipefail
           ./scripts/build_yt_dlp_from_source.sh
           source_file="$PWD/build/yt-dlp-source/yt-dlp"
-          python3 - "$source_file" app/build/generated/unfurlitYtDlp/res/raw/ytdlp <<'PY'
-          import hashlib
-          import sys
+          source_sha="$(sha256sum "$source_file" | awk '{ print $1 }')"
+          test "$source_sha" = 1d641a354c1f2cca803ad8c6d841f5ab65ffcd0eb99ce6b358fc08c7d309ae86
+          ./gradlew --no-daemon assembleRelease \
+            -Punfurlit.ytdlp.file="$source_file" \
+            -Punfurlit.ytdlp.sha256="$source_sha"
+          python3 - <<'PY'
+          import os
           from zipfile import ZipFile
-          # The first debug build downloaded and hash-verified this official asset.
-          with ZipFile(sys.argv[1]) as source, ZipFile(sys.argv[2]) as official:
-              for name in ("core.min.js", "lib.min.js"):
-                  path = f"yt_dlp_ejs/yt/solver/{name}"
-                  output = source.read(path)
-                  assert output and output == official.read(path), f"{name} differs from the official solver"
-                  print(f"Verified official solver bytes: {name} {hashlib.sha256(output).hexdigest()}")
+          with ZipFile('app/build/outputs/apk/release/app-release-unsigned.apk') as apk:
+              assert apk.testzip() is None
+              revision = apk.read('META-INF/version-control-info.textproto').decode()
+              assert f'revision: "{os.environ["APP_SOURCE_REVISION"]}"' in revision
+              assert sorted({n.split('/')[1] for n in apk.namelist() if n.startswith('lib/')}) == ['arm64-v8a']
           PY
-          echo "file=$source_file" >> "$GITHUB_OUTPUT"
-          echo "sha256=$(sha256sum "$source_file" | awk '{ print $1 }')" >> "$GITHUB_OUTPUT"
 
-      - name: Verify the Android project
-        run: >-
-          ./gradlew --no-daemon :buildSrc:test testDebugUnitTest lintDebug assembleDebug
-          assembleDebugAndroidTest assembleRelease assembleLinkCheck
-          -Punfurlit.ytdlp.file="${{ steps.extractor.outputs.file }}"
-          -Punfurlit.ytdlp.sha256="${{ steps.extractor.outputs.sha256 }}"
-
-      - name: Upload the link-check APK
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: unfurlit-link-check-apk
-          path: app/build/outputs/apk/linkCheck/*.apk
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload the unsigned release APK for reproducibility checks
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: unfurlit-unsigned-release-apk
-          path: app/build/outputs/apk/release/*-unsigned.apk
-          if-no-files-found: error
-          retention-days: 14
-
-  instrumented-tests:
-    name: Deterministic UI tests
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
-
-    steps:
-      - name: Check out Unfurlit
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-
-      - name: Set up Java 21
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          distribution: temurin
-          java-version: "21"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
-
-      - name: Enable KVM access
-        run: sudo chmod 666 /dev/kvm
-
-      - name: Install managed-device system image
+      - name: Install signing tools
+        shell: bash
         run: |
+          set -euo pipefail
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "system-images;android-30;aosp_atd;x86_64"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.1.0"
 
-      - name: Run deterministic UI tests
-        run: >-
-          ./gradlew --no-daemon pixel2Api30DebugAndroidTest
-          -Punfurlit.ci.x86_64=true
-          -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+      - name: Sign and verify using the existing release key
+        shell: bash
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          for value in "$SIGNING_KEYSTORE_BASE64" "$SIGNING_KEY_ALIAS" \
+            "$ANDROID_KEYSTORE_PASSWORD" "$ANDROID_KEY_PASSWORD"; do
+            test -n "$value"
+          done
+          signing_dir="$RUNNER_TEMP/unfurlit-phone-signing"
+          artifact_dir="$RUNNER_TEMP/unfurlit-phone-artifact"
+          mkdir -p "$signing_dir" "$artifact_dir"
+          keystore_file="$signing_dir/release.keystore"
+          trap 'rm -f "$keystore_file"' EXIT
+          printf '%s' "$SIGNING_KEYSTORE_BASE64" | base64 --decode > "$keystore_file"
+          release_tools="$ANDROID_HOME/build-tools/36.1.0"
+          unsigned_apk="$PWD/app/build/outputs/apk/release/app-release-unsigned.apk"
+          aligned_apk="$signing_dir/aligned.apk"
+          apk_name=Unfurlit-1.4.0-666816e-arm64-release-signed.apk
+          signed_apk="$artifact_dir/$apk_name"
+          "$release_tools/zipalign" -P 16 -f 4 "$unsigned_apk" "$aligned_apk"
+          "$release_tools/apksigner" sign \
+            --ks "$keystore_file" --ks-key-alias "$SIGNING_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD --key-pass env:ANDROID_KEY_PASSWORD \
+            --v1-signing-enabled false --v2-signing-enabled true \
+            --v3-signing-enabled true --v4-signing-enabled false \
+            --out "$signed_apk" "$aligned_apk"
+          "$release_tools/apksigner" verify --verbose --print-certs "$signed_apk" > "$artifact_dir/signature-verification.txt"
+          cat "$artifact_dir/signature-verification.txt"
+          grep -Fx "Signer #1 certificate SHA-256 digest: $EXPECTED_SIGNER_SHA256" "$artifact_dir/signature-verification.txt"
+          "$release_tools/zipalign" -c -P 16 4 "$signed_apk"
+          "$release_tools/aapt2" dump badging "$signed_apk" > "$artifact_dir/apk-badging.txt"
+          grep -F "package: name='io.github.originalrecipe1.unfurlit' versionCode='13' versionName='1.4.0'" "$artifact_dir/apk-badging.txt"
+          if grep -q application-debuggable "$artifact_dir/apk-badging.txt"; then exit 1; fi
+          (cd "$artifact_dir" && sha256sum "$apk_name" > "$apk_name.sha256")
+          cp app/build/outputs/mapping/release/mapping.txt "$artifact_dir/mapping.txt"
+          printf 'Source commit: %s\nVersion: 1.4.0 / 13\nBuild: optimized ARM64 release\n' "$APP_SOURCE_REVISION" > "$artifact_dir/build-info.txt"
 
-      - name: Upload failed UI test reports
-        if: failure()
+      - name: Upload only the signed APK and public verification files
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: managed-device-test-reports
+          name: unfurlit-1.4.0-666816e-phone-apk
           path: |
-            app/build/reports/androidTests/
-            app/build/outputs/androidTest-results/
-          if-no-files-found: warn
-          retention-days: 14
+            ${{ runner.temp }}/unfurlit-phone-artifact/Unfurlit-1.4.0-666816e-arm64-release-signed.apk
+            ${{ runner.temp }}/unfurlit-phone-artifact/Unfurlit-1.4.0-666816e-arm64-release-signed.apk.sha256
+            ${{ runner.temp }}/unfurlit-phone-artifact/signature-verification.txt
+            ${{ runner.temp }}/unfurlit-phone-artifact/apk-badging.txt
+            ${{ runner.temp }}/unfurlit-phone-artifact/mapping.txt
+            ${{ runner.temp }}/unfurlit-phone-artifact/build-info.txt
+          if-no-files-found: error
+          retention-days: 7
