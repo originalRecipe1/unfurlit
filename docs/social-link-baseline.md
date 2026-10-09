@@ -1,5 +1,46 @@
 # Social-link baseline
 
+## Tumblr native video follow-up — 2026-10-09
+
+**Verified:** the native Tumblr adapter for [#49](https://github.com/originalRecipe1/unfurlit/issues/49)
+plays the reported video through legacy, canonical and dashboard links, and
+preserves both the video and photo in a mixed post. These targeted checks used
+an API 36 x86_64 emulator with anonymous access and the diagnostic viewer checks
+described below. The baseline is main `19d07c4`; engines remain yt-dlp 2026.08.19
+and gallery-dl 1.32.13. The earlier **57/62** release result is unchanged.
+
+Times below measure extraction only, once per URL and build. They are observations,
+not a performance benchmark. Every passing video rendered a frame and advanced
+at least three seconds; audio also advanced where present. Every image
+decoded and drew on its gallery page.
+
+| Case | Main | Native adapter | Verification |
+| --- | --- | --- | --- |
+| [Native video, legacy link](https://maskofthedragon.tumblr.com/post/626907179849564160/mona-talking-in-english) | NetworkFailure, 6.921 s | PASS, 1.151 s | Video + AAC audio |
+| [Same video, canonical link](https://www.tumblr.com/maskofthedragon/626907179849564160) | Not run | PASS, 0.644 s | Video + AAC audio |
+| [Same video, dashboard link](https://www.tumblr.com/blog/view/maskofthedragon/626907179849564160) | Not run | PASS, 1.085 s | Video + AAC audio |
+| [Mixed video/photo post](https://mikf123.tumblr.com/post/167633596145) | NetworkFailure, 9.974 s | PASS, 1.489 s | Silent video then photo |
+| [Four-photo post](https://mikf123.tumblr.com/post/172687798174/photo-post) | PASS, 1.307 s | PASS, 1.702 s | All four photos |
+| [GIF-and-photo gallery](https://www.tumblr.com/k-eke/768588119781130240) | PASS, 1.324 s | PASS, 0.858 s | Both images |
+| [External YouTube embed](https://prozdvoices.tumblr.com/post/673201091169681408/what-recording-voice-acting-sounds-like) | NetworkFailure, 9.706 s | NetworkFailure, 6.922 s | Pre-existing failure in yt-dlp's legacy-page request |
+| [Old reblog](https://bartlebyshop.tumblr.com/post/180294460076/duality-of-bird) | AuthenticationRequired, 16.659 s | AuthenticationRequired, 10.594 s | No matching public post data; existing engines still fail |
+
+The original video failure logs yt-dlp's `Remote end closed connection without
+response` while requesting the legacy blog address. The native adapter instead
+reads the matching post's MP4 from its public permalink data. External providers
+still use the existing engines. The two new permanent fixtures,
+`tumblr-native-video` and `tumblr-mixed-media`, require their media types and counts;
+the live suite now has 64 cases and no new known-failure exemption.
+
+**Verified:** invalid-scheme and private-address checks still report
+`UnsupportedUrl`. Unit tests cover mixed/reblog order, original History URLs,
+optional page-error and size-limit fallback, and terminal cancellation and
+unsafe-target rejection.
+
+**Not verified:** physical ARM64 playback, audible output, release-optimized
+viewer behavior, a live oversized-post fallback, or a new full 64-case run.
+The GIF control checks decoding and drawing; animation lifecycle was not re-tested.
+
 ## 1.3.1 — 2026-10-06
 
 **Verified: 57/62 cases passed; 5 failed.** This includes

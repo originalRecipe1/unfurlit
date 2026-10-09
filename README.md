@@ -29,6 +29,7 @@ Site availability varies; [supported content and limitations](docs/usage.md#site
 - X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
 - Bandcamp: audio tracks.
+- Tumblr: native videos, photos and mixed photo/video posts.
 - Pixiv: public illustrations and multi-page artwork (no Ugoira animations).
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 

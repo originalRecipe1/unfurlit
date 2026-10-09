@@ -345,9 +345,12 @@ class ReportGateTest(unittest.TestCase):
                 write_reference_run(retry, retries)
                 retry_args = ["--retry-results", str(retry), "--retry-step-outcome", retry_step]
             output = folder / "classified.json"
+            # Replay exactly the captured run, even as new live fixtures are added.
+            fixture = folder / "reference-cases.json"
+            fixture.write_text(json.dumps(REFERENCE_CASES))
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
-                status = report.main(["--results", str(initial), "--link-ids", selected,
+                status = report.main(["--fixture", str(fixture), "--results", str(initial), "--link-ids", selected,
                                       "--test-step-outcome", step, "--json-output", str(output)]
                                      + (["--runner"] if runner else []) + retry_args)
             return status, json.loads(output.read_text()), stdout.getvalue()

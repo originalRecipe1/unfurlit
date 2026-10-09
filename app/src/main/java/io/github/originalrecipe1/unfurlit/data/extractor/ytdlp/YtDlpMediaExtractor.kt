@@ -8,8 +8,8 @@ import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
-import io.github.originalrecipe1.unfurlit.data.extractor.tumblr.TumblrPhotoExtractor
-import io.github.originalrecipe1.unfurlit.data.extractor.tumblr.TumblrPhotoParser
+import io.github.originalrecipe1.unfurlit.data.extractor.tumblr.TumblrPostExtractor
+import io.github.originalrecipe1.unfurlit.data.extractor.tumblr.TumblrPostParser
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.instagram.InstagramPhotoParser
 import android.content.Context
@@ -57,7 +57,6 @@ class YtDlpMediaExtractor(
         // Normalize supported wrappers/post links before the usual URL safety preflight.
         val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
             ?.let(RedditLinks::normalize)
-            ?.let { TumblrPhotoParser.canonicalPage(it) ?: it }
             ?.let { PixivArtworkParser.canonicalPage(it) ?: it }
             ?.let(UrlValidator::toHttpsUrl)
         if (secureInputUrl == null) {
@@ -65,6 +64,12 @@ class YtDlpMediaExtractor(
         }
 
         return try {
+            // The optional Tumblr GET performs the same public DNS/redirect checks as
+            // preflight. Try it first so failure can fall back to the original URL.
+            val tumblrPage = TumblrPostParser.canonicalPage(secureInputUrl)
+            tumblrPage?.let { pageUrl ->
+                TumblrPostExtractor().extract(url, pageUrl)?.let { return it }
+            }
             val resolvedUrl = urlPreflight.resolve(secureInputUrl)
             val extractionUrl = RedditLinks.keepPostOverGate(secureInputUrl, resolvedUrl)
             if (extractionUrl != resolvedUrl) {
@@ -76,8 +81,11 @@ class YtDlpMediaExtractor(
             PixivArtworkParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 return PixivArtworkExtractor().extract(url, pageUrl)
             }
-            TumblrPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
-                TumblrPhotoExtractor().extract(url, pageUrl)?.let { return it }
+            // A non-Tumblr input can redirect to a post; never repeat a page attempt.
+            if (tumblrPage == null) {
+                TumblrPostParser.canonicalPage(extractionUrl)?.let { pageUrl ->
+                    TumblrPostExtractor().extract(url, pageUrl)?.let { return it }
+                }
             }
             TikTokPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 return TikTokPhotoExtractor().extract(url, pageUrl)
