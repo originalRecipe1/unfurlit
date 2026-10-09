@@ -168,6 +168,11 @@ urllib3's missing `_version.py`, and uses `PythonZipApp` to combine them with
 independent of the build timezone. Submodule files are never modified, and no
 Python packaging backend or wheel download runs during the APK build.
 
+The gallery-dl pin uses its [Codeberg upstream](https://codeberg.org/mikf/gallery-dl).
+The package files at `v1.32.13` (`61070f0`) match the PyPI 1.32.13 wheel;
+[GitHub's tag](https://github.com/mikf/gallery-dl/tree/v1.32.13) (`19a6403`)
+points to different code. The updater's wheel comparison enforces this match.
+
 Package data includes `certifi/cacert.pem`, typing markers and urllib3's
 JavaScript helper. LICENSE/NOTICE files are stored under `licenses/<package>/`.
 Compiled Python caches and charset-normalizer's optional `.pyx`/`.pxd` sources
