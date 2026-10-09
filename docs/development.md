@@ -249,8 +249,8 @@ R8 code shrinking and optimization enabled. The
 [link-check APK](#checking-links-by-hand) may be used for content checks beforehand,
 but its `linkCheck` build type inherits from `debug` and is not minified or
 optimized. It cannot verify behavior after release optimization. Copy this
-reusable checklist into each release's test record and record the APK revision,
-test date and outcomes there.
+reusable checklist into a release-specific test record under
+[`docs/releases/`](releases/) and record the APK revision, test date and outcomes there.
 
 - Open `x-mixed-media` and confirm that both the video and the photo appear.
 - Open `x-video` and confirm that it does not feel slower compared with the
