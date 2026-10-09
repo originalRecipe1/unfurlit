@@ -1,6 +1,7 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.tumblr
 
 import io.github.originalrecipe1.unfurlit.data.network.PublicPageLoader
+import io.github.originalrecipe1.unfurlit.data.network.UnsafeNetworkTargetException
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
@@ -12,8 +13,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
 
-/** Photo posts exposed in Tumblr's anonymous permalink page, without API credentials. */
-internal object TumblrPhotoParser {
+/** Photos and native videos in Tumblr's anonymous permalink page, without API credentials. */
+internal object TumblrPostParser {
     fun canonicalPage(url: String): String? {
         if (!UrlValidator.isAllowedHttps(url)) return null
         val uri = runCatching { URI(url) }.getOrNull() ?: return null
@@ -31,7 +32,7 @@ internal object TumblrPhotoParser {
         return "https://www.tumblr.com/${blog.lowercase()}/$id"
     }
 
-    /** Null leaves video, audio, mixed posts and unknown page layouts to the existing engines. */
+    /** Null leaves external videos, audio and unknown page layouts to the existing engines. */
     fun parse(sourceUrl: String, pageUrl: String, html: String): ExtractionResult? {
         val canonical = canonicalPage(pageUrl) ?: return null
         if (html.length > PublicPageLoader.MAX_PAGE_BYTES) fail()
@@ -49,29 +50,16 @@ internal object TumblrPhotoParser {
         // NPF trails run oldest to newest, followed by the reblog's own content.
         val parts = post.optJSONArray("trail")?.objects(50).orEmpty() + post
         val blocks = parts.flatMap { orderedContent(it) }
-        if (blocks.any { it.optString("type") !in setOf("image", "text") }) return null
-        val images = blocks.filter { it.optString("type") == "image" }
-        if (images.isEmpty()) return null
-        if (images.size > 50) fail()
-        val media = images.map { block ->
-            val candidates = block.optJSONArray("media")?.objects(100) ?: fail()
-            val safe = candidates.filter {
-                it.optString("type").startsWith("image/") &&
-                    UrlValidator.isAllowedHttps(it.optString("url")) &&
-                    URI(it.getString("url")).rawUserInfo == null
+        if (blocks.any { it.optString("type") !in setOf("image", "video", "text") }) return null
+        val mediaBlocks = blocks.filter { it.optString("type") != "text" }
+        if (mediaBlocks.isEmpty()) return null
+        if (mediaBlocks.size > 50) fail()
+        val media = mediaBlocks.map { block ->
+            when (block.optString("type")) {
+                "image" -> image(block)
+                // Never turn a mixed post into a partial photo-only success.
+                else -> video(block) ?: return null
             }
-            val uncropped = safe.filterNot { it.optBoolean("cropped", false) }.ifEmpty { safe }
-            val best = uncropped.maxByOrNull {
-                it.optLong("width", 0).coerceIn(0, 20_000) * it.optLong("height", 0).coerceIn(0, 20_000)
-            } ?: throw ExtractionException(ExtractionError.UnsupportedUrl)
-            // Use the media itself, including GIFs; never its still `poster`.
-            ExtractedMedia.Image(PlaybackSource(
-                url = best.getString("url"),
-                headers = mapOf("Referer" to "https://www.tumblr.com/"),
-                format = StreamFormat.Progressive,
-                mediaMimeType = best.getString("type").take(128),
-                formatId = null,
-            ))
         }
         val description = blocks.filter { it.optString("type") == "text" }
             .mapNotNull { it.text("text") }.joinToString("\n\n").take(16_384).ifEmpty { null }
@@ -81,10 +69,55 @@ internal object TumblrPhotoParser {
             title = (post.text("summary") ?: description)?.take(512),
             author = post.text("blogName")?.take(512),
             description = description,
-            thumbnailUrl = media.first().source.url,
+            thumbnailUrl = when (val first = media.first()) {
+                is ExtractedMedia.Image -> first.source.url
+                else -> mediaBlocks.first().optJSONArray("poster")?.objects(100)
+                    ?.firstOrNull { it.optString("type").startsWith("image/") && safeUrl(it.optString("url")) }
+                    ?.getString("url")
+            },
             media = media,
         )
     }
+
+    private fun image(block: JSONObject): ExtractedMedia.Image {
+        val candidates = block.optJSONArray("media")?.objects(100) ?: fail()
+        val images = candidates.filter { it.optString("type").startsWith("image/") && it.text("url") != null }
+        if (images.isEmpty()) fail()
+        val safe = images.filter { safeUrl(it.optString("url")) }
+        val uncropped = safe.filterNot { it.optBoolean("cropped", false) }.ifEmpty { safe }
+        val best = uncropped.maxByOrNull {
+            it.optLong("width", 0).coerceIn(0, 20_000) * it.optLong("height", 0).coerceIn(0, 20_000)
+        } ?: unsafe()
+        // Use the media itself, including GIFs; never its still `poster`.
+        return ExtractedMedia.Image(source(best.getString("url"), best.getString("type").take(128)))
+    }
+
+    private fun video(block: JSONObject): ExtractedMedia.Video? {
+        if (block.optString("provider") != "tumblr") return null
+        val media = block.optJSONObject("media") ?: return null
+        if (media.optString("type") != "video/mp4") return null
+        val url = media.text("url") ?: return null
+        if (!safeUrl(url)) unsafe()
+        // NPF durations are milliseconds. A native MP4 already includes its audio.
+        return ExtractedMedia.Video(
+            videoSource = source(url, "video/mp4"),
+            audioSource = null,
+            durationSeconds = block.optLong("duration", -1).takeIf { it >= 0 }?.div(1000),
+        )
+    }
+
+    private fun source(url: String, mimeType: String) = PlaybackSource(
+        url = url,
+        headers = mapOf("Referer" to "https://www.tumblr.com/"),
+        format = StreamFormat.Progressive,
+        mediaMimeType = mimeType,
+        formatId = null,
+    )
+
+    private fun safeUrl(url: String) = UrlValidator.isAllowedHttps(url) && URI(url).rawUserInfo == null
+    private fun unsafe(): Nothing = throw ExtractionException(
+        ExtractionError.UnsupportedUrl, UnsafeNetworkTargetException(),
+    )
 
     private fun orderedContent(part: JSONObject): List<JSONObject> {
         val content = part.optJSONArray("content")?.objects(250) ?: fail()

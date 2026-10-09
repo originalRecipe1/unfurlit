@@ -266,6 +266,8 @@ test date and outcomes there.
   and one still image. Recheck availability before the phone test.
 - Pinch-zoom the GIF and confirm that it keeps animating.
 - Return to History and confirm that the GIF's thumbnail is still.
+- Open `tumblr-native-video` and confirm that its video plays with sound. Open
+  `tumblr-mixed-media` and confirm that the video plays and the following photo loads.
 
 ## Architecture
 
@@ -331,10 +333,10 @@ The **Live social links** workflow runs weekly and on manual dispatch, using the
 same source-built extractor as release APKs. It exercises
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
 gallery-dl engines and JSON normalization, with native page-data adapters for TikTok,
-Instagram, Tumblr and Pixiv photo posts. The cases in
+Instagram and Pixiv photo posts, and Tumblr photos and native videos. The cases in
 `app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
-- **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Reddit (native video
+- **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Tumblr, Reddit (native video
   and external Imgur/Streamable link posts), X (including
   an animated GIF), Instagram posts, Reels and video carousels, TikTok, Bluesky, an Imgur
   GIFV, PeerTube, Dailymotion, a Twitch clip and a direct WebM file.
@@ -343,7 +345,7 @@ Instagram, Tumblr and Pixiv photo posts. The cases in
   `redd.it` links), direct `i.redd.it`, `preview.redd.it`,
   `reddit.com/media` and mirror links, X photos, Bluesky, Imgur images and albums, Flickr,
   Tumblr, Mastodon, Pixiv, Pinterest, Wikimedia Commons and a direct JPEG file.
-- **Mixed media:** an X post with a photo and a video.
+- **Mixed media:** X and Tumblr posts with a photo and a video.
 - **Audio:** SoundCloud, Bandcamp, Mixcloud and a direct Ogg file.
 - **Error handling:** a non-media page, missing pages, an invalid scheme and a
   private address.
@@ -499,18 +501,25 @@ retain their audio. TikTok photo soundtracks remain supported.
 The Instagram photo case is `instagram-photo-carousel` and requires 11 photos.
 `linkId` also accepts comma-separated IDs for focused regression runs.
 
-Tumblr photo posts use the anonymous `www.tumblr.com/<blog>/<id>` permalink page.
+Tumblr photos and native videos use the anonymous `www.tumblr.com/<blog>/<id>` permalink page.
 Legacy blog `/post/` and `/image/` links and dashboard `/blog/view/` links are
-normalized before the usual URL safety preflight; History keeps the original URL.
-The adapter reads only the matching post from `___INITIAL_STATE___`, preserves
-reblog and row-layout order, prefers the largest uncropped image candidates over
-avatars or still GIF posters, and limits responses to 4 MiB and 50 images.
-Video, audio, mixed posts and unrecognized page layouts retain the existing
-yt-dlp/gallery-dl route. Real page-load network errors remain network failures.
-No cookies, account credentials or Tumblr API key are needed for the photo route.
+read through that permalink; History keeps the original URL. The page GET uses
+the same public DNS and redirect checks as URL preflight. The adapter reads only
+the matching post from `___INITIAL_STATE___`, preserves reblog and row-layout
+order, and prefers the largest uncropped images over avatars or still GIF posters.
+Native `provider: tumblr` MP4 blocks play with any muxed audio; posters are
+thumbnails, not gallery items. Mixed posts keep both photos and videos. Responses
+are limited to 4 MiB, 50 reblog entries and 50 media items.
+External video providers, audio and unrecognized layouts retain the existing
+yt-dlp/gallery-dl route. Page-load errors and size-limit rejection also allow that
+route, starting with preflight of the original request URL. Cancellation and
+unsafe DNS, redirects or media targets remain terminal. Unsupported posts still
+incur the optional page lookup (bounded by the HTTP client's 20-second call timeout).
+No cookies, account credentials or Tumblr API key are needed for the native route.
 Row and reblog order follow [Tumblr's NPF specification](https://github.com/tumblr/docs/blob/master/npf-spec.md).
-The `tumblr-photo-post` live fixture still requires all four images; it is no
-longer exempted as a KNOWN failure in the report.
+The live fixtures require all four images in `tumblr-photo-post`, one playable
+video in `tumblr-native-video`, and both kinds in `tumblr-mixed-media`.
+None is exempted as a KNOWN failure in the report.
 
 Pixiv illustrations and manga use the anonymous `/ajax/illust/<id>` web endpoint.
 Multi-page artwork also requests `/ajax/illust/<id>/pages` and uses each original
