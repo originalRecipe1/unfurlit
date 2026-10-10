@@ -52,9 +52,10 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
 TikTok, Instagram, Tumblr and Pixiv photo posts use Unfurlit's own extractors (TikTok including
-the post's soundtrack). Instagram falls back to the bundled gallery-dl engine
-if that fails, as do photos and galleries on other sites. Direct links to an
-image also open. See the [dated test results](social-link-baseline.md) for the
+the post's soundtrack). Photos and galleries on other sites use the bundled
+gallery-dl engine. Instagram photos currently rely on Unfurlit's own extractor:
+anonymous tests of the gallery-dl fallback hit Instagram's login page. Direct
+image links also open. See the [dated test results](social-link-baseline.md) for the
 links and media checked. Pixiv artwork uses its anonymous web data; no refresh
 token is needed. Login-only artwork and Ugoira frame animations are not supported.
 

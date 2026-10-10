@@ -243,14 +243,16 @@ Merge request !47809 originally proposed Peek v5. The prepared update now target
 Unfurlit 1.4.0 at `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`; the matching
 metadata patch has not been posted. The gallery-dl review is tracked in
 [issue #40](https://github.com/originalRecipe1/unfurlit/issues/40).
+The subsequent gallery-dl source build for 1.4.1 does not update the merge
+request automatically.
 Official F-Droid acceptance and publication remain pending. GitHub Actions cannot
 publish directly into the official repository; F-Droid detects tags and controls
 its own build and signing queue.
 
 ## gallery-dl image engine and F-Droid
 
-Builds from 1.3.0 on also bundle the gallery-dl image engine, which
-`preparePinnedGalleryDl` assembles from six pinned, pure-Python PyPI wheels
+Releases 1.3.0 through 1.4.0 bundle the gallery-dl image engine, which
+`preparePinnedGalleryDl` assembled from six pinned, pure-Python PyPI wheels
 (gallery-dl and the requests stack). A reviewer on !47809 raised that these
 wheels are downloaded during Gradle's `preBuild`, outside the F-Droid scanner.
 The 1.4.0 candidate retains that build from 1.3.1. On 2026-10-05, all 428 `.py`
@@ -274,9 +276,30 @@ charset_normalizer wheel uses its Python files, without the optional compiled
 extensions or source `.pyx`/`.pxd` files.
 
 **Not verified:** reviewer acceptance of downloading these wheels outside the
-scanner. [PR #53](https://github.com/originalRecipe1/unfurlit/pull/53) implements
-the source build and CI package comparison, but remains unmerged for 1.4.1.
-It is not part of the 1.4.0 candidate.
+scanner. The source build below is intended for 1.4.1 and is not part of the
+released 1.4.0 candidate.
+
+For 1.4.1, `preparePinnedGalleryDl` now assembles the same package files from
+six release-tag submodules. It copies LICENSE/NOTICE files from source, preserves
+package data, generates urllib3's `_version.py`, excludes charset-normalizer's
+`.pyx`/`.pxd` and Python caches, and omits all wheel metadata. The deterministic
+ZIP writer retains sorted entries and timezone-independent fixed timestamps.
+No pip, Python build backend or wheel download is part of an APK build.
+
+The recipe's existing `submodules: true` checks out all eight submodules (these
+six plus yt-dlp and EJS) at their gitlink commits. Python 3 is already in its
+sudo dependencies. No wheel URLs, downloads or local-wheel override belong in
+the future source-build recipe. Keep the released 1.4.0 candidate pinned to
+`c2a1b5cacf4cf4e58e7eee3b14147d910d142b52` until a 1.4.1 release commit exists;
+use a separate scratch recipe for PR validation.
+
+**Verified locally on 2026-10-09:** all 442 package and license files match the
+six pinned wheels byte for byte, including all 428 `.py` files and the CA bundle.
+An intentionally changed `requests/__init__.py` in a scratch archive fails the
+comparison. CI enforces this through `scripts/check_gallery_dl.py`; the wheel
+references are verification inputs only. The [development guide](development.md)
+documents the explicit tag updater; no scheduled gallery-dl update job was added.
+F-Droid acceptance is still a review decision, and auto-update remains disabled.
 
 ## 32-bit ARM support
 
