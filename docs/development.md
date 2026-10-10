@@ -91,14 +91,20 @@ These are on-device diagnostic samples, not controlled benchmark results. Both
 release runs finished with History visible; the database and thumbnails were
 preserved across the build update. No forced ahead-of-time compilation was used.
 
-The cached AAR transform in `buildSrc` trims the bundled Python runtime for all
-builds, including x86_64 CI tests. Its exact removal list contains only the
-static QuickJS build archive and seven CPython test extension modules. Retained
-file contents, compressed payloads, Unix permissions, and symlink targets are
-preserved. ZIP timestamps are normalized to UTC in code, independently of the
-build's default timezone. The downloaded Maven artifact and its dependency
-metadata remain unchanged; a runtime layout change fails the transform and
-requires review of the list.
+The cached AAR transform in `buildSrc` repacks the bundled Python runtime for all
+builds, including x86_64 CI tests. Pure-Python standard-library files and their
+package data stay compressed in `usr/lib/python312.zip`; native modules and
+site-packages remain unpacked. A bundled `sitecustomize.py` prevents yt-dlp from
+writing bytecode caches. gallery-dl already disables bytecode writes.
+
+The exact removal list covers the static QuickJS build archive, seven CPython
+test extensions, and audited unused terminal/development packages. Retained
+unpacked entries preserve file contents, compressed payloads, Unix permissions,
+and symlink targets. The nested ZIP is deterministic across build timezones.
+The downloaded Maven artifact and its dependency metadata remain unchanged;
+an unexpected runtime layout fails the transform for review. See the
+[runtime storage audit and measurements](python-runtime-storage.md) for the
+removal rationale, native dependency checks, storage savings, and timing tradeoff.
 
 In historical ARM64 measurements on 2026-09-15, trimming reduced expanded
 runtime files from 41,680,927 to 34,880,897 bytes and the release APK from

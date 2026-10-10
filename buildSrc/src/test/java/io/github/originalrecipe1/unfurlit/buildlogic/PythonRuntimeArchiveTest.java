@@ -12,7 +12,10 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.TimeZone;
+import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.X000A_NTFS;
 import org.apache.commons.compress.archivers.zip.X5455_ExtendedTimestamp;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -32,9 +35,11 @@ public class PythonRuntimeArchiveTest {
         PythonRuntimeArchive.trim(input, output);
         try (ZipFile before = ZipFile.builder().setPath(input).get();
              ZipFile after = ZipFile.builder().setPath(output).get()) {
-            assertEquals(3, Collections.list(after.getEntries()).size());
+            assertEquals(5, Collections.list(after.getEntries()).size());
             for (String path : PythonRuntimeArchive.REMOVED_PATHS) assertNull(after.getEntry(path));
-            for (String path : new String[]{"usr/lib/libpython.so", "usr/lib/libpython.so.1", "usr/lib/python3.12/_sysconfigdata__linux_.py"}) {
+            for (String path : new String[]{"usr/lib/libpython.so", "usr/lib/libpython.so.1",
+                "usr/lib/python3.12/site-packages/retained/__init__.py",
+                "usr/lib/python3.12/lib-dynload/_sqlite3.cpython-312.so"}) {
                 ZipArchiveEntry a = before.getEntry(path);
                 ZipArchiveEntry b = after.getEntry(path);
                 assertEquals(a.getUnixMode(), b.getUnixMode());
@@ -58,6 +63,46 @@ public class PythonRuntimeArchiveTest {
                 assertEquals("libpython.so.1", new String(target.readAllBytes(), StandardCharsets.UTF_8));
             }
         }
+    }
+
+    @Test public void zippedStdlibPreservesSourcesAndPackageDataWithoutNativeModules() throws Exception {
+        Path input = fixture(true);
+        Path output = folder.newFile().toPath();
+        PythonRuntimeArchive.trim(input, output);
+        try (ZipFile archive = ZipFile.builder().setPath(output).get()) {
+            assertNull(archive.getEntry("usr/lib/python3.12/os.py"));
+            assertNull(archive.getEntry("usr/lib/python3.12/xmlrpc/unused.py"));
+            var nested = archive.getEntry(PythonRuntimeArchive.STDLIB_ZIP);
+            assertEquals(ZipArchiveEntry.STORED, nested.getMethod());
+            var contents = new TreeMap<String, String>();
+            var order = new ArrayList<String>();
+            try (var zip = new ZipInputStream(archive.getInputStream(nested))) {
+                for (var entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+                    order.add(entry.getName());
+                    contents.put(entry.getName(), new String(zip.readAllBytes(), StandardCharsets.UTF_8));
+                }
+            }
+            assertEquals(new ArrayList<>(contents.keySet()), order);
+            assertEquals("configuration bytes", contents.get("_sysconfigdata__linux_.py"));
+            assertEquals("encoding bytes", contents.get("encodings/__init__.py"));
+            assertEquals("package data", contents.get("email/architecture.rst"));
+            assertEquals("keep adjacent names", contents.get("xmlrpclib.py"));
+            assertEquals("import sys\nsys.dont_write_bytecode = True\n", contents.get("sitecustomize.py"));
+            assertFalse(contents.keySet().stream().anyMatch(name -> name.startsWith("site-packages/")
+                || name.startsWith("lib-dynload/") || name.startsWith("xmlrpc/")));
+        }
+    }
+
+    @Test public void upstreamStartupCustomizationRequiresReview() throws Exception {
+        IOException error = assertThrows(IOException.class, () -> PythonRuntimeArchive.trim(
+            fixture(true, "sitecustomize.py"), folder.newFile().toPath()));
+        assertTrue(error.getMessage().contains("sitecustomize.py"));
+    }
+
+    @Test public void unexpectedNativeModuleInsideAStdlibPackageRequiresReview() throws Exception {
+        IOException error = assertThrows(IOException.class, () -> PythonRuntimeArchive.trim(
+            fixture(true, "somepackage/native.so"), folder.newFile().toPath()));
+        assertTrue(error.getMessage().contains("Unexpected stdlib native file"));
     }
 
     @Test public void outputIsReproducible() throws Exception {
@@ -116,17 +161,25 @@ public class PythonRuntimeArchiveTest {
         assertTrue(error.getMessage().contains("runtime layout changed"));
     }
 
-    private Path fixture(boolean includeRemovals) throws IOException {
+    private Path fixture(boolean includeRemovals, String... extraFiles) throws IOException {
         Path input = folder.newFile().toPath();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(input)) {
             if (includeRemovals) {
                 for (String name : PythonRuntimeArchive.REMOVED_PATHS) {
-                    entry(zip, name, 0100644, "build/test bytes");
+                    entry(zip, name.endsWith("/") ? name + "unused.py" : name, 0100644, "build/test bytes");
                 }
             }
             entry(zip, "usr/lib/libpython.so", 0120777, "libpython.so.1");
             entry(zip, "usr/lib/libpython.so.1", 0100755, "runtime bytes");
+            entry(zip, "usr/lib/python3.12/site-packages/retained/__init__.py", 0100644, "package bytes");
+            entry(zip, "usr/lib/python3.12/lib-dynload/_sqlite3.cpython-312.so", 0100755, "native module bytes");
             entry(zip, "usr/lib/python3.12/_sysconfigdata__linux_.py", 0100644, "configuration bytes");
+            entry(zip, "usr/lib/python3.12/os.py", 0100644, "stdlib bytes");
+            entry(zip, "usr/lib/python3.12/site.py", 0100644, "site bytes");
+            entry(zip, "usr/lib/python3.12/encodings/__init__.py", 0100644, "encoding bytes");
+            entry(zip, "usr/lib/python3.12/email/architecture.rst", 0100644, "package data");
+            entry(zip, "usr/lib/python3.12/xmlrpclib.py", 0100644, "keep adjacent names");
+            for (String name : extraFiles) entry(zip, "usr/lib/python3.12/" + name, 0100644, "upstream change");
         }
         return input;
     }
