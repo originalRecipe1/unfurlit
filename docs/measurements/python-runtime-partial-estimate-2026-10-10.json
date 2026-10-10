@@ -1,0 +1,2181 @@
+{
+  "status": "Estimate only; not implemented or performance/compatibility verified",
+  "api": 36,
+  "abi": "x86_64",
+  "fixtureCount": 64,
+  "fixtureSha256": "c4fe16f0202b1b9aa65a95315c4cd706f70e47a3406b13ab633e3dbe5e8a6b3e",
+  "definition": "Union of stdlib .pyc files created by the full live fixture set through both app engines, with only gallery-dl bytecode suppression removed in a local diagnostic APK. Native modules and site-packages are excluded.",
+  "hot": {
+    "modules": 182,
+    "sourceBytes": 3844095,
+    "bytecodeFiles": 182,
+    "bytecodeBytes": 4347525,
+    "sourceAndCacheBytes": 8191620,
+    "sourceAndCacheAllocatedBytes": 10440704
+  },
+  "cold": {
+    "modules": 306,
+    "otherFiles": 4,
+    "sourceAndDataBytes": 5048004,
+    "currentAllocatedFileBytes": 7065600,
+    "projectedZipBytes": 1312795,
+    "projectedZipAllocatedBytes": 1314816
+  },
+  "projectedSavingVsTrimsOnly": {
+    "logicalBytes": 3735209,
+    "allocatedFileBytesExcludingDirectoryChanges": 5750784
+  },
+  "stdlibSourceAndDataBytes": 8892099,
+  "compression": "Host in-memory ZIP_DEFLATED level 6, sorted relative names and fixed timestamps; no package or runtime modifications",
+  "limitations": [
+    "Observed imports cover only paths exercised by these fixtures and their actual outcomes; no exhaustive upstream extractor claim.",
+    "Regular packages split between disk and ZIP need an import-path design; compatibility and startup performance are not verified.",
+    "Filesystem projection excludes directory overhead and Android accounting effects.",
+    "Gallery-dl production retains -S and PYTHONDONTWRITEBYTECODE=1; the diagnostic records imports without changing shipped behavior."
+  ],
+  "modules": [
+    {
+      "source": "__future__.py",
+      "sourceBytes": 5218,
+      "bytecode": [
+        {
+          "path": "__pycache__/__future__.cpython-312.pyc",
+          "bytes": 4795
+        }
+      ]
+    },
+    {
+      "source": "_compat_pickle.py",
+      "sourceBytes": 8761,
+      "bytecode": [
+        {
+          "path": "__pycache__/_compat_pickle.cpython-312.pyc",
+          "bytes": 7290
+        }
+      ]
+    },
+    {
+      "source": "_compression.py",
+      "sourceBytes": 5681,
+      "bytecode": [
+        {
+          "path": "__pycache__/_compression.cpython-312.pyc",
+          "bytes": 7569
+        }
+      ]
+    },
+    {
+      "source": "_markupbase.py",
+      "sourceBytes": 14653,
+      "bytecode": [
+        {
+          "path": "__pycache__/_markupbase.cpython-312.pyc",
+          "bytes": 12370
+        }
+      ]
+    },
+    {
+      "source": "_strptime.py",
+      "sourceBytes": 28393,
+      "bytecode": [
+        {
+          "path": "__pycache__/_strptime.cpython-312.pyc",
+          "bytes": 27561
+        }
+      ]
+    },
+    {
+      "source": "_sysconfigdata__linux_.py",
+      "sourceBytes": 66448,
+      "bytecode": [
+        {
+          "path": "__pycache__/_sysconfigdata__linux_.cpython-312.pyc",
+          "bytes": 68532
+        }
+      ]
+    },
+    {
+      "source": "_weakrefset.py",
+      "sourceBytes": 5893,
+      "bytecode": [
+        {
+          "path": "__pycache__/_weakrefset.cpython-312.pyc",
+          "bytes": 11828
+        }
+      ]
+    },
+    {
+      "source": "argparse.py",
+      "sourceBytes": 101155,
+      "bytecode": [
+        {
+          "path": "__pycache__/argparse.cpython-312.pyc",
+          "bytes": 101146
+        }
+      ]
+    },
+    {
+      "source": "ast.py",
+      "sourceBytes": 64452,
+      "bytecode": [
+        {
+          "path": "__pycache__/ast.cpython-312.pyc",
+          "bytes": 99825
+        }
+      ]
+    },
+    {
+      "source": "asyncio/__init__.py",
+      "sourceBytes": 1220,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 1548
+        }
+      ]
+    },
+    {
+      "source": "asyncio/base_events.py",
+      "sourceBytes": 78567,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/base_events.cpython-312.pyc",
+          "bytes": 86837
+        }
+      ]
+    },
+    {
+      "source": "asyncio/base_futures.py",
+      "sourceBytes": 1974,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/base_futures.cpython-312.pyc",
+          "bytes": 3177
+        }
+      ]
+    },
+    {
+      "source": "asyncio/base_subprocess.py",
+      "sourceBytes": 8869,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/base_subprocess.cpython-312.pyc",
+          "bytes": 16169
+        }
+      ]
+    },
+    {
+      "source": "asyncio/base_tasks.py",
+      "sourceBytes": 2672,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/base_tasks.cpython-312.pyc",
+          "bytes": 4169
+        }
+      ]
+    },
+    {
+      "source": "asyncio/constants.py",
+      "sourceBytes": 1413,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/constants.cpython-312.pyc",
+          "bytes": 1046
+        }
+      ]
+    },
+    {
+      "source": "asyncio/coroutines.py",
+      "sourceBytes": 3342,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/coroutines.cpython-312.pyc",
+          "bytes": 3860
+        }
+      ]
+    },
+    {
+      "source": "asyncio/events.py",
+      "sourceBytes": 29339,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/events.cpython-312.pyc",
+          "bytes": 36833
+        }
+      ]
+    },
+    {
+      "source": "asyncio/exceptions.py",
+      "sourceBytes": 1752,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/exceptions.cpython-312.pyc",
+          "bytes": 3172
+        }
+      ]
+    },
+    {
+      "source": "asyncio/format_helpers.py",
+      "sourceBytes": 2404,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/format_helpers.cpython-312.pyc",
+          "bytes": 3958
+        }
+      ]
+    },
+    {
+      "source": "asyncio/futures.py",
+      "sourceBytes": 14340,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/futures.cpython-312.pyc",
+          "bytes": 17397
+        }
+      ]
+    },
+    {
+      "source": "asyncio/locks.py",
+      "sourceBytes": 18995,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/locks.cpython-312.pyc",
+          "bytes": 27510
+        }
+      ]
+    },
+    {
+      "source": "asyncio/log.py",
+      "sourceBytes": 124,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/log.cpython-312.pyc",
+          "bytes": 372
+        }
+      ]
+    },
+    {
+      "source": "asyncio/mixins.py",
+      "sourceBytes": 481,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/mixins.cpython-312.pyc",
+          "bytes": 1119
+        }
+      ]
+    },
+    {
+      "source": "asyncio/protocols.py",
+      "sourceBytes": 6957,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/protocols.cpython-312.pyc",
+          "bytes": 8873
+        }
+      ]
+    },
+    {
+      "source": "asyncio/queues.py",
+      "sourceBytes": 7974,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/queues.cpython-312.pyc",
+          "bytes": 12032
+        }
+      ]
+    },
+    {
+      "source": "asyncio/runners.py",
+      "sourceBytes": 7230,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/runners.cpython-312.pyc",
+          "bytes": 10081
+        }
+      ]
+    },
+    {
+      "source": "asyncio/selector_events.py",
+      "sourceBytes": 48332,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/selector_events.cpython-312.pyc",
+          "bytes": 63409
+        }
+      ]
+    },
+    {
+      "source": "asyncio/sslproto.py",
+      "sourceBytes": 31899,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/sslproto.cpython-312.pyc",
+          "bytes": 41983
+        }
+      ]
+    },
+    {
+      "source": "asyncio/staggered.py",
+      "sourceBytes": 7077,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/staggered.cpython-312.pyc",
+          "bytes": 6639
+        }
+      ]
+    },
+    {
+      "source": "asyncio/streams.py",
+      "sourceBytes": 27619,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/streams.cpython-312.pyc",
+          "bytes": 33457
+        }
+      ]
+    },
+    {
+      "source": "asyncio/subprocess.py",
+      "sourceBytes": 7737,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/subprocess.cpython-312.pyc",
+          "bytes": 12185
+        }
+      ]
+    },
+    {
+      "source": "asyncio/taskgroups.py",
+      "sourceBytes": 9559,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/taskgroups.cpython-312.pyc",
+          "bytes": 8533
+        }
+      ]
+    },
+    {
+      "source": "asyncio/tasks.py",
+      "sourceBytes": 37362,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/tasks.cpython-312.pyc",
+          "bytes": 40401
+        }
+      ]
+    },
+    {
+      "source": "asyncio/threads.py",
+      "sourceBytes": 790,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/threads.cpython-312.pyc",
+          "bytes": 1349
+        }
+      ]
+    },
+    {
+      "source": "asyncio/timeouts.py",
+      "sourceBytes": 5321,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/timeouts.cpython-312.pyc",
+          "bytes": 7888
+        }
+      ]
+    },
+    {
+      "source": "asyncio/transports.py",
+      "sourceBytes": 10722,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/transports.cpython-312.pyc",
+          "bytes": 14095
+        }
+      ]
+    },
+    {
+      "source": "asyncio/trsock.py",
+      "sourceBytes": 2475,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/trsock.cpython-312.pyc",
+          "bytes": 5170
+        }
+      ]
+    },
+    {
+      "source": "asyncio/unix_events.py",
+      "sourceBytes": 53124,
+      "bytecode": [
+        {
+          "path": "asyncio/__pycache__/unix_events.cpython-312.pyc",
+          "bytes": 67819
+        }
+      ]
+    },
+    {
+      "source": "base64.py",
+      "sourceBytes": 20661,
+      "bytecode": [
+        {
+          "path": "__pycache__/base64.cpython-312.pyc",
+          "bytes": 24488
+        }
+      ]
+    },
+    {
+      "source": "bisect.py",
+      "sourceBytes": 3423,
+      "bytecode": [
+        {
+          "path": "__pycache__/bisect.cpython-312.pyc",
+          "bytes": 3732
+        }
+      ]
+    },
+    {
+      "source": "bz2.py",
+      "sourceBytes": 11847,
+      "bytecode": [
+        {
+          "path": "__pycache__/bz2.cpython-312.pyc",
+          "bytes": 15224
+        }
+      ]
+    },
+    {
+      "source": "calendar.py",
+      "sourceBytes": 25864,
+      "bytecode": [
+        {
+          "path": "__pycache__/calendar.cpython-312.pyc",
+          "bytes": 39993
+        }
+      ]
+    },
+    {
+      "source": "collections/__init__.py",
+      "sourceBytes": 52378,
+      "bytecode": [
+        {
+          "path": "collections/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 73028
+        }
+      ]
+    },
+    {
+      "source": "collections/abc.py",
+      "sourceBytes": 119,
+      "bytecode": [
+        {
+          "path": "collections/__pycache__/abc.cpython-312.pyc",
+          "bytes": 340
+        }
+      ]
+    },
+    {
+      "source": "concurrent/__init__.py",
+      "sourceBytes": 38,
+      "bytecode": [
+        {
+          "path": "concurrent/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 230
+        }
+      ]
+    },
+    {
+      "source": "concurrent/futures/__init__.py",
+      "sourceBytes": 1583,
+      "bytecode": [
+        {
+          "path": "concurrent/futures/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 1346
+        }
+      ]
+    },
+    {
+      "source": "concurrent/futures/_base.py",
+      "sourceBytes": 22833,
+      "bytecode": [
+        {
+          "path": "concurrent/futures/__pycache__/_base.cpython-312.pyc",
+          "bytes": 31962
+        }
+      ]
+    },
+    {
+      "source": "contextlib.py",
+      "sourceBytes": 27637,
+      "bytecode": [
+        {
+          "path": "__pycache__/contextlib.cpython-312.pyc",
+          "bytes": 30441
+        }
+      ]
+    },
+    {
+      "source": "contextvars.py",
+      "sourceBytes": 129,
+      "bytecode": [
+        {
+          "path": "__pycache__/contextvars.cpython-312.pyc",
+          "bytes": 352
+        }
+      ]
+    },
+    {
+      "source": "copy.py",
+      "sourceBytes": 8412,
+      "bytecode": [
+        {
+          "path": "__pycache__/copy.cpython-312.pyc",
+          "bytes": 9848
+        }
+      ]
+    },
+    {
+      "source": "copyreg.py",
+      "sourceBytes": 7614,
+      "bytecode": [
+        {
+          "path": "__pycache__/copyreg.cpython-312.pyc",
+          "bytes": 7490
+        }
+      ]
+    },
+    {
+      "source": "csv.py",
+      "sourceBytes": 16386,
+      "bytecode": [
+        {
+          "path": "__pycache__/csv.cpython-312.pyc",
+          "bytes": 17827
+        }
+      ]
+    },
+    {
+      "source": "ctypes/__init__.py",
+      "sourceBytes": 18210,
+      "bytecode": [
+        {
+          "path": "ctypes/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 23559
+        }
+      ]
+    },
+    {
+      "source": "ctypes/_endian.py",
+      "sourceBytes": 2535,
+      "bytecode": [
+        {
+          "path": "ctypes/__pycache__/_endian.cpython-312.pyc",
+          "bytes": 3464
+        }
+      ]
+    },
+    {
+      "source": "ctypes/util.py",
+      "sourceBytes": 13998,
+      "bytecode": [
+        {
+          "path": "ctypes/__pycache__/util.cpython-312.pyc",
+          "bytes": 16416
+        }
+      ]
+    },
+    {
+      "source": "dataclasses.py",
+      "sourceBytes": 62085,
+      "bytecode": [
+        {
+          "path": "__pycache__/dataclasses.cpython-312.pyc",
+          "bytes": 44982
+        }
+      ]
+    },
+    {
+      "source": "datetime.py",
+      "sourceBytes": 268,
+      "bytecode": [
+        {
+          "path": "__pycache__/datetime.cpython-312.pyc",
+          "bytes": 500
+        }
+      ]
+    },
+    {
+      "source": "decimal.py",
+      "sourceBytes": 2805,
+      "bytecode": [
+        {
+          "path": "__pycache__/decimal.cpython-312.pyc",
+          "bytes": 3022
+        }
+      ]
+    },
+    {
+      "source": "dis.py",
+      "sourceBytes": 30227,
+      "bytecode": [
+        {
+          "path": "__pycache__/dis.cpython-312.pyc",
+          "bytes": 34532
+        }
+      ]
+    },
+    {
+      "source": "email/__init__.py",
+      "sourceBytes": 1764,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 2010
+        }
+      ]
+    },
+    {
+      "source": "email/_encoded_words.py",
+      "sourceBytes": 8541,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/_encoded_words.cpython-312.pyc",
+          "bytes": 8397
+        }
+      ]
+    },
+    {
+      "source": "email/_parseaddr.py",
+      "sourceBytes": 17821,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/_parseaddr.cpython-312.pyc",
+          "bytes": 23336
+        }
+      ]
+    },
+    {
+      "source": "email/_policybase.py",
+      "sourceBytes": 15535,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/_policybase.cpython-312.pyc",
+          "bytes": 18725
+        }
+      ]
+    },
+    {
+      "source": "email/base64mime.py",
+      "sourceBytes": 3551,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/base64mime.cpython-312.pyc",
+          "bytes": 4036
+        }
+      ]
+    },
+    {
+      "source": "email/charset.py",
+      "sourceBytes": 17063,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/charset.cpython-312.pyc",
+          "bytes": 15334
+        }
+      ]
+    },
+    {
+      "source": "email/encoders.py",
+      "sourceBytes": 1778,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/encoders.cpython-312.pyc",
+          "bytes": 2180
+        }
+      ]
+    },
+    {
+      "source": "email/errors.py",
+      "sourceBytes": 3814,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/errors.cpython-312.pyc",
+          "bytes": 7112
+        }
+      ]
+    },
+    {
+      "source": "email/feedparser.py",
+      "sourceBytes": 22796,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/feedparser.cpython-312.pyc",
+          "bytes": 19889
+        }
+      ]
+    },
+    {
+      "source": "email/header.py",
+      "sourceBytes": 24092,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/header.cpython-312.pyc",
+          "bytes": 24600
+        }
+      ]
+    },
+    {
+      "source": "email/iterators.py",
+      "sourceBytes": 2129,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/iterators.cpython-312.pyc",
+          "bytes": 2890
+        }
+      ]
+    },
+    {
+      "source": "email/message.py",
+      "sourceBytes": 48215,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/message.cpython-312.pyc",
+          "bytes": 53145
+        }
+      ]
+    },
+    {
+      "source": "email/parser.py",
+      "sourceBytes": 4975,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/parser.cpython-312.pyc",
+          "bytes": 6837
+        }
+      ]
+    },
+    {
+      "source": "email/quoprimime.py",
+      "sourceBytes": 9864,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/quoprimime.cpython-312.pyc",
+          "bytes": 10041
+        }
+      ]
+    },
+    {
+      "source": "email/utils.py",
+      "sourceBytes": 16071,
+      "bytecode": [
+        {
+          "path": "email/__pycache__/utils.cpython-312.pyc",
+          "bytes": 16061
+        }
+      ]
+    },
+    {
+      "source": "encodings/__init__.py",
+      "sourceBytes": 5884,
+      "bytecode": [
+        {
+          "path": "encodings/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 5866
+        }
+      ]
+    },
+    {
+      "source": "encodings/aliases.py",
+      "sourceBytes": 15677,
+      "bytecode": [
+        {
+          "path": "encodings/__pycache__/aliases.cpython-312.pyc",
+          "bytes": 12499
+        }
+      ]
+    },
+    {
+      "source": "encodings/ascii.py",
+      "sourceBytes": 1248,
+      "bytecode": [
+        {
+          "path": "encodings/__pycache__/ascii.cpython-312.pyc",
+          "bytes": 2606
+        }
+      ]
+    },
+    {
+      "source": "encodings/cp437.py",
+      "sourceBytes": 34564,
+      "bytecode": [
+        {
+          "path": "encodings/__pycache__/cp437.cpython-312.pyc",
+          "bytes": 13375
+        }
+      ]
+    },
+    {
+      "source": "encodings/idna.py",
+      "sourceBytes": 9710,
+      "bytecode": [
+        {
+          "path": "encodings/__pycache__/idna.cpython-312.pyc",
+          "bytes": 9972
+        }
+      ]
+    },
+    {
+      "source": "encodings/utf_8.py",
+      "sourceBytes": 1005,
+      "bytecode": [
+        {
+          "path": "encodings/__pycache__/utf_8.cpython-312.pyc",
+          "bytes": 2238
+        }
+      ]
+    },
+    {
+      "source": "enum.py",
+      "sourceBytes": 81540,
+      "bytecode": [
+        {
+          "path": "__pycache__/enum.cpython-312.pyc",
+          "bytes": 80435
+        }
+      ]
+    },
+    {
+      "source": "fileinput.py",
+      "sourceBytes": 15714,
+      "bytecode": [
+        {
+          "path": "__pycache__/fileinput.cpython-312.pyc",
+          "bytes": 20359
+        }
+      ]
+    },
+    {
+      "source": "fnmatch.py",
+      "sourceBytes": 5999,
+      "bytecode": [
+        {
+          "path": "__pycache__/fnmatch.cpython-312.pyc",
+          "bytes": 6571
+        }
+      ]
+    },
+    {
+      "source": "functools.py",
+      "sourceBytes": 37940,
+      "bytecode": [
+        {
+          "path": "__pycache__/functools.cpython-312.pyc",
+          "bytes": 40433
+        }
+      ]
+    },
+    {
+      "source": "getpass.py",
+      "sourceBytes": 5990,
+      "bytecode": [
+        {
+          "path": "__pycache__/getpass.cpython-312.pyc",
+          "bytes": 6922
+        }
+      ]
+    },
+    {
+      "source": "gettext.py",
+      "sourceBytes": 21320,
+      "bytecode": [
+        {
+          "path": "__pycache__/gettext.cpython-312.pyc",
+          "bytes": 21874
+        }
+      ]
+    },
+    {
+      "source": "glob.py",
+      "sourceBytes": 8732,
+      "bytecode": [
+        {
+          "path": "__pycache__/glob.cpython-312.pyc",
+          "bytes": 9892
+        }
+      ]
+    },
+    {
+      "source": "hashlib.py",
+      "sourceBytes": 9349,
+      "bytecode": [
+        {
+          "path": "__pycache__/hashlib.cpython-312.pyc",
+          "bytes": 8171
+        }
+      ]
+    },
+    {
+      "source": "heapq.py",
+      "sourceBytes": 23024,
+      "bytecode": [
+        {
+          "path": "__pycache__/heapq.cpython-312.pyc",
+          "bytes": 18029
+        }
+      ]
+    },
+    {
+      "source": "hmac.py",
+      "sourceBytes": 7716,
+      "bytecode": [
+        {
+          "path": "__pycache__/hmac.cpython-312.pyc",
+          "bytes": 10782
+        }
+      ]
+    },
+    {
+      "source": "html/__init__.py",
+      "sourceBytes": 4775,
+      "bytecode": [
+        {
+          "path": "html/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 4472
+        }
+      ]
+    },
+    {
+      "source": "html/entities.py",
+      "sourceBytes": 75512,
+      "bytecode": [
+        {
+          "path": "html/__pycache__/entities.cpython-312.pyc",
+          "bytes": 97756
+        }
+      ]
+    },
+    {
+      "source": "html/parser.py",
+      "sourceBytes": 17054,
+      "bytecode": [
+        {
+          "path": "html/__pycache__/parser.cpython-312.pyc",
+          "bytes": 17265
+        }
+      ]
+    },
+    {
+      "source": "http/__init__.py",
+      "sourceBytes": 8308,
+      "bytecode": [
+        {
+          "path": "http/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 9578
+        }
+      ]
+    },
+    {
+      "source": "http/client.py",
+      "sourceBytes": 57304,
+      "bytecode": [
+        {
+          "path": "http/__pycache__/client.cpython-312.pyc",
+          "bytes": 57273
+        }
+      ]
+    },
+    {
+      "source": "http/cookiejar.py",
+      "sourceBytes": 77438,
+      "bytecode": [
+        {
+          "path": "http/__pycache__/cookiejar.cpython-312.pyc",
+          "bytes": 81507
+        }
+      ]
+    },
+    {
+      "source": "http/cookies.py",
+      "sourceBytes": 19951,
+      "bytecode": [
+        {
+          "path": "http/__pycache__/cookies.cpython-312.pyc",
+          "bytes": 20882
+        }
+      ]
+    },
+    {
+      "source": "importlib/__init__.py",
+      "sourceBytes": 4784,
+      "bytecode": [
+        {
+          "path": "importlib/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 4650
+        }
+      ]
+    },
+    {
+      "source": "importlib/_abc.py",
+      "sourceBytes": 1354,
+      "bytecode": [
+        {
+          "path": "importlib/__pycache__/_abc.cpython-312.pyc",
+          "bytes": 1734
+        }
+      ]
+    },
+    {
+      "source": "importlib/abc.py",
+      "sourceBytes": 7612,
+      "bytecode": [
+        {
+          "path": "importlib/__pycache__/abc.cpython-312.pyc",
+          "bytes": 10502
+        }
+      ]
+    },
+    {
+      "source": "importlib/metadata/__init__.py",
+      "sourceBytes": 28757,
+      "bytecode": [
+        {
+          "path": "importlib/metadata/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 48528
+        }
+      ]
+    },
+    {
+      "source": "importlib/metadata/_adapters.py",
+      "sourceBytes": 2406,
+      "bytecode": [
+        {
+          "path": "importlib/metadata/__pycache__/_adapters.cpython-312.pyc",
+          "bytes": 3929
+        }
+      ]
+    },
+    {
+      "source": "importlib/metadata/_collections.py",
+      "sourceBytes": 743,
+      "bytecode": [
+        {
+          "path": "importlib/metadata/__pycache__/_collections.cpython-312.pyc",
+          "bytes": 1972
+        }
+      ]
+    },
+    {
+      "source": "importlib/metadata/_functools.py",
+      "sourceBytes": 2895,
+      "bytecode": [
+        {
+          "path": "importlib/metadata/__pycache__/_functools.cpython-312.pyc",
+          "bytes": 3534
+        }
+      ]
+    },
+    {
+      "source": "importlib/metadata/_itertools.py",
+      "sourceBytes": 2068,
+      "bytecode": [
+        {
+          "path": "importlib/metadata/__pycache__/_itertools.cpython-312.pyc",
+          "bytes": 2447
+        }
+      ]
+    },
+    {
+      "source": "importlib/metadata/_meta.py",
+      "sourceBytes": 1590,
+      "bytecode": [
+        {
+          "path": "importlib/metadata/__pycache__/_meta.cpython-312.pyc",
+          "bytes": 3372
+        }
+      ]
+    },
+    {
+      "source": "importlib/metadata/_text.py",
+      "sourceBytes": 2166,
+      "bytecode": [
+        {
+          "path": "importlib/metadata/__pycache__/_text.cpython-312.pyc",
+          "bytes": 3933
+        }
+      ]
+    },
+    {
+      "source": "importlib/readers.py",
+      "sourceBytes": 327,
+      "bytecode": [
+        {
+          "path": "importlib/__pycache__/readers.cpython-312.pyc",
+          "bytes": 553
+        }
+      ]
+    },
+    {
+      "source": "importlib/resources/__init__.py",
+      "sourceBytes": 532,
+      "bytecode": [
+        {
+          "path": "importlib/resources/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 728
+        }
+      ]
+    },
+    {
+      "source": "importlib/resources/_adapters.py",
+      "sourceBytes": 4482,
+      "bytecode": [
+        {
+          "path": "importlib/resources/__pycache__/_adapters.cpython-312.pyc",
+          "bytes": 9702
+        }
+      ]
+    },
+    {
+      "source": "importlib/resources/_common.py",
+      "sourceBytes": 5486,
+      "bytecode": [
+        {
+          "path": "importlib/resources/__pycache__/_common.cpython-312.pyc",
+          "bytes": 8822
+        }
+      ]
+    },
+    {
+      "source": "importlib/resources/_itertools.py",
+      "sourceBytes": 1277,
+      "bytecode": [
+        {
+          "path": "importlib/resources/__pycache__/_itertools.cpython-312.pyc",
+          "bytes": 1630
+        }
+      ]
+    },
+    {
+      "source": "importlib/resources/_legacy.py",
+      "sourceBytes": 2949,
+      "bytecode": [
+        {
+          "path": "importlib/resources/__pycache__/_legacy.cpython-312.pyc",
+          "bytes": 4934
+        }
+      ]
+    },
+    {
+      "source": "importlib/resources/abc.py",
+      "sourceBytes": 5203,
+      "bytecode": [
+        {
+          "path": "importlib/resources/__pycache__/abc.cpython-312.pyc",
+          "bytes": 8994
+        }
+      ]
+    },
+    {
+      "source": "importlib/resources/readers.py",
+      "sourceBytes": 4370,
+      "bytecode": [
+        {
+          "path": "importlib/resources/__pycache__/readers.cpython-312.pyc",
+          "bytes": 9089
+        }
+      ]
+    },
+    {
+      "source": "inspect.py",
+      "sourceBytes": 127125,
+      "bytecode": [
+        {
+          "path": "__pycache__/inspect.cpython-312.pyc",
+          "bytes": 134454
+        }
+      ]
+    },
+    {
+      "source": "ipaddress.py",
+      "sourceBytes": 81414,
+      "bytecode": [
+        {
+          "path": "__pycache__/ipaddress.cpython-312.pyc",
+          "bytes": 93867
+        }
+      ]
+    },
+    {
+      "source": "json/__init__.py",
+      "sourceBytes": 14020,
+      "bytecode": [
+        {
+          "path": "json/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 13706
+        }
+      ]
+    },
+    {
+      "source": "json/decoder.py",
+      "sourceBytes": 12525,
+      "bytecode": [
+        {
+          "path": "json/__pycache__/decoder.cpython-312.pyc",
+          "bytes": 14004
+        }
+      ]
+    },
+    {
+      "source": "json/encoder.py",
+      "sourceBytes": 16075,
+      "bytecode": [
+        {
+          "path": "json/__pycache__/encoder.cpython-312.pyc",
+          "bytes": 15179
+        }
+      ]
+    },
+    {
+      "source": "json/scanner.py",
+      "sourceBytes": 2434,
+      "bytecode": [
+        {
+          "path": "json/__pycache__/scanner.cpython-312.pyc",
+          "bytes": 3421
+        }
+      ]
+    },
+    {
+      "source": "keyword.py",
+      "sourceBytes": 1073,
+      "bytecode": [
+        {
+          "path": "__pycache__/keyword.cpython-312.pyc",
+          "bytes": 1132
+        }
+      ]
+    },
+    {
+      "source": "linecache.py",
+      "sourceBytes": 5800,
+      "bytecode": [
+        {
+          "path": "__pycache__/linecache.cpython-312.pyc",
+          "bytes": 6640
+        }
+      ]
+    },
+    {
+      "source": "locale.py",
+      "sourceBytes": 78599,
+      "bytecode": [
+        {
+          "path": "__pycache__/locale.cpython-312.pyc",
+          "bytes": 59579
+        }
+      ]
+    },
+    {
+      "source": "logging/__init__.py",
+      "sourceBytes": 83437,
+      "bytecode": [
+        {
+          "path": "logging/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 95479
+        }
+      ]
+    },
+    {
+      "source": "lzma.py",
+      "sourceBytes": 13277,
+      "bytecode": [
+        {
+          "path": "__pycache__/lzma.cpython-312.pyc",
+          "bytes": 15946
+        }
+      ]
+    },
+    {
+      "source": "mimetypes.py",
+      "sourceBytes": 23110,
+      "bytecode": [
+        {
+          "path": "__pycache__/mimetypes.cpython-312.pyc",
+          "bytes": 24585
+        }
+      ]
+    },
+    {
+      "source": "netrc.py",
+      "sourceBytes": 6922,
+      "bytecode": [
+        {
+          "path": "__pycache__/netrc.cpython-312.pyc",
+          "bytes": 8946
+        }
+      ]
+    },
+    {
+      "source": "numbers.py",
+      "sourceBytes": 11467,
+      "bytecode": [
+        {
+          "path": "__pycache__/numbers.cpython-312.pyc",
+          "bytes": 14058
+        }
+      ]
+    },
+    {
+      "source": "opcode.py",
+      "sourceBytes": 13174,
+      "bytecode": [
+        {
+          "path": "__pycache__/opcode.cpython-312.pyc",
+          "bytes": 14807
+        }
+      ]
+    },
+    {
+      "source": "operator.py",
+      "sourceBytes": 10965,
+      "bytecode": [
+        {
+          "path": "__pycache__/operator.cpython-312.pyc",
+          "bytes": 17443
+        }
+      ]
+    },
+    {
+      "source": "optparse.py",
+      "sourceBytes": 60369,
+      "bytecode": [
+        {
+          "path": "__pycache__/optparse.cpython-312.pyc",
+          "bytes": 67532
+        }
+      ]
+    },
+    {
+      "source": "pathlib.py",
+      "sourceBytes": 51052,
+      "bytecode": [
+        {
+          "path": "__pycache__/pathlib.cpython-312.pyc",
+          "bytes": 61789
+        }
+      ]
+    },
+    {
+      "source": "pickle.py",
+      "sourceBytes": 66911,
+      "bytecode": [
+        {
+          "path": "__pycache__/pickle.cpython-312.pyc",
+          "bytes": 77805
+        }
+      ]
+    },
+    {
+      "source": "pkgutil.py",
+      "sourceBytes": 18281,
+      "bytecode": [
+        {
+          "path": "__pycache__/pkgutil.cpython-312.pyc",
+          "bytes": 19978
+        }
+      ]
+    },
+    {
+      "source": "platform.py",
+      "sourceBytes": 43415,
+      "bytecode": [
+        {
+          "path": "__pycache__/platform.cpython-312.pyc",
+          "bytes": 41670
+        }
+      ]
+    },
+    {
+      "source": "queue.py",
+      "sourceBytes": 11496,
+      "bytecode": [
+        {
+          "path": "__pycache__/queue.cpython-312.pyc",
+          "bytes": 14750
+        }
+      ]
+    },
+    {
+      "source": "quopri.py",
+      "sourceBytes": 7210,
+      "bytecode": [
+        {
+          "path": "__pycache__/quopri.cpython-312.pyc",
+          "bytes": 9394
+        }
+      ]
+    },
+    {
+      "source": "random.py",
+      "sourceBytes": 34689,
+      "bytecode": [
+        {
+          "path": "__pycache__/random.cpython-312.pyc",
+          "bytes": 33236
+        }
+      ]
+    },
+    {
+      "source": "re/__init__.py",
+      "sourceBytes": 16315,
+      "bytecode": [
+        {
+          "path": "re/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 18021
+        }
+      ]
+    },
+    {
+      "source": "re/_casefix.py",
+      "sourceBytes": 5444,
+      "bytecode": [
+        {
+          "path": "re/__pycache__/_casefix.cpython-312.pyc",
+          "bytes": 1907
+        }
+      ]
+    },
+    {
+      "source": "re/_compiler.py",
+      "sourceBytes": 26399,
+      "bytecode": [
+        {
+          "path": "re/__pycache__/_compiler.cpython-312.pyc",
+          "bytes": 26585
+        }
+      ]
+    },
+    {
+      "source": "re/_constants.py",
+      "sourceBytes": 5930,
+      "bytecode": [
+        {
+          "path": "re/__pycache__/_constants.cpython-312.pyc",
+          "bytes": 5394
+        }
+      ]
+    },
+    {
+      "source": "re/_parser.py",
+      "sourceBytes": 41201,
+      "bytecode": [
+        {
+          "path": "re/__pycache__/_parser.cpython-312.pyc",
+          "bytes": 42038
+        }
+      ]
+    },
+    {
+      "source": "reprlib.py",
+      "sourceBytes": 7148,
+      "bytecode": [
+        {
+          "path": "__pycache__/reprlib.cpython-312.pyc",
+          "bytes": 10317
+        }
+      ]
+    },
+    {
+      "source": "secrets.py",
+      "sourceBytes": 1984,
+      "bytecode": [
+        {
+          "path": "__pycache__/secrets.cpython-312.pyc",
+          "bytes": 2647
+        }
+      ]
+    },
+    {
+      "source": "selectors.py",
+      "sourceBytes": 19671,
+      "bytecode": [
+        {
+          "path": "__pycache__/selectors.cpython-312.pyc",
+          "bytes": 26194
+        }
+      ]
+    },
+    {
+      "source": "shlex.py",
+      "sourceBytes": 13353,
+      "bytecode": [
+        {
+          "path": "__pycache__/shlex.cpython-312.pyc",
+          "bytes": 14243
+        }
+      ]
+    },
+    {
+      "source": "shutil.py",
+      "sourceBytes": 56762,
+      "bytecode": [
+        {
+          "path": "__pycache__/shutil.cpython-312.pyc",
+          "bytes": 66149
+        }
+      ]
+    },
+    {
+      "source": "signal.py",
+      "sourceBytes": 2495,
+      "bytecode": [
+        {
+          "path": "__pycache__/signal.cpython-312.pyc",
+          "bytes": 4548
+        }
+      ]
+    },
+    {
+      "source": "socket.py",
+      "sourceBytes": 37815,
+      "bytecode": [
+        {
+          "path": "__pycache__/socket.cpython-312.pyc",
+          "bytes": 42036
+        }
+      ]
+    },
+    {
+      "source": "sqlite3/__init__.py",
+      "sourceBytes": 2501,
+      "bytecode": [
+        {
+          "path": "sqlite3/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 1918
+        }
+      ]
+    },
+    {
+      "source": "sqlite3/dbapi2.py",
+      "sourceBytes": 3631,
+      "bytecode": [
+        {
+          "path": "sqlite3/__pycache__/dbapi2.cpython-312.pyc",
+          "bytes": 5142
+        }
+      ]
+    },
+    {
+      "source": "ssl.py",
+      "sourceBytes": 50904,
+      "bytecode": [
+        {
+          "path": "__pycache__/ssl.cpython-312.pyc",
+          "bytes": 63173
+        }
+      ]
+    },
+    {
+      "source": "string.py",
+      "sourceBytes": 11786,
+      "bytecode": [
+        {
+          "path": "__pycache__/string.cpython-312.pyc",
+          "bytes": 11553
+        }
+      ]
+    },
+    {
+      "source": "stringprep.py",
+      "sourceBytes": 12917,
+      "bytecode": [
+        {
+          "path": "__pycache__/stringprep.cpython-312.pyc",
+          "bytes": 25255
+        }
+      ]
+    },
+    {
+      "source": "struct.py",
+      "sourceBytes": 257,
+      "bytecode": [
+        {
+          "path": "__pycache__/struct.cpython-312.pyc",
+          "bytes": 416
+        }
+      ]
+    },
+    {
+      "source": "subprocess.py",
+      "sourceBytes": 88621,
+      "bytecode": [
+        {
+          "path": "__pycache__/subprocess.cpython-312.pyc",
+          "bytes": 79078
+        }
+      ]
+    },
+    {
+      "source": "sysconfig.py",
+      "sourceBytes": 31850,
+      "bytecode": [
+        {
+          "path": "__pycache__/sysconfig.cpython-312.pyc",
+          "bytes": 29517
+        }
+      ]
+    },
+    {
+      "source": "tempfile.py",
+      "sourceBytes": 32381,
+      "bytecode": [
+        {
+          "path": "__pycache__/tempfile.cpython-312.pyc",
+          "bytes": 40689
+        }
+      ]
+    },
+    {
+      "source": "textwrap.py",
+      "sourceBytes": 19718,
+      "bytecode": [
+        {
+          "path": "__pycache__/textwrap.cpython-312.pyc",
+          "bytes": 18371
+        }
+      ]
+    },
+    {
+      "source": "threading.py",
+      "sourceBytes": 60200,
+      "bytecode": [
+        {
+          "path": "__pycache__/threading.cpython-312.pyc",
+          "bytes": 65307
+        }
+      ]
+    },
+    {
+      "source": "token.py",
+      "sourceBytes": 2511,
+      "bytecode": [
+        {
+          "path": "__pycache__/token.cpython-312.pyc",
+          "bytes": 3660
+        }
+      ]
+    },
+    {
+      "source": "tokenize.py",
+      "sourceBytes": 21570,
+      "bytecode": [
+        {
+          "path": "__pycache__/tokenize.cpython-312.pyc",
+          "bytes": 25467
+        }
+      ]
+    },
+    {
+      "source": "traceback.py",
+      "sourceBytes": 46393,
+      "bytecode": [
+        {
+          "path": "__pycache__/traceback.cpython-312.pyc",
+          "bytes": 51558
+        }
+      ]
+    },
+    {
+      "source": "types.py",
+      "sourceBytes": 10993,
+      "bytecode": [
+        {
+          "path": "__pycache__/types.cpython-312.pyc",
+          "bytes": 15036
+        }
+      ]
+    },
+    {
+      "source": "typing.py",
+      "sourceBytes": 118836,
+      "bytecode": [
+        {
+          "path": "__pycache__/typing.cpython-312.pyc",
+          "bytes": 142477
+        }
+      ]
+    },
+    {
+      "source": "urllib/__init__.py",
+      "sourceBytes": 0,
+      "bytecode": [
+        {
+          "path": "urllib/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 226
+        }
+      ]
+    },
+    {
+      "source": "urllib/error.py",
+      "sourceBytes": 2415,
+      "bytecode": [
+        {
+          "path": "urllib/__pycache__/error.cpython-312.pyc",
+          "bytes": 3739
+        }
+      ]
+    },
+    {
+      "source": "urllib/parse.py",
+      "sourceBytes": 45676,
+      "bytecode": [
+        {
+          "path": "urllib/__pycache__/parse.cpython-312.pyc",
+          "bytes": 50704
+        }
+      ]
+    },
+    {
+      "source": "urllib/request.py",
+      "sourceBytes": 103515,
+      "bytecode": [
+        {
+          "path": "urllib/__pycache__/request.cpython-312.pyc",
+          "bytes": 115567
+        }
+      ]
+    },
+    {
+      "source": "urllib/response.py",
+      "sourceBytes": 2361,
+      "bytecode": [
+        {
+          "path": "urllib/__pycache__/response.cpython-312.pyc",
+          "bytes": 4505
+        }
+      ]
+    },
+    {
+      "source": "uuid.py",
+      "sourceBytes": 29607,
+      "bytecode": [
+        {
+          "path": "__pycache__/uuid.cpython-312.pyc",
+          "bytes": 32994
+        }
+      ]
+    },
+    {
+      "source": "warnings.py",
+      "sourceBytes": 21909,
+      "bytecode": [
+        {
+          "path": "__pycache__/warnings.cpython-312.pyc",
+          "bytes": 23918
+        }
+      ]
+    },
+    {
+      "source": "weakref.py",
+      "sourceBytes": 21513,
+      "bytecode": [
+        {
+          "path": "__pycache__/weakref.cpython-312.pyc",
+          "bytes": 31302
+        }
+      ]
+    },
+    {
+      "source": "xml/__init__.py",
+      "sourceBytes": 557,
+      "bytecode": [
+        {
+          "path": "xml/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 798
+        }
+      ]
+    },
+    {
+      "source": "xml/etree/ElementPath.py",
+      "sourceBytes": 13997,
+      "bytecode": [
+        {
+          "path": "xml/etree/__pycache__/ElementPath.cpython-312.pyc",
+          "bytes": 14885
+        }
+      ]
+    },
+    {
+      "source": "xml/etree/ElementTree.py",
+      "sourceBytes": 74017,
+      "bytecode": [
+        {
+          "path": "xml/etree/__pycache__/ElementTree.cpython-312.pyc",
+          "bytes": 82320
+        }
+      ]
+    },
+    {
+      "source": "xml/etree/__init__.py",
+      "sourceBytes": 1605,
+      "bytecode": [
+        {
+          "path": "xml/etree/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 229
+        }
+      ]
+    },
+    {
+      "source": "zipfile/__init__.py",
+      "sourceBytes": 88339,
+      "bytecode": [
+        {
+          "path": "zipfile/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 100023
+        }
+      ]
+    },
+    {
+      "source": "zipfile/_path/__init__.py",
+      "sourceBytes": 10860,
+      "bytecode": [
+        {
+          "path": "zipfile/_path/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 18999
+        }
+      ]
+    },
+    {
+      "source": "zipfile/_path/glob.py",
+      "sourceBytes": 1158,
+      "bytecode": [
+        {
+          "path": "zipfile/_path/__pycache__/glob.cpython-312.pyc",
+          "bytes": 2044
+        }
+      ]
+    }
+  ],
+  "liveFixtureResults": [
+    {
+      "fixture": "youtube-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "youtube-short-link",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "youtube-big-buck-bunny",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "youtube-shorts",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "youtube-shorts-sign-in-fallback",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "vimeo-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "vimeo-player",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "vimeo-unlisted",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tumblr-native-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-native-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "x-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "x-second-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "x-animated-gif",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "instagram-post",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "instagram-reel",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "instagram-video-carousel",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tiktok-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tiktok-second-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "bluesky-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "imgur-gifv",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "peertube-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "dailymotion-video",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "twitch-clip",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "direct-video-file",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "instagram-photo-carousel",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "instagram-eight-photo-post",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "instagram-single-photo",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tiktok-photos-with-audio",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tiktok-photo-link",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tiktok-single-photo",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-image-post",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-gallery",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-gallery-comments",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-gallery-share",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-gallery-short",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-external-imgur",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-external-streamable",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-direct-image",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-preview-image",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-image-link-wrapper",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "reddit-mirror-post",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "x-photo-post",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "x-mixed-media",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "bluesky-image",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "imgur-image",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "imgur-album",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "flickr-photo",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tumblr-photo-post",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "tumblr-mixed-media",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "mastodon-photos",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "pixiv-artwork",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "pinterest-pin",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "wikimedia-commons-file",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "direct-image-file",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "soundcloud-track",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "bandcamp-track",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "mixcloud-show",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "direct-audio-file",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "non-media-page",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "missing-page",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "imgur-missing-image",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "invalid-scheme",
+      "statusCode": 0,
+      "passed": true
+    },
+    {
+      "fixture": "private-address",
+      "statusCode": 0,
+      "passed": true
+    }
+  ],
+  "diagnosticApkSha256": "eaaa5d823d0b0f9c07683195bd456e6a922c2c30d5a99d04e4060a3977191284"
+}

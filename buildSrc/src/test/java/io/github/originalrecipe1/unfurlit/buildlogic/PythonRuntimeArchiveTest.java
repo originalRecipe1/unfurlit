@@ -32,9 +32,13 @@ public class PythonRuntimeArchiveTest {
         PythonRuntimeArchive.trim(input, output);
         try (ZipFile before = ZipFile.builder().setPath(input).get();
              ZipFile after = ZipFile.builder().setPath(output).get()) {
-            assertEquals(3, Collections.list(after.getEntries()).size());
+            assertEquals(10, Collections.list(after.getEntries()).size());
             for (String path : PythonRuntimeArchive.REMOVED_PATHS) assertNull(after.getEntry(path));
-            for (String path : new String[]{"usr/lib/libpython.so", "usr/lib/libpython.so.1", "usr/lib/python3.12/_sysconfigdata__linux_.py"}) {
+            for (String path : new String[]{"usr/lib/libpython.so", "usr/lib/libpython.so.1",
+                "usr/lib/python3.12/site-packages/retained/__init__.py",
+                "usr/lib/python3.12/lib-dynload/_sqlite3.cpython-312.so",
+                "usr/lib/python3.12/os.py", "usr/lib/python3.12/encodings/__init__.py",
+                "usr/lib/python3.12/email/architecture.rst"}) {
                 ZipArchiveEntry a = before.getEntry(path);
                 ZipArchiveEntry b = after.getEntry(path);
                 assertEquals(a.getUnixMode(), b.getUnixMode());
@@ -58,6 +62,38 @@ public class PythonRuntimeArchiveTest {
                 assertEquals("libpython.so.1", new String(target.readAllBytes(), StandardCharsets.UTF_8));
             }
         }
+    }
+
+    @Test public void stdlibStaysUnpackedWithSourcesAndPackageDataUnchanged() throws Exception {
+        Path input = fixture(true);
+        Path output = folder.newFile().toPath();
+        PythonRuntimeArchive.trim(input, output);
+        try (ZipFile before = ZipFile.builder().setPath(input).get();
+             ZipFile after = ZipFile.builder().setPath(output).get()) {
+            assertNull(after.getEntry("usr/lib/python312.zip"));
+            assertNull(after.getEntry("usr/lib/python3.12/sitecustomize.py"));
+            assertNull(after.getEntry("usr/lib/python3.12/xmlrpc/unused.py"));
+            for (String path : new String[]{"_sysconfigdata__linux_.py", "os.py", "site.py",
+                "encodings/__init__.py", "email/architecture.rst", "xmlrpclib.py"}) {
+                String name = "usr/lib/python3.12/" + path;
+                try (var original = before.getInputStream(before.getEntry(name));
+                     var kept = after.getInputStream(after.getEntry(name))) {
+                    assertArrayEquals(name, original.readAllBytes(), kept.readAllBytes());
+                }
+            }
+        }
+    }
+
+    @Test public void upstreamStartupCustomizationRequiresReview() throws Exception {
+        IOException error = assertThrows(IOException.class, () -> PythonRuntimeArchive.trim(
+            fixture(true, "sitecustomize.py"), folder.newFile().toPath()));
+        assertTrue(error.getMessage().contains("sitecustomize.py"));
+    }
+
+    @Test public void unexpectedNativeModuleInsideAStdlibPackageRequiresReview() throws Exception {
+        IOException error = assertThrows(IOException.class, () -> PythonRuntimeArchive.trim(
+            fixture(true, "somepackage/native.so"), folder.newFile().toPath()));
+        assertTrue(error.getMessage().contains("Unexpected stdlib native file"));
     }
 
     @Test public void outputIsReproducible() throws Exception {
@@ -116,17 +152,25 @@ public class PythonRuntimeArchiveTest {
         assertTrue(error.getMessage().contains("runtime layout changed"));
     }
 
-    private Path fixture(boolean includeRemovals) throws IOException {
+    private Path fixture(boolean includeRemovals, String... extraFiles) throws IOException {
         Path input = folder.newFile().toPath();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(input)) {
             if (includeRemovals) {
                 for (String name : PythonRuntimeArchive.REMOVED_PATHS) {
-                    entry(zip, name, 0100644, "build/test bytes");
+                    entry(zip, name.endsWith("/") ? name + "unused.py" : name, 0100644, "build/test bytes");
                 }
             }
             entry(zip, "usr/lib/libpython.so", 0120777, "libpython.so.1");
             entry(zip, "usr/lib/libpython.so.1", 0100755, "runtime bytes");
+            entry(zip, "usr/lib/python3.12/site-packages/retained/__init__.py", 0100644, "package bytes");
+            entry(zip, "usr/lib/python3.12/lib-dynload/_sqlite3.cpython-312.so", 0100755, "native module bytes");
             entry(zip, "usr/lib/python3.12/_sysconfigdata__linux_.py", 0100644, "configuration bytes");
+            entry(zip, "usr/lib/python3.12/os.py", 0100644, "stdlib bytes");
+            entry(zip, "usr/lib/python3.12/site.py", 0100644, "site bytes");
+            entry(zip, "usr/lib/python3.12/encodings/__init__.py", 0100644, "encoding bytes");
+            entry(zip, "usr/lib/python3.12/email/architecture.rst", 0100644, "package data");
+            entry(zip, "usr/lib/python3.12/xmlrpclib.py", 0100644, "keep adjacent names");
+            for (String name : extraFiles) entry(zip, "usr/lib/python3.12/" + name, 0100644, "upstream change");
         }
         return input;
     }

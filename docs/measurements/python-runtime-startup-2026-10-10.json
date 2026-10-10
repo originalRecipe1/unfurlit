@@ -1,0 +1,724 @@
+{
+  "date": "2026-10-10",
+  "device": {
+    "api": 36,
+    "readOnly": true,
+    "ro.build.fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys",
+    "ro.product.cpu.abi": "x86_64",
+    "ro.build.version.sdk": "36"
+  },
+  "buildType": "debug x86_64",
+  "subjects": {
+    "a": "95e8befa65263489ae9337cde09d7898b207386d",
+    "b": "34d3fd3773eb3e621aa6a5f4f101ad6f4df3b567",
+    "c": "34d3fd3773eb3e621aa6a5f4f101ad6f4df3b567 with only the sitecustomize.py injection removed"
+  },
+  "engineSha256": "1d641a354c1f2cca803ad8c6d841f5ab65ffcd0eb99ce6b358fc08c7d309ae86",
+  "apkVariants": {
+    "a": {
+      "apkSha256": "f6ca4352b90ff6330d765ccf1e980711e5ff291987d7aacea93a67a7aaf00a20",
+      "runtimeSha256": "f920135a5a5935af18edd209932b24dec7859c08f28b139d640ad9055ec1ffba",
+      "pythonLauncherSha256": "894dd7e4f8dcc47dd8e87b5d2696e0e6eb03d125683e8b81475682fb8f619e87"
+    },
+    "b": {
+      "apkSha256": "6c4d5de1df989f4e23ae6ce3c28acf7769c9e41949819d0fdfaa10560fc14bc0",
+      "runtimeSha256": "81745d68b3a1fe5f057967692b75bd56fe0c1cad83882382d6e73042d2a7b015",
+      "pythonLauncherSha256": "894dd7e4f8dcc47dd8e87b5d2696e0e6eb03d125683e8b81475682fb8f619e87"
+    },
+    "c": {
+      "apkSha256": "768805642d343aa67951cfe60934b3efe72a514adf36f36ad3ecd1bfc7dc5808",
+      "runtimeSha256": "8b18b02d18484e0ba591906c3d7e962962d417f0e033d11cda706e1462cb1f9b",
+      "pythonLauncherSha256": "894dd7e4f8dcc47dd8e87b5d2696e0e6eb03d125683e8b81475682fb8f619e87"
+    }
+  },
+  "blockOrders": [
+    "abc",
+    "bca",
+    "cab"
+  ],
+  "retainedRunsPerCommandPerVariant": 18,
+  "discardedWarmupsPerCommandPerInstall": 1,
+  "network": "App UID rejected in both IPv4 and IPv6 OUTPUT chains; blocked socket probe in instrumentation",
+  "clock": "SystemClock.elapsedRealtimeNanos from immediately before ProcessBuilder.start through reading output and waitFor; installation outside interval",
+  "statistics": [
+    {
+      "variant": "a",
+      "command": "version",
+      "samplesNanos": [
+        665608524,
+        664541919,
+        651740837,
+        660086728,
+        665433394,
+        662825985,
+        654869606,
+        653323000,
+        651792714,
+        653336154,
+        658174816,
+        661996997,
+        645972548,
+        656173836,
+        638373330,
+        645574621,
+        656233849,
+        646660000
+      ],
+      "medianNanos": 655521721.0,
+      "q25Nanos": 651753806.25,
+      "q75Nanos": 661519429.75,
+      "minNanos": 638373330,
+      "maxNanos": 665608524
+    },
+    {
+      "variant": "a",
+      "command": "initialize",
+      "samplesNanos": [
+        887929442,
+        904981252,
+        891926273,
+        892998658,
+        898194651,
+        903030416,
+        902679086,
+        901619235,
+        916096417,
+        890429079,
+        905272209,
+        893961687,
+        895565380,
+        906201705,
+        907880129,
+        884306616,
+        888248372,
+        906007481
+      ],
+      "medianNanos": 899906943.0,
+      "q25Nanos": 892194369.25,
+      "q75Nanos": 905199469.75,
+      "minNanos": 884306616,
+      "maxNanos": 916096417
+    },
+    {
+      "variant": "b",
+      "command": "version",
+      "samplesNanos": [
+        1633713722,
+        1649829262,
+        1638338792,
+        1626649589,
+        1651202873,
+        1664430377,
+        1638517779,
+        1794810795,
+        1642363945,
+        1649937806,
+        1625657034,
+        1637384068,
+        1634816885,
+        1619823313,
+        1613540537,
+        1627772308,
+        1637116255,
+        1628933139
+      ],
+      "medianNanos": 1637250161.5,
+      "q25Nanos": 1628062515.75,
+      "q75Nanos": 1647962932.75,
+      "minNanos": 1613540537,
+      "maxNanos": 1794810795
+    },
+    {
+      "variant": "b",
+      "command": "initialize",
+      "samplesNanos": [
+        1899098155,
+        1891597832,
+        1952256747,
+        1883525756,
+        1888279468,
+        1883791806,
+        1893351648,
+        2002605760,
+        1885564125,
+        1885921457,
+        1901036147,
+        1873652224,
+        1896922628,
+        1862293711,
+        1889499429,
+        1857881751,
+        1893014014,
+        1897878113
+      ],
+      "medianNanos": 1890548630.5,
+      "q25Nanos": 1884234885.75,
+      "q75Nanos": 1897639241.75,
+      "minNanos": 1857881751,
+      "maxNanos": 2002605760
+    },
+    {
+      "variant": "c",
+      "command": "version",
+      "samplesNanos": [
+        1548517352,
+        1549926390,
+        1564644925,
+        1532836920,
+        1541911109,
+        1539482917,
+        1536134105,
+        1529279645,
+        1603743729,
+        1526173770,
+        1537772504,
+        1532015466,
+        1514943219,
+        1510225473,
+        1509799824,
+        1524930885,
+        1512059150,
+        1519357132
+      ],
+      "medianNanos": 1532426193.0,
+      "q25Nanos": 1520750570.25,
+      "q75Nanos": 1541304061.0,
+      "minNanos": 1509799824,
+      "maxNanos": 1603743729
+    },
+    {
+      "variant": "c",
+      "command": "initialize",
+      "samplesNanos": [
+        1849294577,
+        1804644883,
+        1786133391,
+        1802170834,
+        1794125647,
+        1793075404,
+        1766692933,
+        1785239181,
+        1778583545,
+        1774590461,
+        1775059152,
+        1777293351,
+        1762810798,
+        1769638848,
+        1762044859,
+        1769648196,
+        1751521546,
+        1763735886
+      ],
+      "medianNanos": 1776176251.5,
+      "q25Nanos": 1767429411.75,
+      "q75Nanos": 1791339900.75,
+      "minNanos": 1751521546,
+      "maxNanos": 1849294577
+    }
+  ],
+  "discardedWarmups": [
+    {
+      "block": 1,
+      "variant": "a",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1247252562
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 895324597
+        }
+      ]
+    },
+    {
+      "block": 1,
+      "variant": "b",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1637444081
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1881433564
+        }
+      ]
+    },
+    {
+      "block": 1,
+      "variant": "c",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1636804339
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1784074752
+        }
+      ]
+    },
+    {
+      "block": 2,
+      "variant": "b",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1660304985
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1877843989
+        }
+      ]
+    },
+    {
+      "block": 2,
+      "variant": "c",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1622867993
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1774814562
+        }
+      ]
+    },
+    {
+      "block": 2,
+      "variant": "a",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1257987212
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 907903292
+        }
+      ]
+    },
+    {
+      "block": 3,
+      "variant": "c",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1616415199
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1757832064
+        }
+      ]
+    },
+    {
+      "block": 3,
+      "variant": "a",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1221786562
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 879440443
+        }
+      ]
+    },
+    {
+      "block": 3,
+      "variant": "b",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1624201819
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1902402033
+        }
+      ]
+    }
+  ],
+  "variantCRealExtraction": {
+    "fixture": "youtube-video",
+    "url": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+    "freshInstall": true,
+    "successful": true,
+    "bytecode": {
+      "files": 54,
+      "bytes": 791415,
+      "allocatedBytes": 1142784,
+      "directories": {
+        "usr/lib/python3.12/site-packages/Cryptodome/Cipher/__pycache__": {
+          "files": 6,
+          "bytes": 35261,
+          "allocatedBytes": 73728
+        },
+        "usr/lib/python3.12/site-packages/Cryptodome/Hash/__pycache__": {
+          "files": 4,
+          "bytes": 30380,
+          "allocatedBytes": 53248
+        },
+        "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__": {
+          "files": 7,
+          "bytes": 82006,
+          "allocatedBytes": 126976
+        },
+        "usr/lib/python3.12/site-packages/Cryptodome/PublicKey/__pycache__": {
+          "files": 2,
+          "bytes": 36177,
+          "allocatedBytes": 49152
+        },
+        "usr/lib/python3.12/site-packages/Cryptodome/Random/__pycache__": {
+          "files": 2,
+          "bytes": 6500,
+          "allocatedBytes": 20480
+        },
+        "usr/lib/python3.12/site-packages/Cryptodome/Signature/__pycache__": {
+          "files": 2,
+          "bytes": 14865,
+          "allocatedBytes": 28672
+        },
+        "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__": {
+          "files": 8,
+          "bytes": 134265,
+          "allocatedBytes": 188416
+        },
+        "usr/lib/python3.12/site-packages/Cryptodome/__pycache__": {
+          "files": 1,
+          "bytes": 524,
+          "allocatedBytes": 8192
+        },
+        "usr/lib/python3.12/site-packages/mutagen/__pycache__": {
+          "files": 11,
+          "bytes": 175845,
+          "allocatedBytes": 245760
+        },
+        "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__": {
+          "files": 7,
+          "bytes": 188316,
+          "allocatedBytes": 233472
+        },
+        "usr/lib/python3.12/site-packages/mutagen/mp4/__pycache__": {
+          "files": 4,
+          "bytes": 87276,
+          "allocatedBytes": 114688
+        }
+      },
+      "entries": [
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 6104,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__/_file.cpython-312.pyc",
+          "bytes": 15225,
+          "allocatedBytes": 20480
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__/_util.cpython-312.pyc",
+          "bytes": 6980,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__/_tags.cpython-312.pyc",
+          "bytes": 24961,
+          "allocatedBytes": 32768
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__/_frames.cpython-312.pyc",
+          "bytes": 86348,
+          "allocatedBytes": 94208
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__/_specs.cpython-312.pyc",
+          "bytes": 41808,
+          "allocatedBytes": 49152
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/id3/__pycache__/_id3v1.cpython-312.pyc",
+          "bytes": 6890,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/mp4/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 55900,
+          "allocatedBytes": 61440
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/mp4/__pycache__/_atom.cpython-312.pyc",
+          "bytes": 9279,
+          "allocatedBytes": 16384
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/mp4/__pycache__/_util.cpython-312.pyc",
+          "bytes": 822,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/mp4/__pycache__/_as_entry.cpython-312.pyc",
+          "bytes": 21275,
+          "allocatedBytes": 28672
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 1098,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/_util.cpython-312.pyc",
+          "bytes": 41506,
+          "allocatedBytes": 49152
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/_file.cpython-312.pyc",
+          "bytes": 10857,
+          "allocatedBytes": 16384
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/_tags.cpython-312.pyc",
+          "bytes": 5065,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/flac.cpython-312.pyc",
+          "bytes": 45354,
+          "allocatedBytes": 53248
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/_vorbis.cpython-312.pyc",
+          "bytes": 13074,
+          "allocatedBytes": 20480
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/_constants.cpython-312.pyc",
+          "bytes": 2267,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/aac.cpython-312.pyc",
+          "bytes": 15296,
+          "allocatedBytes": 20480
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/oggopus.cpython-312.pyc",
+          "bytes": 7788,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/ogg.cpython-312.pyc",
+          "bytes": 25468,
+          "allocatedBytes": 32768
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/mutagen/__pycache__/oggvorbis.cpython-312.pyc",
+          "bytes": 8072,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/PublicKey/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 2790,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/PublicKey/__pycache__/RSA.cpython-312.pyc",
+          "bytes": 33387,
+          "allocatedBytes": 40960
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Random/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 1440,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Random/__pycache__/random.cpython-312.pyc",
+          "bytes": 5060,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 1228,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/_raw_api.cpython-312.pyc",
+          "bytes": 12997,
+          "allocatedBytes": 20480
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/py3compat.cpython-312.pyc",
+          "bytes": 7101,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/_file_system.cpython-312.pyc",
+          "bytes": 1314,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/_cpu_features.cpython-312.pyc",
+          "bytes": 917,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/number.cpython-312.pyc",
+          "bytes": 65710,
+          "allocatedBytes": 73728
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/strxor.cpython-312.pyc",
+          "bytes": 4307,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Util/__pycache__/asn1.cpython-312.pyc",
+          "bytes": 40691,
+          "allocatedBytes": 45056
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 249,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__/Numbers.cpython-312.pyc",
+          "bytes": 878,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__/_IntegerGMP.cpython-312.pyc",
+          "bytes": 33777,
+          "allocatedBytes": 40960
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__/_IntegerBase.cpython-312.pyc",
+          "bytes": 15537,
+          "allocatedBytes": 20480
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__/_IntegerCustom.cpython-312.pyc",
+          "bytes": 4495,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__/_IntegerNative.cpython-312.pyc",
+          "bytes": 16351,
+          "allocatedBytes": 20480
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Math/__pycache__/Primality.cpython-312.pyc",
+          "bytes": 10719,
+          "allocatedBytes": 16384
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Signature/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 449,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Signature/__pycache__/pss.cpython-312.pyc",
+          "bytes": 14416,
+          "allocatedBytes": 20480
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Hash/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 2365,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Hash/__pycache__/SHA1.cpython-312.pyc",
+          "bytes": 6986,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Hash/__pycache__/CMAC.cpython-312.pyc",
+          "bytes": 11698,
+          "allocatedBytes": 16384
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Hash/__pycache__/BLAKE2s.cpython-312.pyc",
+          "bytes": 9331,
+          "allocatedBytes": 16384
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Cipher/__pycache__/_pkcs1_oaep_decode.cpython-312.pyc",
+          "bytes": 2161,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Cipher/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 2892,
+          "allocatedBytes": 8192
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Cipher/__pycache__/AES.cpython-312.pyc",
+          "bytes": 8326,
+          "allocatedBytes": 16384
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Cipher/__pycache__/PKCS1_OAEP.cpython-312.pyc",
+          "bytes": 9031,
+          "allocatedBytes": 16384
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Cipher/__pycache__/Blowfish.cpython-312.pyc",
+          "bytes": 5717,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/Cipher/__pycache__/PKCS1_v1_5.cpython-312.pyc",
+          "bytes": 7134,
+          "allocatedBytes": 12288
+        },
+        {
+          "path": "usr/lib/python3.12/site-packages/Cryptodome/__pycache__/__init__.cpython-312.pyc",
+          "bytes": 524,
+          "allocatedBytes": 8192
+        }
+      ]
+    }
+  },
+  "recommendation": "Keep the global bytecode switch; restoring site-packages caches recovers only about 11% of the measured regression."
+}

@@ -10,6 +10,7 @@ import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlRunn
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
+import io.github.originalrecipe1.unfurlit.data.history.HistoryDatabase
 import java.io.File
 import java.util.UUID
 import java.util.zip.ZipInputStream
@@ -65,24 +66,41 @@ class PythonRuntimeTest {
         val engine = YoutubeDL.getInstance()
         engine.init(context)
         val runtime = File(context.noBackupFilesDir, "youtubedl-android/packages/python")
-        val obsolete = File(runtime, "usr/lib/quickjs/libquickjs.a")
+        val obsolete = listOf(
+            "usr/lib/quickjs/libquickjs.a",
+            "usr/lib/python312.zip",
+            "usr/lib/python3.12/sitecustomize.py",
+            "usr/lib/python3.12/__pycache__/os.cpython-312.pyc",
+            "usr/lib/python3.12/curses/__init__.py",
+            "usr/lib/python3.12/lib-dynload/_curses.cpython-312.so",
+            "usr/lib/libncursesw.so.6.5",
+        ).map { File(runtime, it) }
         val databaseName = "runtime-upgrade-${UUID.randomUUID()}.db"
         try {
-            context.openOrCreateDatabase(databaseName, Context.MODE_PRIVATE, null).use { database ->
-                database.execSQL("CREATE TABLE history (title TEXT NOT NULL)")
-                database.execSQL("INSERT INTO history VALUES ('Saved visit')")
-                obsolete.parentFile!!.mkdirs()
-                obsolete.writeText("obsolete runtime build file")
+            HistoryDatabase(context, databaseName).use { history ->
+                val database = history.writableDatabase
+                database.execSQL("""
+                    INSERT INTO history (source_url, title, media_kind, media_count, viewed_at, thumbnail)
+                    VALUES ('https://example.invalid/saved', 'Saved visit', 'Image', 1, 1, X'010203')
+                """.trimIndent())
+                for (file in obsolete) {
+                    file.parentFile!!.mkdirs()
+                    file.writeText("obsolete unpacked runtime file")
+                }
                 // Simulate the archive-size marker stored by the previous runtime.
                 context.getSharedPreferences("youtubedl-android", Context.MODE_PRIVATE)
                     .edit().putString("pythonLibVersion", "previous-archive-size").apply()
 
                 engine.initPython(context, runtime)
 
-                assertFalse(obsolete.exists())
-                database.rawQuery("SELECT title FROM history", null).use { cursor ->
+                for (file in obsolete) assertFalse("Obsolete file survived: $file", file.exists())
+                assertTrue(File(runtime, "usr/lib/python3.12/os.py").isFile)
+                assertTrue(File(runtime, "usr/lib/python3.12/encodings/__init__.py").isFile)
+                database.rawQuery("SELECT title, source_url, thumbnail FROM history", null).use { cursor ->
                     assertTrue(cursor.moveToFirst())
                     assertEquals("Saved visit", cursor.getString(0))
+                    assertEquals("https://example.invalid/saved", cursor.getString(1))
+                    org.junit.Assert.assertArrayEquals(byteArrayOf(1, 2, 3), cursor.getBlob(2))
                 }
                 val request = YoutubeDLRequest(emptyList()).apply { addOption("--version") }
                 assertEquals(BuildConfig.YT_DLP_ENGINE_VERSION, engine.execute(request).out.trim())
@@ -105,6 +123,45 @@ class PythonRuntimeTest {
         assertFalse(File(runtime, "usr/lib/quickjs/libquickjs.a").exists())
         val modules = File(runtime, "usr/lib/python3.12/lib-dynload").listFiles().orEmpty()
         assertFalse(modules.any { it.name.startsWith("_test") && it.extension == "so" })
+    }
+
+    @Test(timeout = 120_000)
+    fun unpackedStdlibLoadsNativeAndEngineDependencies() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        BundledYtDlpInstaller(context).ensureCurrent()
+        YoutubeDL.getInstance().init(context)
+        val runtime = File(context.noBackupFilesDir, "youtubedl-android/packages/python")
+        val home = File(runtime, "usr")
+        val script = """
+            import encodings, importlib.util, json, ssl, sqlite3, ctypes, bz2, lzma, sys
+            import xml.etree.ElementTree
+            from Cryptodome.Cipher import AES
+            import mutagen
+            assert not sys.dont_write_bytecode
+            assert '/python3.12/encodings/' in encodings.__file__, encodings.__file__
+            assert '/python3.12/json/' in json.__file__, json.__file__
+            assert sqlite3.connect(':memory:').execute('SELECT 54').fetchone() == (54,)
+            assert AES.new(bytes(16), AES.MODE_ECB).encrypt(bytes(16)).hex() == '66e94bd4ef8a2c3b884cfa59ca342b2e'
+            assert ssl.create_default_context().cert_store_stats()['x509_ca'] > 0
+            for name in ('curses', 'readline', 'lib2to3', 'venv', 'xmlrpc'):
+                assert importlib.util.find_spec(name) is None, name
+            print('stdlib/native/dependency imports passed')
+        """.trimIndent()
+        val process = ProcessBuilder(
+            File(context.applicationInfo.nativeLibraryDir, "libpython.so").absolutePath, "-c", script,
+        ).redirectErrorStream(true).apply {
+            environment().apply {
+                put("LD_LIBRARY_PATH", File(home, "lib").absolutePath)
+                put("PYTHONHOME", home.absolutePath)
+                put("HOME", home.absolutePath)
+                put("SSL_CERT_FILE", File(home, "etc/tls/cert.pem").absolutePath)
+                // Preserve normal Python bytecode caching without a caller-provided flag.
+                remove("PYTHONDONTWRITEBYTECODE")
+            }
+        }.start()
+        val output = process.inputStream.bufferedReader().use { it.readText() }
+        assertEquals(output, 0, process.waitFor())
+        assertEquals("stdlib/native/dependency imports passed", output.trim())
     }
 
     @Test(timeout = 120_000)
