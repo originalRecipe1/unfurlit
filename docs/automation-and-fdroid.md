@@ -34,9 +34,10 @@ branch of the `originalRecipe1/fdroiddata` fork. `org.peek.app` is the retained
 branch name; the proposed metadata has not been merged into official `fdroiddata`.
 
 The local candidate is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
-It targets Unfurlit `1.3.1`, version code 12, pinned to tag `v1.3.1` at commit
-`c76c789b78605bf7caa1da122f1761217c68b5e9`. The MR targets the same `1.3.1`
-release and is waiting on the reviewer's gallery-dl answer; see
+It targets Unfurlit `1.4.0`, version code 13, pinned to tag `v1.4.0` at commit
+`c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`. The matching patch for MR !47809
+is prepared locally and has not been posted. Review of the gallery-dl build
+approach remains tracked in
 [issue #40](https://github.com/originalRecipe1/unfurlit/issues/40).
 The candidate retains the `Unfurlit-%v.apk` release filename. Its application ID is
 `io.github.originalrecipe1.unfurlit`, and its repository and release URLs point to
@@ -123,7 +124,11 @@ Official F-Droid metadata does not live in this repository. The proposed file is
 `metadata/io.github.originalrecipe1.unfurlit.yml` on the fork's `org.peek.app`
 branch, pending merge in !47809. The local Unfurlit candidate is
 [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml),
-which targets `1.3.1` at commit `c76c789`. Use that file for the full metadata.
+which targets `1.4.0` at commit `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`.
+It retains the 1.3.1 build block and adds 1.4.0 / 13 with the same build steps,
+including the six pinned PyPI wheels. Use that file for the full metadata.
+The 1.4.0 candidate has not yet had a new F-Droid build or signed-APK comparison;
+the successful 1.3.1 checks below are historical evidence.
 Its `sudo` commands install `git make nodejs npm python3 tar zip` from Debian.
 Its build block uses the current property names:
 
@@ -154,8 +159,9 @@ the tagged app source rather than from `fdroiddata`.
 
 Auto-update remains disabled locally with `AutoUpdateMode: None`. The original
 1.3.0 build block had no Node.js or npm and could not build releases containing
-the EJS solver. The 1.3.1 candidate now installs them, but EJS and gallery-dl
-dependency acceptance is still unresolved. Restore `AutoUpdateMode: Version`
+the EJS solver. The current candidate retains 1.3.1's installation steps,
+but EJS and gallery-dl dependency acceptance is still unresolved.
+Restore `AutoUpdateMode: Version`
 only after reviewers accept the build approaches, the candidate targets the
 appropriate release tag, and it passes F-Droid validation (lint, scanner,
 offline build, an empty-cache build, and the signed release comparison).
@@ -233,8 +239,9 @@ rejects checksum or version mismatches. The youtubedl-android runtime is resolve
 from Maven Central, a trusted Maven repository; it contains the native Python and
 QuickJS runtimes documented in `THIRD_PARTY_NOTICES.md`.
 
-Merge request !47809 originally proposed Peek v5 and now proposes Unfurlit 1.3.1
-at `c76c789`, pending the reviewer's gallery-dl answer tracked in
+Merge request !47809 originally proposed Peek v5. The prepared update now targets
+Unfurlit 1.4.0 at `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`; the matching
+metadata patch has not been posted. The gallery-dl review is tracked in
 [issue #40](https://github.com/originalRecipe1/unfurlit/issues/40).
 Official F-Droid acceptance and publication remain pending. GitHub Actions cannot
 publish directly into the official repository; F-Droid detects tags and controls
@@ -246,7 +253,7 @@ Builds from 1.3.0 on also bundle the gallery-dl image engine, which
 `preparePinnedGalleryDl` assembles from six pinned, pure-Python PyPI wheels
 (gallery-dl and the requests stack). A reviewer on !47809 raised that these
 wheels are downloaded during Gradle's `preBuild`, outside the F-Droid scanner.
-The 1.3.1 candidate leaves that build unchanged. On 2026-10-05, all 428 `.py`
+The 1.4.0 candidate retains that build from 1.3.1. On 2026-10-05, all 428 `.py`
 files in the six hash-verified wheels were compared byte for byte against the
 matching upstream tags and hash-verified PyPI source distributions:
 
@@ -266,11 +273,10 @@ are pure Python and contain no native or WASM libraries. The chosen
 charset_normalizer wheel uses its Python files, without the optional compiled
 extensions or source `.pyx`/`.pxd` files.
 
-**Not verified:** the reviewer has not accepted downloading these wheels outside
-the scanner. If required, offer a from-source build for 1.3.2, using pinned
-sources and comparing the packaged files with the current hash-pinned wheels in
-CI. That remains a proposal pending the reviewer's answer, not an implemented
-build change.
+**Not verified:** reviewer acceptance of downloading these wheels outside the
+scanner. [PR #53](https://github.com/originalRecipe1/unfurlit/pull/53) implements
+the source build and CI package comparison, but remains unmerged for 1.4.1.
+It is not part of the 1.4.0 candidate.
 
 ## 32-bit ARM support
 
