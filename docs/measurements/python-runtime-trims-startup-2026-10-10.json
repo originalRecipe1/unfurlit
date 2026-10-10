@@ -1,0 +1,710 @@
+{
+  "date": "2026-10-10",
+  "api": 36,
+  "abi": "x86_64",
+  "buildType": "debug",
+  "baseline": "95e8befa65263489ae9337cde09d7898b207386d",
+  "after": "trims-only revision of PR #58; identify measured artifacts by APK/runtime hashes",
+  "engineSha256": "1d641a354c1f2cca803ad8c6d841f5ab65ffcd0eb99ce6b358fc08c7d309ae86",
+  "artifacts": {
+    "baseline": {
+      "apkSha256": "f6ca4352b90ff6330d765ccf1e980711e5ff291987d7aacea93a67a7aaf00a20",
+      "runtimeSha256": "f920135a5a5935af18edd209932b24dec7859c08f28b139d640ad9055ec1ffba",
+      "pythonLauncherSha256": "894dd7e4f8dcc47dd8e87b5d2696e0e6eb03d125683e8b81475682fb8f619e87"
+    },
+    "after": {
+      "apkSha256": "e48f500ee4a287486c582620027a95bd6fa496c783e33c11f505a57b05ce05ed",
+      "runtimeSha256": "077b680033c6dc397b8b8382a9b3c5c45621734ffafda611f2d03ba46e03f872",
+      "pythonLauncherSha256": "894dd7e4f8dcc47dd8e87b5d2696e0e6eb03d125683e8b81475682fb8f619e87"
+    }
+  },
+  "network": "Per-app UID IPv4 and IPv6 OUTPUT REJECT rules, plus an in-test blocked socket probe",
+  "method": "ProcessBuilder, normal engine ZIP path and environment; elapsedRealtimeNanos through output collection and exit; setup excluded. First invocation per command per install discarded, 6 retained per command per install, 3 fresh installs per variant.",
+  "blockOrders": [
+    [
+      "baseline",
+      "after"
+    ],
+    [
+      "after",
+      "baseline"
+    ],
+    [
+      "baseline",
+      "after"
+    ]
+  ],
+  "retainedRunsPerCommandPerVariant": 18,
+  "statistics": [
+    {
+      "variant": "baseline",
+      "command": "version",
+      "samplesNanos": [
+        651325045,
+        651320737,
+        651714057,
+        650765655,
+        661620210,
+        652592226,
+        653065506,
+        656123131,
+        652485626,
+        647283141,
+        664369295,
+        650760083,
+        651904384,
+        639954951,
+        653457021,
+        644290237,
+        659560890,
+        643599870
+      ],
+      "medianNanos": 651809220.5,
+      "q25Nanos": 650761476.0,
+      "q75Nanos": 653359142.25,
+      "minNanos": 639954951,
+      "maxNanos": 664369295
+    },
+    {
+      "variant": "baseline",
+      "command": "initialize",
+      "samplesNanos": [
+        889048846,
+        893311234,
+        897133496,
+        893319109,
+        907950080,
+        904504767,
+        899601103,
+        902484481,
+        901337696,
+        892558139,
+        899113628,
+        901128263,
+        880824232,
+        888106696,
+        890733000,
+        884747624,
+        894499497,
+        892755340
+      ],
+      "medianNanos": 893909303.0,
+      "q25Nanos": 891189284.75,
+      "q75Nanos": 900746473.0,
+      "minNanos": 880824232,
+      "maxNanos": 907950080
+    },
+    {
+      "variant": "after",
+      "command": "version",
+      "samplesNanos": [
+        666352421,
+        656333406,
+        654097385,
+        649339835,
+        670589132,
+        668339084,
+        644071025,
+        648965331,
+        651049918,
+        644335632,
+        644670953,
+        638766408,
+        665467879,
+        651732912,
+        660855573,
+        656931540,
+        657016369,
+        654213212
+      ],
+      "medianNanos": 654155298.5,
+      "q25Nanos": 649058957.0,
+      "q75Nanos": 659895772.0,
+      "minNanos": 638766408,
+      "maxNanos": 670589132
+    },
+    {
+      "variant": "after",
+      "command": "initialize",
+      "samplesNanos": [
+        894941137,
+        939602102,
+        918850852,
+        895119342,
+        904745028,
+        899072630,
+        884196028,
+        881139846,
+        884155982,
+        882565895,
+        879354551,
+        882950176,
+        896313466,
+        908879186,
+        918450951,
+        897183500,
+        893485082,
+        891855078
+      ],
+      "medianNanos": 895030239.5,
+      "q25Nanos": 884165993.5,
+      "q75Nanos": 903326928.5,
+      "minNanos": 879354551,
+      "maxNanos": 939602102
+    }
+  ],
+  "rawRuns": [
+    {
+      "block": 1,
+      "variant": "baseline",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1218219570
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 900892560
+        },
+        {
+          "command": "initialize",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 889048846
+        },
+        {
+          "command": "version",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 651325045
+        },
+        {
+          "command": "version",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 651320737
+        },
+        {
+          "command": "initialize",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 893311234
+        },
+        {
+          "command": "initialize",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 897133496
+        },
+        {
+          "command": "version",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 651714057
+        },
+        {
+          "command": "version",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 650765655
+        },
+        {
+          "command": "initialize",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 893319109
+        },
+        {
+          "command": "initialize",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 907950080
+        },
+        {
+          "command": "version",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 661620210
+        },
+        {
+          "command": "version",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 652592226
+        },
+        {
+          "command": "initialize",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 904504767
+        }
+      ],
+      "bytecodeFiles": 215,
+      "bytecodeBytes": 4693834
+    },
+    {
+      "block": 1,
+      "variant": "after",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1371078594
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 897801021
+        },
+        {
+          "command": "initialize",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 894941137
+        },
+        {
+          "command": "version",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 666352421
+        },
+        {
+          "command": "version",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 656333406
+        },
+        {
+          "command": "initialize",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 939602102
+        },
+        {
+          "command": "initialize",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 918850852
+        },
+        {
+          "command": "version",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 654097385
+        },
+        {
+          "command": "version",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 649339835
+        },
+        {
+          "command": "initialize",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 895119342
+        },
+        {
+          "command": "initialize",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 904745028
+        },
+        {
+          "command": "version",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 670589132
+        },
+        {
+          "command": "version",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 668339084
+        },
+        {
+          "command": "initialize",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 899072630
+        }
+      ],
+      "bytecodeFiles": 215,
+      "bytecodeBytes": 4693834
+    },
+    {
+      "block": 2,
+      "variant": "after",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1216660110
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 881512536
+        },
+        {
+          "command": "initialize",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 884196028
+        },
+        {
+          "command": "version",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 644071025
+        },
+        {
+          "command": "version",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 648965331
+        },
+        {
+          "command": "initialize",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 881139846
+        },
+        {
+          "command": "initialize",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 884155982
+        },
+        {
+          "command": "version",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 651049918
+        },
+        {
+          "command": "version",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 644335632
+        },
+        {
+          "command": "initialize",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 882565895
+        },
+        {
+          "command": "initialize",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 879354551
+        },
+        {
+          "command": "version",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 644670953
+        },
+        {
+          "command": "version",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 638766408
+        },
+        {
+          "command": "initialize",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 882950176
+        }
+      ],
+      "bytecodeFiles": 215,
+      "bytecodeBytes": 4693834
+    },
+    {
+      "block": 2,
+      "variant": "baseline",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1234790546
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 904872388
+        },
+        {
+          "command": "initialize",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 899601103
+        },
+        {
+          "command": "version",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 653065506
+        },
+        {
+          "command": "version",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 656123131
+        },
+        {
+          "command": "initialize",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 902484481
+        },
+        {
+          "command": "initialize",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 901337696
+        },
+        {
+          "command": "version",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 652485626
+        },
+        {
+          "command": "version",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 647283141
+        },
+        {
+          "command": "initialize",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 892558139
+        },
+        {
+          "command": "initialize",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 899113628
+        },
+        {
+          "command": "version",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 664369295
+        },
+        {
+          "command": "version",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 650760083
+        },
+        {
+          "command": "initialize",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 901128263
+        }
+      ],
+      "bytecodeFiles": 215,
+      "bytecodeBytes": 4693834
+    },
+    {
+      "block": 3,
+      "variant": "baseline",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1202925644
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 894951257
+        },
+        {
+          "command": "initialize",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 880824232
+        },
+        {
+          "command": "version",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 651904384
+        },
+        {
+          "command": "version",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 639954951
+        },
+        {
+          "command": "initialize",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 888106696
+        },
+        {
+          "command": "initialize",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 890733000
+        },
+        {
+          "command": "version",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 653457021
+        },
+        {
+          "command": "version",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 644290237
+        },
+        {
+          "command": "initialize",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 884747624
+        },
+        {
+          "command": "initialize",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 894499497
+        },
+        {
+          "command": "version",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 659560890
+        },
+        {
+          "command": "version",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 643599870
+        },
+        {
+          "command": "initialize",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 892755340
+        }
+      ],
+      "bytecodeFiles": 215,
+      "bytecodeBytes": 4693834
+    },
+    {
+      "block": 3,
+      "variant": "after",
+      "samples": [
+        {
+          "command": "version",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 1282085952
+        },
+        {
+          "command": "initialize",
+          "index": 0,
+          "discarded": true,
+          "elapsedNanos": 998547077
+        },
+        {
+          "command": "initialize",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 896313466
+        },
+        {
+          "command": "version",
+          "index": 1,
+          "discarded": false,
+          "elapsedNanos": 665467879
+        },
+        {
+          "command": "version",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 651732912
+        },
+        {
+          "command": "initialize",
+          "index": 2,
+          "discarded": false,
+          "elapsedNanos": 908879186
+        },
+        {
+          "command": "initialize",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 918450951
+        },
+        {
+          "command": "version",
+          "index": 3,
+          "discarded": false,
+          "elapsedNanos": 660855573
+        },
+        {
+          "command": "version",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 656931540
+        },
+        {
+          "command": "initialize",
+          "index": 4,
+          "discarded": false,
+          "elapsedNanos": 897183500
+        },
+        {
+          "command": "initialize",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 893485082
+        },
+        {
+          "command": "version",
+          "index": 5,
+          "discarded": false,
+          "elapsedNanos": 657016369
+        },
+        {
+          "command": "version",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 654213212
+        },
+        {
+          "command": "initialize",
+          "index": 6,
+          "discarded": false,
+          "elapsedNanos": 891855078
+        }
+      ],
+      "bytecodeFiles": 215,
+      "bytecodeBytes": 4693834
+    }
+  ]
+}

@@ -91,20 +91,19 @@ These are on-device diagnostic samples, not controlled benchmark results. Both
 release runs finished with History visible; the database and thumbnails were
 preserved across the build update. No forced ahead-of-time compilation was used.
 
-The cached AAR transform in `buildSrc` repacks the bundled Python runtime for all
-builds, including x86_64 CI tests. Pure-Python standard-library files and their
-package data stay compressed in `usr/lib/python312.zip`; native modules and
-site-packages remain unpacked. A bundled `sitecustomize.py` prevents yt-dlp from
-writing bytecode caches. gallery-dl already disables bytecode writes.
+The cached AAR transform in `buildSrc` trims the bundled Python runtime for all
+builds, including x86_64 CI tests. The standard library and site-packages stay
+unpacked, and Python may write its normal bytecode caches. gallery-dl retains
+its existing `-S` and `PYTHONDONTWRITEBYTECODE=1` behavior.
 
 The exact removal list covers the static QuickJS build archive, seven CPython
 test extensions, and audited unused terminal/development packages. Retained
-unpacked entries preserve file contents, compressed payloads, Unix permissions,
-and symlink targets. The nested ZIP is deterministic across build timezones.
-The downloaded Maven artifact and its dependency metadata remain unchanged;
-an unexpected runtime layout fails the transform for review. See the
+entries preserve file contents, compressed payloads, Unix permissions, symlink
+targets, and timestamp metadata across build timezones. The downloaded Maven
+artifact and dependency metadata remain unchanged; an unexpected runtime layout
+fails the transform for review. See the
 [runtime storage audit and measurements](python-runtime-storage.md) for the
-removal rationale, native dependency checks, storage savings, and timing tradeoff.
+removal rationale, storage savings, and rejected zipped-stdlib experiment.
 
 In historical ARM64 measurements on 2026-09-15, trimming reduced expanded
 runtime files from 41,680,927 to 34,880,897 bytes and the release APK from
@@ -305,6 +304,12 @@ optimized. It cannot verify behavior after release optimization. Copy this
 reusable checklist into a release-specific test record under
 [`docs/releases/`](releases/) and record the APK revision, test date and outcomes there.
 
+- On a fresh release-build install, perform one extraction and record user data
+  excluding cache and app size. Compare with the owner-reported 1.4.0 release
+  baseline of **45.29 MB user data / 37.94 MB app size** after use; record the
+  workload difference as well as the phone, Android version and APK hash.
+- Update from the **1.4.0 release** without clearing data, extract a link to trigger
+  runtime replacement, and confirm that saved History entries and thumbnails remain.
 - Open `x-mixed-media` and confirm that both the video and the photo appear.
 - Open `x-video` and confirm that it does not feel slower compared with the
   previous release.

@@ -1,0 +1,563 @@
+{
+  "date": "2026-10-10",
+  "buildType": "debug x86_64",
+  "baseline": "95e8befa65263489ae9337cde09d7898b207386d",
+  "fixture": "youtube-video",
+  "fixtureUrl": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+  "method": "Three fresh installs per API/variant, one extraction then a subsequent extraction. Headline values use the first extraction only. StorageStats dataBytes minus cacheBytes; runtime logical lengths exclude symlinks.",
+  "releaseArtifacts": {
+    "baseline": {
+      "apkBytes": 19914537,
+      "apkSha256": "46c24bb244dcb720a9f975c2b1d0fd2cc477e804fe08dbadfcf90109f0dd9e2a",
+      "runtimeArchiveBytes": 12478102,
+      "runtimeSha256": "abef66b45d17b6a869c775a569e32650b2f3ee9b437c9b1ef67056da9084ef9c",
+      "runtimePayloadBytes": 34880897,
+      "files": 934
+    },
+    "after": {
+      "apkBytes": 19353557,
+      "apkSha256": "4d6f7747dac29bd43a4e00e7e78cc20d869437573c2a5fc49b399a6c724f76ea",
+      "runtimeArchiveBytes": 11892960,
+      "runtimeSha256": "18033ca58ec6ab469bb1a03430ca04188ddf2a189001dfa81661abb58fde336c",
+      "runtimePayloadBytes": 33393483,
+      "files": 798
+    }
+  },
+  "debugArtifacts": {
+    "baseline": {
+      "apkSha256": "f6ca4352b90ff6330d765ccf1e980711e5ff291987d7aacea93a67a7aaf00a20",
+      "runtimeSha256": "f920135a5a5935af18edd209932b24dec7859c08f28b139d640ad9055ec1ffba",
+      "pythonLauncherSha256": "894dd7e4f8dcc47dd8e87b5d2696e0e6eb03d125683e8b81475682fb8f619e87"
+    },
+    "after": {
+      "apkSha256": "e48f500ee4a287486c582620027a95bd6fa496c783e33c11f505a57b05ce05ed",
+      "runtimeSha256": "077b680033c6dc397b8b8382a9b3c5c45621734ffafda611f2d03ba46e03f872",
+      "pythonLauncherSha256": "894dd7e4f8dcc47dd8e87b5d2696e0e6eb03d125683e8b81475682fb8f619e87"
+    }
+  },
+  "summaryAfterOneExtraction": [
+    {
+      "api": 30,
+      "variant": "baseline",
+      "appBytes": 48701440,
+      "cacheBytes": 32768,
+      "runtimeFileBytes": 40024175,
+      "bytecodeFiles": 223,
+      "bytecodeBytes": 4849801,
+      "userDataExcludingCacheBytes": 51179520
+    },
+    {
+      "api": 30,
+      "variant": "after",
+      "appBytes": 47538176,
+      "cacheBytes": 32768,
+      "runtimeFileBytes": 38561827,
+      "bytecodeFiles": 223,
+      "bytecodeBytes": 4849801,
+      "userDataExcludingCacheBytes": 48840704
+    },
+    {
+      "api": 36,
+      "variant": "baseline",
+      "appBytes": 48705536,
+      "cacheBytes": 32768,
+      "runtimeFileBytes": 40024175,
+      "bytecodeFiles": 223,
+      "bytecodeBytes": 4849801,
+      "userDataExcludingCacheBytes": 51195904
+    },
+    {
+      "api": 36,
+      "variant": "after",
+      "appBytes": 47542272,
+      "cacheBytes": 32768,
+      "runtimeFileBytes": 38561827,
+      "bytecodeFiles": 223,
+      "bytecodeBytes": 4849801,
+      "userDataExcludingCacheBytes": 48857088
+    }
+  ],
+  "rawMeasurements": [
+    {
+      "api": 30,
+      "stage": "baseline",
+      "attempt": 1,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.7,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041722,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48701440,
+        "dataBytes": 51212288,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51179520
+    },
+    {
+      "api": 30,
+      "stage": "baseline",
+      "attempt": 1,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.2,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041722,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 91693056,
+        "dataBytes": 51212288,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51179520
+    },
+    {
+      "api": 30,
+      "stage": "baseline",
+      "attempt": 2,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.7,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041722,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48701440,
+        "dataBytes": 51212288,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51179520
+    },
+    {
+      "api": 30,
+      "stage": "baseline",
+      "attempt": 2,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.5,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041722,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48701440,
+        "dataBytes": 51212288,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51179520
+    },
+    {
+      "api": 30,
+      "stage": "baseline",
+      "attempt": 3,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.9,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041722,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48701440,
+        "dataBytes": 51212288,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51179520
+    },
+    {
+      "api": 30,
+      "stage": "baseline",
+      "attempt": 3,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.1,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041722,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48701440,
+        "dataBytes": 51212288,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51179520
+    },
+    {
+      "api": 30,
+      "stage": "after",
+      "attempt": 1,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.8,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579374,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47538176,
+        "dataBytes": 48873472,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48840704
+    },
+    {
+      "api": 30,
+      "stage": "after",
+      "attempt": 1,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.6,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579374,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47538176,
+        "dataBytes": 48873472,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48840704
+    },
+    {
+      "api": 30,
+      "stage": "after",
+      "attempt": 2,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.1,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579374,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47538176,
+        "dataBytes": 48873472,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48840704
+    },
+    {
+      "api": 30,
+      "stage": "after",
+      "attempt": 2,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.1,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579374,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47538176,
+        "dataBytes": 48873472,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48840704
+    },
+    {
+      "api": 30,
+      "stage": "after",
+      "attempt": 3,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.2,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579374,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47538176,
+        "dataBytes": 48873472,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48840704
+    },
+    {
+      "api": 30,
+      "stage": "after",
+      "attempt": 3,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 13.8,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579374,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47538176,
+        "dataBytes": 48873472,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48840704
+    },
+    {
+      "api": 36,
+      "stage": "baseline",
+      "attempt": 1,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 18.2,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041746,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48705536,
+        "dataBytes": 51228672,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51195904
+    },
+    {
+      "api": 36,
+      "stage": "baseline",
+      "attempt": 1,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.2,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041746,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48705536,
+        "dataBytes": 51228672,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51195904
+    },
+    {
+      "api": 36,
+      "stage": "baseline",
+      "attempt": 2,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.1,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041746,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48705536,
+        "dataBytes": 51228672,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51195904
+    },
+    {
+      "api": 36,
+      "stage": "baseline",
+      "attempt": 2,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.0,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041746,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48705536,
+        "dataBytes": 51228672,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51195904
+    },
+    {
+      "api": 36,
+      "stage": "baseline",
+      "attempt": 3,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.7,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041746,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48705536,
+        "dataBytes": 51228672,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51195904
+    },
+    {
+      "api": 36,
+      "stage": "baseline",
+      "attempt": 3,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 14.8,
+      "storage": {
+        "runtimeFileBytes": 40024175,
+        "dataFileBytes": 43041746,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 48705536,
+        "dataBytes": 51228672,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 51195904
+    },
+    {
+      "api": 36,
+      "stage": "after",
+      "attempt": 1,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 17.2,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579398,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47542272,
+        "dataBytes": 48889856,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48857088
+    },
+    {
+      "api": 36,
+      "stage": "after",
+      "attempt": 1,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.3,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579398,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47542272,
+        "dataBytes": 48889856,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48857088
+    },
+    {
+      "api": 36,
+      "stage": "after",
+      "attempt": 2,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 16.6,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579398,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47542272,
+        "dataBytes": 48889856,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48857088
+    },
+    {
+      "api": 36,
+      "stage": "after",
+      "attempt": 2,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.9,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579398,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47542272,
+        "dataBytes": 48889856,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48857088
+    },
+    {
+      "api": 36,
+      "stage": "after",
+      "attempt": 3,
+      "phase": "cold",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 17.9,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579398,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47542272,
+        "dataBytes": 48889856,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48857088
+    },
+    {
+      "api": 36,
+      "stage": "after",
+      "attempt": 3,
+      "phase": "warm",
+      "fixture": "youtube-video",
+      "passed": true,
+      "seconds": 15.5,
+      "storage": {
+        "runtimeFileBytes": 38561827,
+        "dataFileBytes": 41579398,
+        "bytecodeFiles": 223,
+        "bytecodeBytes": 4849801,
+        "stdlibZipBytes": 0,
+        "appBytes": 47542272,
+        "dataBytes": 48889856,
+        "cacheBytes": 32768
+      },
+      "userDataExcludingCacheBytes": 48857088
+    }
+  ],
+  "note": "One supplemental API 30 baseline subsequent-extraction appBytes reading was 91693056; package state changed from run-from-apk/unknown to verify/boot. All first-extraction appBytes readings matched within each API/variant. Raw sample retained; no adjustment or reset applied."
+}

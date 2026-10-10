@@ -1,20 +1,15 @@
 package io.github.originalrecipe1.unfurlit.buildlogic;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.zip.CRC32;
 import org.apache.commons.compress.archivers.zip.X000A_NTFS;
 import org.apache.commons.compress.archivers.zip.X5455_ExtendedTimestamp;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -22,13 +17,11 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.archivers.zip.ZipLong;
 
-/** Zips the stdlib and removes unused tooling; retained native payloads keep their metadata. */
+/** Removes audited unused tooling; retained payloads and metadata stay unchanged. */
 public final class PythonRuntimeArchive {
     private PythonRuntimeArchive() {}
 
     private static final String STDLIB = "usr/lib/python3.12/";
-    public static final String STDLIB_ZIP = "usr/lib/python312.zip";
-    private static final LocalDateTime ENTRY_TIME = LocalDateTime.of(1980, 1, 2, 0, 0);
 
     // Deliberately exact: a Python version/layout change must be reviewed.
     // A trailing slash removes one audited package, including its non-Python data.
@@ -99,9 +92,7 @@ public final class PythonRuntimeArchive {
         long centralDirectoryOffset;
         try (ZipFile source = ZipFile.builder().setPath(input).get();
              ZipArchiveOutputStream destination = new ZipArchiveOutputStream(output)) {
-            TreeMap<String, byte[]> stdlib = new TreeMap<>();
-            List<ZipArchiveEntry> retained = new ArrayList<>();
-            Set<String> retainedDirectories = new HashSet<>();
+            Set<String> stdlib = new HashSet<>();
             var entries = source.getEntriesInPhysicalOrder();
             while (entries.hasMoreElements()) {
                 ZipArchiveEntry entry = entries.nextElement();
@@ -109,51 +100,26 @@ public final class PythonRuntimeArchive {
                 String removal = removalFor(name);
                 if (removal != null) {
                     missing.remove(removal);
-                } else if (!entry.isDirectory() && isStdlibFile(name)) {
+                    continue;
+                }
+                if (name.equals("usr/lib/python312.zip")) {
+                    throw new IOException("Upstream already supplies " + name);
+                }
+                if (!entry.isDirectory() && isStdlibFile(name)) {
                     if (entry.isUnixSymlink() || name.endsWith(".so") || name.contains(".so.")) {
                         throw new IOException("Unexpected stdlib native file or symlink: " + name);
                     }
-                    try (InputStream contents = source.getInputStream(entry)) {
-                        stdlib.put(name.substring(STDLIB.length()), contents.readAllBytes());
+                    if (name.equals(STDLIB + "sitecustomize.py")) {
+                        throw new IOException("Upstream supplies sitecustomize.py; review its startup behavior");
                     }
-                } else {
-                    if (name.equals(STDLIB_ZIP)) throw new IOException("Upstream already supplies " + STDLIB_ZIP);
-                    retained.add(entry);
-                    if (!entry.isDirectory()) {
-                        for (int slash = name.lastIndexOf('/'); slash >= 0; slash = name.lastIndexOf('/', slash - 1)) {
-                            retainedDirectories.add(name.substring(0, slash + 1));
-                        }
-                    }
+                    stdlib.add(name.substring(STDLIB.length()));
                 }
-            }
-            if (!missing.isEmpty() || !stdlib.keySet().containsAll(Set.of("os.py", "site.py", "encodings/__init__.py"))) {
-                throw new IOException("Python runtime layout changed; review the trim list and stdlib. Missing: " + missing);
-            }
-            // yt-dlp starts Python without -B. site runs this before importing engines or
-            // site-packages. gallery-dl uses -S and already sets PYTHONDONTWRITEBYTECODE.
-            if (stdlib.putIfAbsent("sitecustomize.py", "import sys\nsys.dont_write_bytecode = True\n"
-                    .getBytes(StandardCharsets.UTF_8)) != null) {
-                throw new IOException("Upstream supplies sitecustomize.py; review its startup behavior");
-            }
-            for (ZipArchiveEntry entry : retained) {
-                // Do not recreate empty package directories whose contents now live in the zip.
-                if (entry.isDirectory() && entry.getName().startsWith(STDLIB)
-                        && !retainedDirectories.contains(entry.getName())) continue;
                 timestamps.add(new TimestampPatch(destination.getBytesWritten(), utcDosTime(entry)));
                 copyRaw(source, entry, destination);
             }
-            byte[] zippedStdlib = zipStdlib(stdlib);
-            ZipArchiveEntry nested = deterministicEntry(STDLIB_ZIP);
-            // The stdlib is compressed once, so initialization just copies this zip.
-            nested.setMethod(ZipArchiveEntry.STORED);
-            nested.setSize(zippedStdlib.length);
-            CRC32 crc = new CRC32();
-            crc.update(zippedStdlib);
-            nested.setCrc(crc.getValue());
-            timestamps.add(new TimestampPatch(destination.getBytesWritten(), null));
-            destination.putArchiveEntry(nested);
-            destination.write(zippedStdlib);
-            destination.closeArchiveEntry();
+            if (!missing.isEmpty() || !stdlib.containsAll(Set.of("os.py", "site.py", "encodings/__init__.py"))) {
+                throw new IOException("Python runtime layout changed; review the trim list and stdlib. Missing: " + missing);
+            }
             centralDirectoryOffset = destination.getBytesWritten();
         }
         normalizeDosTimes(output, centralDirectoryOffset, timestamps);
@@ -169,26 +135,6 @@ public final class PythonRuntimeArchive {
     private static boolean isStdlibFile(String name) {
         return name.startsWith(STDLIB) && !name.startsWith(STDLIB + "lib-dynload/")
             && !name.startsWith(STDLIB + "site-packages/");
-    }
-
-    private static ZipArchiveEntry deterministicEntry(String name) {
-        ZipArchiveEntry entry = new ZipArchiveEntry(name);
-        entry.setTime(ENTRY_TIME.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-        entry.setUnixMode(0100644);
-        entry.setMethod(ZipArchiveEntry.DEFLATED);
-        return entry;
-    }
-
-    private static byte[] zipStdlib(TreeMap<String, byte[]> files) throws IOException {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(bytes)) {
-            for (var file : files.entrySet()) {
-                zip.putArchiveEntry(deterministicEntry(file.getKey()));
-                zip.write(file.getValue());
-                zip.closeArchiveEntry();
-            }
-        }
-        return bytes.toByteArray();
     }
 
     private record TimestampPatch(long localHeaderOffset, byte[] dosTime) {}

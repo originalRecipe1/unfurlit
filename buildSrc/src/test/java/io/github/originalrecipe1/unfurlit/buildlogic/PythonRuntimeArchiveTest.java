@@ -12,10 +12,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.ArrayList;
-import java.util.TreeMap;
 import java.util.TimeZone;
-import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.X000A_NTFS;
 import org.apache.commons.compress.archivers.zip.X5455_ExtendedTimestamp;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -35,11 +32,13 @@ public class PythonRuntimeArchiveTest {
         PythonRuntimeArchive.trim(input, output);
         try (ZipFile before = ZipFile.builder().setPath(input).get();
              ZipFile after = ZipFile.builder().setPath(output).get()) {
-            assertEquals(5, Collections.list(after.getEntries()).size());
+            assertEquals(10, Collections.list(after.getEntries()).size());
             for (String path : PythonRuntimeArchive.REMOVED_PATHS) assertNull(after.getEntry(path));
             for (String path : new String[]{"usr/lib/libpython.so", "usr/lib/libpython.so.1",
                 "usr/lib/python3.12/site-packages/retained/__init__.py",
-                "usr/lib/python3.12/lib-dynload/_sqlite3.cpython-312.so"}) {
+                "usr/lib/python3.12/lib-dynload/_sqlite3.cpython-312.so",
+                "usr/lib/python3.12/os.py", "usr/lib/python3.12/encodings/__init__.py",
+                "usr/lib/python3.12/email/architecture.rst"}) {
                 ZipArchiveEntry a = before.getEntry(path);
                 ZipArchiveEntry b = after.getEntry(path);
                 assertEquals(a.getUnixMode(), b.getUnixMode());
@@ -65,31 +64,23 @@ public class PythonRuntimeArchiveTest {
         }
     }
 
-    @Test public void zippedStdlibPreservesSourcesAndPackageDataWithoutNativeModules() throws Exception {
+    @Test public void stdlibStaysUnpackedWithSourcesAndPackageDataUnchanged() throws Exception {
         Path input = fixture(true);
         Path output = folder.newFile().toPath();
         PythonRuntimeArchive.trim(input, output);
-        try (ZipFile archive = ZipFile.builder().setPath(output).get()) {
-            assertNull(archive.getEntry("usr/lib/python3.12/os.py"));
-            assertNull(archive.getEntry("usr/lib/python3.12/xmlrpc/unused.py"));
-            var nested = archive.getEntry(PythonRuntimeArchive.STDLIB_ZIP);
-            assertEquals(ZipArchiveEntry.STORED, nested.getMethod());
-            var contents = new TreeMap<String, String>();
-            var order = new ArrayList<String>();
-            try (var zip = new ZipInputStream(archive.getInputStream(nested))) {
-                for (var entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
-                    order.add(entry.getName());
-                    contents.put(entry.getName(), new String(zip.readAllBytes(), StandardCharsets.UTF_8));
+        try (ZipFile before = ZipFile.builder().setPath(input).get();
+             ZipFile after = ZipFile.builder().setPath(output).get()) {
+            assertNull(after.getEntry("usr/lib/python312.zip"));
+            assertNull(after.getEntry("usr/lib/python3.12/sitecustomize.py"));
+            assertNull(after.getEntry("usr/lib/python3.12/xmlrpc/unused.py"));
+            for (String path : new String[]{"_sysconfigdata__linux_.py", "os.py", "site.py",
+                "encodings/__init__.py", "email/architecture.rst", "xmlrpclib.py"}) {
+                String name = "usr/lib/python3.12/" + path;
+                try (var original = before.getInputStream(before.getEntry(name));
+                     var kept = after.getInputStream(after.getEntry(name))) {
+                    assertArrayEquals(name, original.readAllBytes(), kept.readAllBytes());
                 }
             }
-            assertEquals(new ArrayList<>(contents.keySet()), order);
-            assertEquals("configuration bytes", contents.get("_sysconfigdata__linux_.py"));
-            assertEquals("encoding bytes", contents.get("encodings/__init__.py"));
-            assertEquals("package data", contents.get("email/architecture.rst"));
-            assertEquals("keep adjacent names", contents.get("xmlrpclib.py"));
-            assertEquals("import sys\nsys.dont_write_bytecode = True\n", contents.get("sitecustomize.py"));
-            assertFalse(contents.keySet().stream().anyMatch(name -> name.startsWith("site-packages/")
-                || name.startsWith("lib-dynload/") || name.startsWith("xmlrpc/")));
         }
     }
 

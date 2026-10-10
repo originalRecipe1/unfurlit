@@ -68,8 +68,8 @@ class PythonRuntimeTest {
         val runtime = File(context.noBackupFilesDir, "youtubedl-android/packages/python")
         val obsolete = listOf(
             "usr/lib/quickjs/libquickjs.a",
-            "usr/lib/python3.12/os.py",
-            "usr/lib/python3.12/encodings/__init__.py",
+            "usr/lib/python312.zip",
+            "usr/lib/python3.12/sitecustomize.py",
             "usr/lib/python3.12/__pycache__/os.cpython-312.pyc",
             "usr/lib/python3.12/curses/__init__.py",
             "usr/lib/python3.12/lib-dynload/_curses.cpython-312.so",
@@ -94,7 +94,8 @@ class PythonRuntimeTest {
                 engine.initPython(context, runtime)
 
                 for (file in obsolete) assertFalse("Obsolete file survived: $file", file.exists())
-                assertTrue(File(runtime, "usr/lib/python312.zip").isFile)
+                assertTrue(File(runtime, "usr/lib/python3.12/os.py").isFile)
+                assertTrue(File(runtime, "usr/lib/python3.12/encodings/__init__.py").isFile)
                 database.rawQuery("SELECT title, source_url, thumbnail FROM history", null).use { cursor ->
                     assertTrue(cursor.moveToFirst())
                     assertEquals("Saved visit", cursor.getString(0))
@@ -122,11 +123,10 @@ class PythonRuntimeTest {
         assertFalse(File(runtime, "usr/lib/quickjs/libquickjs.a").exists())
         val modules = File(runtime, "usr/lib/python3.12/lib-dynload").listFiles().orEmpty()
         assertFalse(modules.any { it.name.startsWith("_test") && it.extension == "so" })
-        assertNoBytecode(runtime)
     }
 
     @Test(timeout = 120_000)
-    fun zippedStdlibLoadsNativeAndEngineDependenciesWithoutBytecodeCaches() {
+    fun unpackedStdlibLoadsNativeAndEngineDependencies() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         BundledYtDlpInstaller(context).ensureCurrent()
         YoutubeDL.getInstance().init(context)
@@ -137,9 +137,9 @@ class PythonRuntimeTest {
             import xml.etree.ElementTree
             from Cryptodome.Cipher import AES
             import mutagen
-            assert sys.dont_write_bytecode
-            assert '/python312.zip/' in encodings.__file__, encodings.__file__
-            assert '/python312.zip/' in json.__file__, json.__file__
+            assert not sys.dont_write_bytecode
+            assert '/python3.12/encodings/' in encodings.__file__, encodings.__file__
+            assert '/python3.12/json/' in json.__file__, json.__file__
             assert sqlite3.connect(':memory:').execute('SELECT 54').fetchone() == (54,)
             assert AES.new(bytes(16), AES.MODE_ECB).encrypt(bytes(16)).hex() == '66e94bd4ef8a2c3b884cfa59ca342b2e'
             assert ssl.create_default_context().cert_store_stats()['x509_ca'] > 0
@@ -155,14 +155,13 @@ class PythonRuntimeTest {
                 put("PYTHONHOME", home.absolutePath)
                 put("HOME", home.absolutePath)
                 put("SSL_CERT_FILE", File(home, "etc/tls/cert.pem").absolutePath)
-                // Verify the bundled startup policy, without a caller-provided bytecode flag.
+                // Preserve normal Python bytecode caching without a caller-provided flag.
                 remove("PYTHONDONTWRITEBYTECODE")
             }
         }.start()
         val output = process.inputStream.bufferedReader().use { it.readText() }
         assertEquals(output, 0, process.waitFor())
         assertEquals("stdlib/native/dependency imports passed", output.trim())
-        assertNoBytecode(runtime)
     }
 
     @Test(timeout = 120_000)
@@ -185,12 +184,5 @@ class PythonRuntimeTest {
         val imageUrl = "https://images.example.invalid/photo.jpg"
         val result = GalleryDlJsonParser.parse(imageUrl, runBlocking { runner.run(imageUrl) })
         assertEquals(imageUrl, (result.media.single() as ExtractedMedia.Image).source.url)
-        assertNoBytecode(File(context.noBackupFilesDir, "youtubedl-android/packages/python"))
-    }
-
-    private fun assertNoBytecode(runtime: File) {
-        assertFalse("Python wrote bytecode into the installed runtime", runtime.walkTopDown().any {
-            it.extension == "pyc" || it.extension == "pyo" || it.name == "__pycache__"
-        })
     }
 }

@@ -2,7 +2,7 @@
 
 - [Using Unfurlit](usage.md) — installation, opening media, history, and troubleshooting.
 - [Development](development.md) — building, testing, architecture, and network safety.
-- [Python runtime storage](python-runtime-storage.md) — retained dependencies, runtime repacking, and before/after measurements.
+- [Python runtime storage](python-runtime-storage.md) — retained dependencies, runtime trimming, and before/after measurements.
 - [Social-link baseline](social-link-baseline.md) — dated compatibility and playback checks.
 - [Release automation and F-Droid](automation-and-fdroid.md) — versions, signing, publishing, and the pending submission.
 - [Identity and design](design/unfurlit.md) — icons, Material colors, and the transition from Peek.
