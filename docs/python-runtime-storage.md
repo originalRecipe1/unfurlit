@@ -106,6 +106,94 @@ Later extractions were 1.2–1.4 seconds slower at the median in these samples.
 Avoiding persistent bytecode trades repeated parsing/decompression for storage.
 Network variability prevents attributing the full difference to that change.
 
+## Isolated offline startup timing
+
+**Verified — 2026-10-10:** API 36 Google APIs x86_64, debug APKs, the same
+source-built yt-dlp engine in every variant. App-UID IPv4 and IPv6 OUTPUT rules
+rejected network access throughout timing; a socket probe also confirmed the
+block. `RuntimeStartupTimingTest` uses `ProcessBuilder` with youtubedl-android's
+environment and `SystemClock.elapsedRealtimeNanos`, measuring process start
+through output collection and exit. Installing/unpacking the runtime and hashing
+the engine are outside the measured interval.
+
+The commands are `libpython.so <installed-yt-dlp-zip> --version` and
+`libpython.so -c` with `sys.path[0]` set to that same installed engine ZIP, followed
+by `import yt_dlp, yt_dlp.YoutubeDL; yt_dlp.YoutubeDL({'quiet': True})`. No `-B`,
+`PYTHONDONTWRITEBYTECODE`, or extracted engine package changes their behavior.
+
+There were three fresh installs per variant, ordered **a/b/c, b/c/a, c/a/b**.
+The first invocation of **each command on each install** was discarded to warm
+caches. Six subsequent samples per command/install give **18 retained samples
+per command/variant**. Commands alternate order within each install. All 108
+retained invocations and 18 discarded warm-ups exited successfully. Quartiles
+use inclusive linear interpolation; no retained sample or outlier was removed.
+
+| Variant | Command | Median (s) | 25th–75th percentile (s) | Min–max (s) |
+| --- | --- | ---: | --- | --- |
+| (a) #53 `95e8bef`, warmed caches | `--version` | 0.656 | 0.652–0.662 | 0.638–0.666 |
+| (b) #58 `34d3fd3`, global bytecode switch | `--version` | 1.637 | 1.628–1.648 | 1.614–1.795 |
+| (c) #58 without `sitecustomize.py` | `--version` | 1.532 | 1.521–1.541 | 1.510–1.604 |
+| (a) #53 `95e8bef`, warmed caches | Construct `YoutubeDL` | 0.900 | 0.892–0.905 | 0.884–0.916 |
+| (b) #58 `34d3fd3`, global bytecode switch | Construct `YoutubeDL` | 1.891 | 1.884–1.898 | 1.858–2.003 |
+| (c) #58 without `sitecustomize.py` | Construct `YoutubeDL` | 1.776 | 1.767–1.791 | 1.752–1.849 |
+
+**Recommendation: keep the global switch.** Variant (c) recovers only
+**0.105 seconds** for `--version` and **0.114 seconds** for initialization:
+**10.7% / 11.5%** of the added startup time. It does not recover most of the
+regression. The global policy and its no-bytecode tests therefore remain.
+
+**The zipped stdlib still adds about 0.88 seconds** versus the warmed baseline
+after site-packages caches are restored (0.877 / 0.876 seconds for the two
+commands). This is above the 0.5-second review threshold. Removing or limiting
+the global switch does not address that main cost. No build-time `.pyc`
+precompilation is introduced: it would require an exact Python 3.12 build host
+and a separate reproducibility design. **Not verified:** equivalent timing on
+ARM64 hardware or a physical-phone release build.
+
+### Variant (c) caches after one real extraction
+
+**Verified:** on a separate fresh install, one successful `youtube-video`
+extraction wrote **54 `.pyc` files totaling 791,415 bytes (0.79 MB)**. Their
+allocated file blocks total **1,142,784 bytes (1.14 MB)**, excluding directories.
+Every file is in `usr/lib/python3.12/site-packages/`; there are no stdlib caches.
+No benchmark warm-up or initialization command preceded this extraction.
+
+Paths below are relative to `usr/lib/python3.12/site-packages/`:
+
+| Directory | `.pyc` files | Payload bytes |
+| --- | ---: | ---: |
+| `Cryptodome/__pycache__` | 1 | 524 |
+| `Cryptodome/Cipher/__pycache__` | 6 | 35,261 |
+| `Cryptodome/Hash/__pycache__` | 4 | 30,380 |
+| `Cryptodome/Math/__pycache__` | 7 | 82,006 |
+| `Cryptodome/PublicKey/__pycache__` | 2 | 36,177 |
+| `Cryptodome/Random/__pycache__` | 2 | 6,500 |
+| `Cryptodome/Signature/__pycache__` | 2 | 14,865 |
+| `Cryptodome/Util/__pycache__` | 8 | 134,265 |
+| `mutagen/__pycache__` | 11 | 175,845 |
+| `mutagen/id3/__pycache__` | 7 | 188,316 |
+| `mutagen/mp4/__pycache__` | 4 | 87,276 |
+
+[Raw nanosecond samples, warm-ups, APK/runtime hashes and every cache file](measurements/python-runtime-startup-2026-10-10.json)
+are committed alongside this report. Variant (c)'s runtime was compared against
+(b): all retained payloads, including the other stdlib ZIP members, are identical;
+only the injected `sitecustomize.py` is absent. Python launchers and engine bytes
+match across all three variants.
+
+To reproduce, install the chosen APK and the same instrumentation APK on a
+dedicated API 36 emulator, block both IPv4 and IPv6 for the app UID, then run:
+
+```sh
+adb -s "$serial" shell am instrument -w -r \
+  -e class io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.RuntimeStartupTimingTest \
+  -e runtimeTiming true -e runtimeTimingRuns 15 -e runtimeTimingVariant baseline \
+  io.github.originalrecipe1.unfurlit.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+The `runtimeTiming` status contains per-run nanoseconds, discarded warm-ups and
+artifact hashes. Restore the app's network rules afterward. Count post-extraction
+caches on another fresh install so timing warm-ups do not contribute files.
+
 ## Validation and reproduction
 
 **Verified:** 11 build-logic tests, 155 app unit tests, 96 Python script tests,
