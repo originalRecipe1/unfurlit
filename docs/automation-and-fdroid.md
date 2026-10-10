@@ -36,9 +36,9 @@ branch name; the proposed metadata has not been merged into official `fdroiddata
 The local candidate is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
 It targets Unfurlit `1.4.0`, version code 13, pinned to tag `v1.4.0` at commit
 `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`. The matching patch for MR !47809
-is prepared locally and has not been posted. Review of the gallery-dl build
-approach remains tracked in
-[issue #40](https://github.com/originalRecipe1/unfurlit/issues/40).
+is prepared locally and has not been posted. The gallery-dl source build is implemented by PR #53; issue #40 is closed.
+The proposed 1.4.1 / 14 update is a separate
+[draft with a merge-commit placeholder](fdroid/1.4.1-draft.md), not a posted MR update.
 The candidate retains the `Unfurlit-%v.apk` release filename. Its application ID is
 `io.github.originalrecipe1.unfurlit`, and its repository and release URLs point to
 `originalRecipe1/unfurlit`. The signing certificate, extractor version, and
@@ -80,7 +80,11 @@ still requests only `contents: write` and `pull-requests: write`.
 
 After an automation pull request is merged, `release-tag.yml` rebuilds the merged
 commit and creates a GitHub release and `v<versionName>` tag. It can also be run
-manually to tag a normal app release. Release APKs use pinned yt-dlp and EJS
+manually to tag a normal app release: enter the full CI- and phone-tested merge
+SHA in `release_commit`. The workflow requires that SHA to be on the default
+branch, checks it out, and uses it as the tag target even if `main` advances.
+See the [1.4.1 handoff procedure](releases/1.4.1-phone-test.md#after-the-owner-merges-apk-handoff-and-publication).
+Release APKs use pinned yt-dlp and EJS
 submodules, with the challenge solver built using Node.js 22 and its npm lockfile.
 The exported EJS build directory substitutes integrity-pinned
 `@rollup/wasm-node` 4.52.5 for native Rollup 4.52.5; the submodule stays unchanged.
@@ -126,7 +130,9 @@ branch, pending merge in !47809. The local Unfurlit candidate is
 [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml),
 which targets `1.4.0` at commit `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`.
 It retains the 1.3.1 build block and adds 1.4.0 / 13 with the same build steps,
-including the six pinned PyPI wheels. Use that file for the full metadata.
+including the six pinned PyPI wheels. Use that file for the released 1.4.0 metadata;
+the [1.4.1 draft](fdroid/1.4.1-draft.yml) adds source preparation and uses no
+gallery-dl wheels in build 14.
 The 1.4.0 candidate has not yet had a new F-Droid build or signed-APK comparison;
 the successful 1.3.1 checks below are historical evidence.
 Its `sudo` commands install `git make nodejs npm python3 tar zip` from Debian.
@@ -241,8 +247,9 @@ QuickJS runtimes documented in `THIRD_PARTY_NOTICES.md`.
 
 Merge request !47809 originally proposed Peek v5. The prepared update now targets
 Unfurlit 1.4.0 at `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`; the matching
-metadata patch has not been posted. The gallery-dl review is tracked in
-[issue #40](https://github.com/originalRecipe1/unfurlit/issues/40).
+metadata patch has not been posted. The source-build work in
+[issue #40](https://github.com/originalRecipe1/unfurlit/issues/40) is complete;
+F-Droid reviewer acceptance remains pending.
 The subsequent gallery-dl source build for 1.4.1 does not update the merge
 request automatically.
 Official F-Droid acceptance and publication remain pending. GitHub Actions cannot
