@@ -5,6 +5,11 @@ on:
     types:
       - closed
   workflow_dispatch:
+    inputs:
+      release_commit:
+        description: Full 40-character commit SHA verified by CI and the phone test
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -24,12 +29,41 @@ jobs:
     timeout-minutes: 40
 
     steps:
-      - name: Check out the default branch
+      - name: Select the release commit
+        id: release_commit
+        env:
+          REQUESTED_COMMIT: ${{ inputs.release_commit }}
+          EVENT_COMMIT: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          commit="$EVENT_COMMIT"
+          if [[ "$EVENT_NAME" == 'workflow_dispatch' ]]; then
+            commit="$REQUESTED_COMMIT"
+          fi
+          if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "A full lowercase commit SHA is required" >&2
+            exit 1
+          fi
+          echo "sha=$commit" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the release commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ steps.release_commit.outputs.sha }}
           fetch-depth: 0
           submodules: recursive
+
+      - name: Require a commit on the default branch
+        env:
+          RELEASE_COMMIT: ${{ steps.release_commit.outputs.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+          git merge-base --is-ancestor "$RELEASE_COMMIT" "refs/remotes/origin/$DEFAULT_BRANCH"
 
       - name: Set up Node.js 22
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -137,6 +171,7 @@ jobs:
         if: steps.version.outputs.create == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ steps.release_commit.outputs.sha }}
           TAG: ${{ steps.version.outputs.tag }}
           VERSION_NAME: ${{ steps.version.outputs.name }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
@@ -151,7 +186,7 @@ jobs:
             release_flags+=(--prerelease)
           fi
           gh release create "$TAG" \
-            --target "$GITHUB_SHA" \
+            --target "$RELEASE_COMMIT" \
             --title "Unfurlit $VERSION_NAME" \
             --notes-file "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt" \
             "$SIGNED_APK" \
