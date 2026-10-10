@@ -1,5 +1,149 @@
 # Social-link baseline
 
+## 1.4.0 — 2026-10-09
+
+**Verified: 63/64 cases passed; 1 failed.** This release-candidate run includes
+58/59 media cases and 5/5 expected-error checks. All 64 fixtures ran once;
+the separate successful retry below does not replace the first failure.
+No fixture or expectation was changed for the release run.
+
+- Source: `release/1.4.0`, tested commit
+  [`3bb9201a1775824bbc5fe670f3b7215bf6f5cfe4`](https://github.com/originalRecipe1/unfurlit/tree/3bb9201a1775824bbc5fe670f3b7215bf6f5cfe4),
+  based on main `ae422ec`, version name 1.4.0 / code 13. The subsequent release
+  commit adds documentation only; application code and build configuration are unchanged.
+- Fixture: all 64 entries in
+  [social-links.json](../app/src/socialLinks/assets/social-links.json), including
+  the two Tumblr video/mixed-media cases added since the 62-case 1.3.1 baseline.
+- Environment: Android 16 / API 36 Google APIs x86_64 emulator, a residential
+  connection, anonymous access. This was not a GitHub Actions run.
+- Build: **debug-based `linkCheck`, without R8 optimization**, with local passive
+  diagnostic observers. An attempt to instrument a release-derived minified build
+  failed before tests started because AndroidJUnitRunner could not load shared
+  AndroidX/Kotlin classes (`androidx.tracing.Trace`, then `kotlin.LazyKt`). Those
+  harness failures are outside the 64-case result. No production keep rules changed.
+- Engines: yt-dlp 2026.08.19 with EJS 0.8.0, and gallery-dl 1.32.13 assembled from
+  the existing six pinned wheels. Both bundled engine resources are byte-identical
+  to the published 1.3.1 APK. The gallery-dl source-build PR is excluded from 1.4.0.
+
+Each case opens its fixture from History in a fresh app process. A media case
+passes only when its expected types, count and specified soundtrack match and
+every returned item renders or plays. Every gallery page is visited. Images must
+decode and draw; video must render a frame and advance at least three seconds;
+selected audio must advance. An expected-error case must show its specified error
+screen. The harness records the first playback error and does not wait for the
+app's automatic URL refresh, so a failed sample does not establish that recovery failed.
+
+### Failure triage and before/after evidence
+
+**Verified observation:** `youtube-big-buck-bunny` extracted one video with separate
+audio, then playback returned `ERROR_CODE_IO_BAD_HTTP_STATUS` / HTTP 403 before
+a frame or audio output started. A fresh-process retry with the same 1.4.0 APK
+passed, as did a fresh 1.3.1 control on the same API 36 environment and connection.
+The full-run count remains **63/64**.
+
+**Classification: pre-existing intermittent playback failure; no regression identified.**
+The same fixture produced a playback HTTP 403 on 2026-10-05 at `8ea5d43`, before
+1.3.1, and passed an unchanged retry. Another YouTube video hit the same failure
+in the earlier 50-attempt sample (1/50). The bundled engines and player HTTP-403
+recovery code have not changed since 1.3.1. This evidence supports an intermittent
+media-endpoint refusal, but its root cause, dependence on a particular connection,
+and the outcome of automatic recovery in this failed sample are **not verified**.
+
+The following six targeted controls used 1.3.1 `c76c789` with the same current
+fixtures and debug-based viewer checks. These are separate checks, not a new full
+1.3.1 baseline. All times below include navigation and rendering/playback checks.
+
+| Case | 1.3.1 control | 1.4.0 full run | Separate 1.4.0 retry |
+| --- | --- | --- | --- |
+| `youtube-big-buck-bunny` | PASS: success: 1 video (Progressive, separate audio), from Youtube (38.2 s) | FAIL: Playback HTTP 403 (19.2 s) | PASS, 31.5 s |
+| `x-mixed-media` | FAIL: Video only; photo missing (14.7 s) | PASS: success: 1 video, 1 image (Progressive), from Twitter (12.3 s) | Not run |
+| `tumblr-photo-post` | FAIL: NetworkFailure (7.3 s) | PASS: success: 4 images, from Tumblr (5.4 s) | Not run |
+| `tumblr-native-video` | FAIL: NetworkFailure (5.7 s) | PASS: success: 1 video (Progressive), from Tumblr (7.2 s) | Not run |
+| `tumblr-mixed-media` | FAIL: NetworkFailure (8.8 s) | PASS: success: 1 video, 1 image (Progressive), from Tumblr (7.2 s) | Not run |
+| `pixiv-artwork` | FAIL: AuthenticationRequired (15.4 s) | PASS: success: 1 image, from Pixiv (8.0 s) | Not run |
+
+All other first-pass cases passed, including the previously failing X mixed-media,
+Tumblr photo and Pixiv cases, and both Imgur cases that failed in the 1.3.1 full run.
+The new Tumblr native-video and mixed-media cases also passed. The Imgur results
+demonstrate current availability; no Imgur-specific fix is claimed.
+
+**Not verified:** optimized release playback on a physical ARM64 phone, GIF
+animation lifecycle in this sweep, audible output from physical speakers,
+full-length playback, other regions/connections, or the install-over-1.3.1 upgrade.
+The [1.4.0 phone record](releases/1.4.0-phone-test.md) remains blank for the signed,
+optimized release APK test. A passing image decode is not an animation check.
+
+### Per-case results
+
+Times include navigation and viewer checks; they are not extraction benchmarks.
+
+| Case | Expected | Result | Observed | Seconds |
+| --- | --- | --- | --- | ---: |
+| `youtube-video` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 29.6 |
+| `youtube-short-link` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 22.1 |
+| `youtube-big-buck-bunny` | success: 1 video | **FAIL** | success: 1 video (Progressive, separate audio), from Youtube; playback HTTP 403 before first frame/audio | 19.2 |
+| `youtube-shorts` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 29.9 |
+| `youtube-shorts-sign-in-fallback` | success: 1 video | **PASS** | success: 1 video (Progressive, separate audio), from Youtube | 23.5 |
+| `vimeo-video` | success: 1 video | **PASS** | success: 1 video (Hls, separate audio), from Vimeo | 14.5 |
+| `vimeo-player` | success: 1 video | **PASS** | success: 1 video (Hls, separate audio), from Vimeo | 14.2 |
+| `vimeo-unlisted` | success: 1 video | **PASS** | success: 1 video (Hls), from Vimeo | 14.7 |
+| `tumblr-native-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from Tumblr | 7.2 |
+| `reddit-video` | success: 1 video | **PASS** | success: 1 video (Hls/Progressive, separate audio), from Reddit | 17.9 |
+| `reddit-native-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from Reddit | 15.0 |
+| `x-video` | success: 1 video | **PASS** | success: 1 video (Hls, separate audio), from Twitter | 11.8 |
+| `x-second-video` | success: 1 video | **PASS** | success: 1 video (Hls), from Twitter | 13.3 |
+| `x-animated-gif` | success: 1 video | **PASS** | success: 1 video (Progressive), from Twitter | 8.5 |
+| `instagram-post` | success: 3 videos | **PASS** | success: 3 videos (Progressive), from Instagram | 20.1 |
+| `instagram-reel` | success: 1 video | **PASS** | success: 1 video (Progressive), from Instagram | 12.5 |
+| `instagram-video-carousel` | success: 2 videos | **PASS** | success: 2 videos (Progressive), from Instagram | 17.9 |
+| `tiktok-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from TikTok | 11.3 |
+| `tiktok-second-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from TikTok | 11.3 |
+| `bluesky-video` | success: 1 video | **PASS** | success: 1 video (Progressive), from Bluesky | 17.2 |
+| `imgur-gifv` | success: 1 video | **PASS** | success: 1 video (Progressive), from Imgur | 17.4 |
+| `peertube-video` | success: 1 video | **PASS** | success: 1 video (Hls), from PeerTube | 13.5 |
+| `dailymotion-video` | success: 1 video | **PASS** | success: 1 video (Hls), from Dailymotion | 16.4 |
+| `twitch-clip` | success: 1 video | **PASS** | success: 1 video (Progressive), from TwitchClips | 10.9 |
+| `direct-video-file` | success: 1 video | **PASS** | success: 1 video (Progressive), from Generic | 9.6 |
+| `instagram-photo-carousel` | success: 11 images | **PASS** | success: 11 images, from Instagram | 7.4 |
+| `instagram-eight-photo-post` | success: 8 images | **PASS** | success: 8 images, from Instagram | 7.3 |
+| `instagram-single-photo` | success: 1 image | **PASS** | success: 1 image, from Instagram | 4.7 |
+| `tiktok-photos-with-audio` | success: 3 images, with soundtrack | **PASS** | success: 3 images, soundtrack, from TikTok | 9.9 |
+| `tiktok-photo-link` | success: 16 images, with soundtrack | **PASS** | success: 16 images, soundtrack, from TikTok | 9.1 |
+| `tiktok-single-photo` | success: 1 image | **PASS** | success: 1 image, soundtrack, from TikTok | 5.9 |
+| `reddit-image-post` | success: 1 image | **PASS** | success: 1 image, from Reddit | 16.0 |
+| `reddit-gallery` | success: 3 images | **PASS** | success: 3 images, from Reddit | 12.3 |
+| `reddit-gallery-comments` | success: 3 images | **PASS** | success: 3 images, from Reddit | 20.1 |
+| `reddit-gallery-share` | success: 4 images | **PASS** | success: 4 images, from Reddit | 18.2 |
+| `reddit-gallery-short` | success: 3 images | **PASS** | success: 3 images, from Reddit | 18.7 |
+| `reddit-external-imgur` | success: 1 video | **PASS** | success: 1 video (Progressive), from Imgur | 17.7 |
+| `reddit-external-streamable` | success: 1 video | **PASS** | success: 1 video (Progressive), from Streamable | 16.6 |
+| `reddit-direct-image` | success: 1 image | **PASS** | success: 1 image, from Reddit | 11.9 |
+| `reddit-preview-image` | success: 1 image | **PASS** | success: 1 image, from Reddit | 11.6 |
+| `reddit-image-link-wrapper` | success: 1 image | **PASS** | success: 1 image, from Reddit | 11.2 |
+| `reddit-mirror-post` | success: 1 image | **PASS** | success: 1 image, from Reddit | 16.1 |
+| `x-photo-post` | success: 4 images | **PASS** | success: 4 images, from X/Twitter | 10.9 |
+| `x-mixed-media` | success: 2 video+image | **PASS** | success: 1 video, 1 image (Progressive), from Twitter | 12.3 |
+| `bluesky-image` | success: 1 image | **PASS** | success: 1 image, from Bluesky | 12.1 |
+| `imgur-image` | success: 1 image | **PASS** | success: 1 image, from Imgur | 9.2 |
+| `imgur-album` | success: 19 images | **PASS** | success: 19 images, from Imgur | 13.6 |
+| `flickr-photo` | success: 1 image | **PASS** | success: 1 image, from Flickr | 15.7 |
+| `tumblr-photo-post` | success: 4 images | **PASS** | success: 4 images, from Tumblr | 5.4 |
+| `tumblr-mixed-media` | success: 2 video+image | **PASS** | success: 1 video, 1 image (Progressive), from Tumblr | 7.2 |
+| `mastodon-photos` | success: 4 images | **PASS** | success: 4 images, from Mastodon.social | 14.2 |
+| `pixiv-artwork` | success: 1 image | **PASS** | success: 1 image, from Pixiv | 8.0 |
+| `pinterest-pin` | success: 1 image | **PASS** | success: 1 image, from Pinterest | 9.5 |
+| `wikimedia-commons-file` | success: 1 image | **PASS** | success: 1 image, from Wikimedia | 8.6 |
+| `direct-image-file` | success: 1 image | **PASS** | success: 1 image, from Generic | 5.9 |
+| `soundcloud-track` | success: 1 audio | **PASS** | success: 1 audio (Hls), from Soundcloud | 18.6 |
+| `bandcamp-track` | success: 1 audio | **PASS** | success: 1 audio (Progressive), from Bandcamp | 24.1 |
+| `mixcloud-show` | success: 1 audio | **PASS** | success: 1 audio (Dash), from Mixcloud | 14.9 |
+| `direct-audio-file` | success: 1 audio | **PASS** | success: 1 audio (Progressive), from Generic | 9.8 |
+| `non-media-page` | UnsupportedUrl | **PASS** | UnsupportedUrl | 10.0 |
+| `missing-page` | MediaUnavailable | **PASS** | MediaUnavailable | 5.7 |
+| `imgur-missing-image` | MediaUnavailable | **PASS** | MediaUnavailable | 6.8 |
+| `invalid-scheme` | UnsupportedUrl | **PASS** | UnsupportedUrl | 2.1 |
+| `private-address` | UnsupportedUrl | **PASS** | UnsupportedUrl | 2.1 |
+
 ## Tumblr native video follow-up — 2026-10-09
 
 **Verified:** the native Tumblr adapter for [#49](https://github.com/originalRecipe1/unfurlit/issues/49)

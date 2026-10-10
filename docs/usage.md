@@ -68,8 +68,12 @@ Other sites may work too; audio and galleries depend on the source. Availability
 region and platform changes. Private, login-gated or restricted posts may not
 open; signing in is not available.
 
-Tap **Supported links and media** on Home for this list in the app. See the
-[dated test results](social-link-baseline.md) for tested links.
+Tap **Supported links and media** on Home for this list in the app.
+The **1.4.0 release candidate** passed **63/64 cases** in the full local API 36
+emulator run on **2026-10-09**, including 5 expected-error checks. The only failure,
+an intermittent YouTube playback HTTP 403, passed a separate retry with the same
+APK. This used the debug-based link-check harness; optimized physical-phone
+testing remains pending. See the [dated results and failure triage](social-link-baseline.md#140--2026-10-09).
 
 Private, login-gated, age-restricted, or region-restricted posts may not open.
 Importing login cookies, choosing quality manually, and saving media are not

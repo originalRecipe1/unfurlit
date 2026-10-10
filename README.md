@@ -45,18 +45,16 @@ open; signing in is not available.
 
 ## Site compatibility
 
-On **2026-10-06**, the full local emulator run of **1.3.1** passed **57/62
-cases**, including 5 expected-error checks. Media cases check extraction, image
-rendering and short playback samples. Known issues in that release were
-[missing photos in X mixed-media posts (#37)](https://github.com/originalRecipe1/unfurlit/issues/37),
-[Tumblr connection failures (#38)](https://github.com/originalRecipe1/unfurlit/issues/38),
-and [Pixiv's unsupported refresh-token requirement (#39)](https://github.com/originalRecipe1/unfurlit/issues/39).
-`imgur-gifv` returned the wrong media type (an image), then failed to load that
-image because of a DNS error; the cause of the wrong media type is not verified.
-`imgur-image` also failed on DNS. Both passed a separate retry.
+On **2026-10-09**, the full local API 36 emulator run of the **1.4.0 release
+candidate** passed **63/64 cases**, including 5 expected-error checks. X mixed
+video/photo posts, Tumblr photos and videos, and public Pixiv artwork passed.
+The only failure was an intermittent YouTube playback HTTP 403; the same APK
+passed a separate retry. The first-pass count remains 63/64.
 
-See the [dated results and per-case outcomes](docs/social-link-baseline.md#131--2026-10-06)
-for the test environment and limitations. These results describe the tested
-links on that date; availability can change.
+These checks used the debug-based link-check harness for extraction, image
+rendering and short playback samples. Testing the optimized release APK on a
+physical phone is still pending. See the
+[dated results, failure triage and per-case outcomes](docs/social-link-baseline.md#140--2026-10-09)
+for the environment and limits. Availability can change.
 
 [Report a bug](https://github.com/originalRecipe1/unfurlit/issues) · [Build from source](docs/development.md#build) · [GPL-3.0-only](LICENSE)
