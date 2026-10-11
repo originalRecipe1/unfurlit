@@ -1,1 +1,1 @@
-Reduced storage use.
+Uses slightly less storage.

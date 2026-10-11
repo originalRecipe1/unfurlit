@@ -33,12 +33,12 @@ jobs:
         id: release_commit
         env:
           REQUESTED_COMMIT: ${{ inputs.release_commit }}
-          EVENT_COMMIT: ${{ github.sha }}
+          MERGED_PR_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
           EVENT_NAME: ${{ github.event_name }}
         shell: bash
         run: |
           set -euo pipefail
-          commit="$EVENT_COMMIT"
+          commit="$MERGED_PR_COMMIT"
           if [[ "$EVENT_NAME" == 'workflow_dispatch' ]]; then
             commit="$REQUESTED_COMMIT"
           fi

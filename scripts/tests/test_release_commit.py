@@ -17,12 +17,13 @@ def step_script(name):
 
 class ReleaseCommitTest(unittest.TestCase):
     def test_manual_release_uses_tested_commit_even_when_main_has_advanced(self):
-        tested, current = 'a' * 40, 'b' * 40
+        tested = 'a' * 40
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / 'outputs'
             result = subprocess.run(['bash', '-c', step_script('Select the release commit')],
                                     env={**os.environ, 'EVENT_NAME': 'workflow_dispatch',
-                                         'REQUESTED_COMMIT': tested, 'EVENT_COMMIT': current,
+                                         'REQUESTED_COMMIT': tested, 'MERGED_PR_COMMIT': '',
+                                         'GITHUB_SHA': 'c' * 40,
                                          'GITHUB_OUTPUT': str(output)}, capture_output=True, text=True)
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(f'sha={tested}\n', output.read_text())
@@ -33,20 +34,37 @@ class ReleaseCommitTest(unittest.TestCase):
                 with self.subTest(requested=requested):
                     result = subprocess.run(['bash', '-c', step_script('Select the release commit')],
                                             env={**os.environ, 'EVENT_NAME': 'workflow_dispatch',
-                                                 'REQUESTED_COMMIT': requested, 'EVENT_COMMIT': 'b' * 40,
+                                                 'REQUESTED_COMMIT': requested, 'MERGED_PR_COMMIT': '',
+                                                 'GITHUB_SHA': 'c' * 40,
                                                  'GITHUB_OUTPUT': str(Path(directory) / 'outputs')},
                                             capture_output=True)
                     self.assertNotEqual(0, result.returncode)
 
-    def test_automatic_release_uses_event_commit(self):
+    def test_automatic_release_uses_pull_request_merge_commit(self):
+        self.assertIn('MERGED_PR_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}',
+                      WORKFLOW.read_text())
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / 'outputs'
             result = subprocess.run(['bash', '-c', step_script('Select the release commit')],
                                     env={**os.environ, 'EVENT_NAME': 'pull_request',
-                                         'REQUESTED_COMMIT': '', 'EVENT_COMMIT': 'b' * 40,
+                                         'REQUESTED_COMMIT': 'a' * 40, 'MERGED_PR_COMMIT': 'b' * 40,
+                                         'GITHUB_SHA': 'c' * 40,
                                          'GITHUB_OUTPUT': str(output)}, capture_output=True, text=True)
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(f"sha={'b' * 40}\n", output.read_text())
+
+    def test_automatic_release_rejects_missing_or_invalid_merge_commit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for merged_commit in ('', 'main', 'abcdef1'):
+                with self.subTest(merged_commit=merged_commit):
+                    result = subprocess.run(['bash', '-c', step_script('Select the release commit')],
+                                            env={**os.environ, 'EVENT_NAME': 'pull_request',
+                                                 'REQUESTED_COMMIT': 'a' * 40,
+                                                 'MERGED_PR_COMMIT': merged_commit,
+                                                 'GITHUB_SHA': 'c' * 40,
+                                                 'GITHUB_OUTPUT': str(Path(directory) / 'outputs')},
+                                            capture_output=True)
+                    self.assertNotEqual(0, result.returncode)
 
     def test_only_default_branch_history_can_be_released(self):
         with tempfile.TemporaryDirectory() as directory:

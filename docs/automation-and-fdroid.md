@@ -78,8 +78,11 @@ step to work, enable **Settings → Actions → General → Workflow permissions
 Allow GitHub Actions to create and approve pull requests**. The workflow itself
 still requests only `contents: write` and `pull-requests: write`.
 
-After an automation pull request is merged, `release-tag.yml` rebuilds the merged
-commit and creates a GitHub release and `v<versionName>` tag. It can also be run
+After an automation pull request is merged, `release-tag.yml` selects
+`github.event.pull_request.merge_commit_sha` for checkout and the release tag
+target, rebuilds that commit and creates a GitHub release and `v<versionName>`
+tag. **Not verified against a real GitHub event:** the automatic merged-PR path
+has only been checked with local selection tests. It can also be run
 manually to tag a normal app release: enter the full CI- and phone-tested merge
 SHA in `release_commit`. The workflow requires that SHA to be on the default
 branch, checks it out, and uses it as the tag target even if `main` advances.
@@ -131,10 +134,14 @@ branch, pending merge in !47809. The local Unfurlit candidate is
 which targets `1.4.0` at commit `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52`.
 It retains the 1.3.1 build block and adds 1.4.0 / 13 with the same build steps,
 including the six pinned PyPI wheels. Use that file for the released 1.4.0 metadata;
-the [1.4.1 draft](fdroid/1.4.1-draft.yml) adds source preparation and uses no
-gallery-dl wheels in build 14.
-The 1.4.0 candidate has not yet had a new F-Droid build or signed-APK comparison;
-the successful 1.3.1 checks below are historical evidence.
+the [1.4.1 draft](fdroid/1.4.1-draft.yml) uses Gradle's gallery-dl source
+preparation, with no gallery-dl wheels in build 14.
+**Verified on 2026-10-10:** the recipe build of `c2a1b5c` passed with `Binaries`
+and `AllowedAPKSigningKeys` retained. After F-Droid copied the upstream signature,
+the rebuilt APK was byte-identical to the published `v1.4.0` APK; both have SHA-256
+`7bbb9323f4c9acc367b0b987899c60b5e3ec8c4e5857359f6430ab74a13710b2`.
+The source scanner and APK scanners (rebuilt and published APKs) all exited 0.
+The successful 1.3.1 checks below are historical evidence.
 Its `sudo` commands install `git make nodejs npm python3 tar zip` from Debian.
 Its build block uses the current property names:
 

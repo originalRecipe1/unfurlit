@@ -61,8 +61,6 @@ Builds:
       - apt-get install -y git make nodejs npm python3 tar zip
     gradle:
       - yes
-    prebuild:
-      - python3 ../scripts/prepare_gallery_dl_sources.py --output ../build/fdroid-gallery-dl-sources
     build:
       - ../scripts/build_yt_dlp_from_source.sh
       - echo "unfurlit.ytdlp.file=$PWD/../build/yt-dlp-source/yt-dlp" >> ../gradle.properties
