@@ -1,5 +1,33 @@
 # Social-link baseline
 
+## 1.4.1 — 2026-10-10
+
+**Verified: 64/64 fixtures passed — 59/59 media cases and 5/5 expected-error
+checks.** All current fixtures ran once, without filtering, skips or retries.
+No fixture URL or expectation changed. There were **no failures to classify as
+pre-existing or new**, and no extraction regression was observed.
+
+- Base: main `d0ad73b8954dd4fcc118763a4619edeef5113ab3` (#53 source-built
+  gallery-dl and #58 audited runtime trims), with the 1.4.1 / 14 version change.
+  Extraction code and engine pins are unchanged from that main revision.
+- Environment: API 36 / Android 16 x86_64 emulator, anonymous access on the local
+  network, not a GitHub-hosted runner.
+- Build: normal debug APK and `SocialLinksTest`, with production extraction
+  settings; source-built yt-dlp 2026.08.19 / EJS 0.8.0 and gallery-dl 1.32.13.
+  The stdlib is unpacked and bytecode caching follows the production settings.
+- Evidence: [all 64 named outcomes, observations and APK/fixture hashes](measurements/1.4.1-social-links-2026-10-10.json).
+  The test asserts the exact expected outcome, media kinds/counts and any
+  specified soundtrack, through the app's real routes and both engines.
+
+This run verifies **extraction**, including the source-built gallery-dl paths;
+it does not check every item's rendered frames or playback endpoints. The
+1.4.0 baseline below used a separate viewer harness, so its intermittent
+YouTube playback HTTP 403 is neither reproduced nor cleared by this extraction
+pass. **Not verified:** full-fixture playback and physical ARM64 release behavior.
+The [1.4.1 phone record](releases/1.4.1-phone-test.md) leaves those owner results
+blank. Real R8 release upgrade checks are recorded
+[separately](releases/1.4.1-emulator-test.md).
+
 ## 1.4.0 — 2026-10-09
 
 **Verified: 63/64 cases passed; 1 failed.** This release-candidate run includes

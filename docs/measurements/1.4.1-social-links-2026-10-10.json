@@ -1,0 +1,399 @@
+{
+  "date": "2026-10-10",
+  "version": "1.4.1",
+  "api": 36,
+  "abi": "x86_64",
+  "variant": "debug; production extraction settings; source-built engines",
+  "apkSha256": "d2122e3b8cf550a89ba4c206fa371f1e137eead4f4593fb03be6b7aa4c188242",
+  "instrumentationExit": 0,
+  "durationSeconds": 468.1,
+  "cases": [
+    {
+      "fixture": "youtube-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "youtube-video: success: 1 video (Progressive, separate audio), from Youtube in 34.0 s"
+    },
+    {
+      "fixture": "youtube-short-link",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "youtube-short-link: success: 1 video (Progressive, separate audio), from Youtube in 17.8 s"
+    },
+    {
+      "fixture": "youtube-big-buck-bunny",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "youtube-big-buck-bunny: success: 1 video (Progressive, separate audio), from Youtube in 15.8 s"
+    },
+    {
+      "fixture": "youtube-shorts",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "youtube-shorts: success: 1 video (Progressive, separate audio), from Youtube in 18.3 s"
+    },
+    {
+      "fixture": "youtube-shorts-sign-in-fallback",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "youtube-shorts-sign-in-fallback: success: 1 video (Progressive, separate audio), from Youtube in 16.7 s"
+    },
+    {
+      "fixture": "vimeo-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "vimeo-video: success: 1 video (Hls, separate audio), from Vimeo in 7.7 s"
+    },
+    {
+      "fixture": "vimeo-player",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "vimeo-player: success: 1 video (Hls, separate audio), from Vimeo in 6.6 s"
+    },
+    {
+      "fixture": "vimeo-unlisted",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "vimeo-unlisted: success: 1 video (Hls), from Vimeo in 6.1 s"
+    },
+    {
+      "fixture": "tumblr-native-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tumblr-native-video: success: 1 video (Progressive), from Tumblr in 1.8 s"
+    },
+    {
+      "fixture": "reddit-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-video: success: 1 video (Hls/Progressive, separate audio), from Reddit in 9.7 s"
+    },
+    {
+      "fixture": "reddit-native-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-native-video: success: 1 video (Progressive), from Reddit in 9.7 s"
+    },
+    {
+      "fixture": "x-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "x-video: success: 1 video (Hls, separate audio), from Twitter in 6.0 s"
+    },
+    {
+      "fixture": "x-second-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "x-second-video: success: 1 video (Hls), from Twitter in 4.3 s"
+    },
+    {
+      "fixture": "x-animated-gif",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "x-animated-gif: success: 1 video (Progressive), from Twitter in 6.2 s"
+    },
+    {
+      "fixture": "instagram-post",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "instagram-post: success: 3 videos (Progressive), from Instagram in 7.4 s"
+    },
+    {
+      "fixture": "instagram-reel",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "instagram-reel: success: 1 video (Progressive), from Instagram in 6.9 s"
+    },
+    {
+      "fixture": "instagram-video-carousel",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "instagram-video-carousel: success: 2 videos (Progressive), from Instagram in 7.8 s"
+    },
+    {
+      "fixture": "tiktok-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tiktok-video: success: 1 video (Progressive), from TikTok in 4.5 s"
+    },
+    {
+      "fixture": "tiktok-second-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tiktok-second-video: success: 1 video (Progressive), from TikTok in 3.5 s"
+    },
+    {
+      "fixture": "bluesky-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "bluesky-video: success: 1 video (Progressive), from Bluesky in 7.6 s"
+    },
+    {
+      "fixture": "imgur-gifv",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "imgur-gifv: success: 1 video (Progressive), from Imgur in 6.7 s"
+    },
+    {
+      "fixture": "peertube-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "peertube-video: success: 1 video (Hls), from PeerTube in 5.7 s"
+    },
+    {
+      "fixture": "dailymotion-video",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "dailymotion-video: success: 1 video (Hls), from Dailymotion in 7.6 s"
+    },
+    {
+      "fixture": "twitch-clip",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "twitch-clip: success: 1 video (Progressive), from TwitchClips in 4.3 s"
+    },
+    {
+      "fixture": "direct-video-file",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "direct-video-file: success: 1 video (Progressive), from Generic in 3.9 s"
+    },
+    {
+      "fixture": "instagram-photo-carousel",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "instagram-photo-carousel: success: 11 images, from Instagram in 2.8 s"
+    },
+    {
+      "fixture": "instagram-eight-photo-post",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "instagram-eight-photo-post: success: 8 images, from Instagram in 1.1 s"
+    },
+    {
+      "fixture": "instagram-single-photo",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "instagram-single-photo: success: 1 image, from Instagram in 1.3 s"
+    },
+    {
+      "fixture": "tiktok-photos-with-audio",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tiktok-photos-with-audio: success: 3 images, soundtrack, from TikTok in 4.3 s"
+    },
+    {
+      "fixture": "tiktok-photo-link",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tiktok-photo-link: success: 16 images, soundtrack, from TikTok in 0.8 s"
+    },
+    {
+      "fixture": "tiktok-single-photo",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tiktok-single-photo: success: 1 image, soundtrack, from TikTok in 0.8 s"
+    },
+    {
+      "fixture": "reddit-image-post",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-image-post: success: 1 image, from Reddit in 11.7 s"
+    },
+    {
+      "fixture": "reddit-gallery",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-gallery: success: 3 images, from Reddit in 6.6 s"
+    },
+    {
+      "fixture": "reddit-gallery-comments",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-gallery-comments: success: 3 images, from Reddit in 14.3 s"
+    },
+    {
+      "fixture": "reddit-gallery-share",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-gallery-share: success: 4 images, from Reddit in 12.1 s"
+    },
+    {
+      "fixture": "reddit-gallery-short",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-gallery-short: success: 3 images, from Reddit in 15.1 s"
+    },
+    {
+      "fixture": "reddit-external-imgur",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-external-imgur: success: 1 video (Progressive), from Imgur in 10.4 s"
+    },
+    {
+      "fixture": "reddit-external-streamable",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-external-streamable: success: 1 video (Progressive), from Streamable in 7.0 s"
+    },
+    {
+      "fixture": "reddit-direct-image",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-direct-image: success: 1 image, from Reddit in 8.1 s"
+    },
+    {
+      "fixture": "reddit-preview-image",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-preview-image: success: 1 image, from Reddit in 6.1 s"
+    },
+    {
+      "fixture": "reddit-image-link-wrapper",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-image-link-wrapper: success: 1 image, from Reddit in 5.3 s"
+    },
+    {
+      "fixture": "reddit-mirror-post",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "reddit-mirror-post: success: 1 image, from Reddit in 8.6 s"
+    },
+    {
+      "fixture": "x-photo-post",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "x-photo-post: success: 4 images, from X/Twitter in 6.9 s"
+    },
+    {
+      "fixture": "x-mixed-media",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "x-mixed-media: success: 1 video, 1 image (Progressive), from Twitter in 5.4 s"
+    },
+    {
+      "fixture": "bluesky-image",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "bluesky-image: success: 1 image, from Bluesky in 8.9 s"
+    },
+    {
+      "fixture": "imgur-image",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "imgur-image: success: 1 image, from Imgur in 6.1 s"
+    },
+    {
+      "fixture": "imgur-album",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "imgur-album: success: 19 images, from Imgur in 6.3 s"
+    },
+    {
+      "fixture": "flickr-photo",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "flickr-photo: success: 1 image, from Flickr in 13.6 s"
+    },
+    {
+      "fixture": "tumblr-photo-post",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tumblr-photo-post: success: 4 images, from Tumblr in 2.0 s"
+    },
+    {
+      "fixture": "tumblr-mixed-media",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "tumblr-mixed-media: success: 1 video, 1 image (Progressive), from Tumblr in 0.4 s"
+    },
+    {
+      "fixture": "mastodon-photos",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "mastodon-photos: success: 4 images, from Mastodon.social in 9.9 s"
+    },
+    {
+      "fixture": "pixiv-artwork",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "pixiv-artwork: success: 1 image, from Pixiv in 3.6 s"
+    },
+    {
+      "fixture": "pinterest-pin",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "pinterest-pin: success: 1 image, from Pinterest in 6.4 s"
+    },
+    {
+      "fixture": "wikimedia-commons-file",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "wikimedia-commons-file: success: 1 image, from Wikimedia in 3.8 s"
+    },
+    {
+      "fixture": "direct-image-file",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "direct-image-file: success: 1 image, from Generic in 3.6 s"
+    },
+    {
+      "fixture": "soundcloud-track",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "soundcloud-track: success: 1 audio (Hls), from Soundcloud in 12.1 s"
+    },
+    {
+      "fixture": "bandcamp-track",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "bandcamp-track: success: 1 audio (Progressive), from Bandcamp in 10.3 s"
+    },
+    {
+      "fixture": "mixcloud-show",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "mixcloud-show: success: 1 audio (Dash), from Mixcloud in 7.6 s"
+    },
+    {
+      "fixture": "direct-audio-file",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "direct-audio-file: success: 1 audio (Progressive), from Generic in 2.1 s"
+    },
+    {
+      "fixture": "non-media-page",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "non-media-page: UnsupportedUrl in 7.2 s"
+    },
+    {
+      "fixture": "missing-page",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "missing-page: MediaUnavailable in 2.1 s"
+    },
+    {
+      "fixture": "imgur-missing-image",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "imgur-missing-image: MediaUnavailable in 3.8 s"
+    },
+    {
+      "fixture": "invalid-scheme",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "invalid-scheme: UnsupportedUrl in 0.0 s"
+    },
+    {
+      "fixture": "private-address",
+      "statusCode": 0,
+      "passed": true,
+      "observation": "private-address: UnsupportedUrl in 0.0 s"
+    }
+  ],
+  "fixtureSha256": "c4fe16f0202b1b9aa65a95315c4cd706f70e47a3406b13ab633e3dbe5e8a6b3e",
+  "sourceBase": "d0ad73b8954dd4fcc118763a4619edeef5113ab3",
+  "sourceChanges": "1.4.1 versionCode 14 / versionName 1.4.1; extraction code and engine pins unchanged from main"
+}

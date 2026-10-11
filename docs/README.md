@@ -5,6 +5,7 @@
 - [Python runtime storage](python-runtime-storage.md) — retained dependencies, runtime trimming, and before/after measurements.
 - [Social-link baseline](social-link-baseline.md) — dated compatibility and playback checks.
 - [Release automation and F-Droid](automation-and-fdroid.md) — versions, signing, publishing, and the pending submission.
+- [1.4.1 phone test](releases/1.4.1-phone-test.md) — blank owner checklist and merge-commit APK handoff.
 - [Identity and design](design/unfurlit.md) — icons, Material colors, and the transition from Peek.
 - [Home and History navigation](design/history-navigation.md) — gestures and animations.
 
