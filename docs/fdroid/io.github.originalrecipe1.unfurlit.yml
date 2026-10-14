@@ -2,7 +2,8 @@ AntiFeatures:
   NonFreeNet:
     en-US: Connects to third-party social platforms and media CDNs
 Categories:
-  - Internet
+  - Online Media Player
+  - Social Network
 License: GPL-3.0-only
 AuthorName: originalRecipe1
 SourceCode: https://github.com/originalRecipe1/unfurlit
@@ -12,7 +13,7 @@ AutoName: Unfurlit
 
 RepoType: git
 Repo: https://github.com/originalRecipe1/unfurlit.git
-Binaries:
+Binaries: 
   https://github.com/originalRecipe1/unfurlit/releases/download/v%v/Unfurlit-%v.apk
 
 Builds:
