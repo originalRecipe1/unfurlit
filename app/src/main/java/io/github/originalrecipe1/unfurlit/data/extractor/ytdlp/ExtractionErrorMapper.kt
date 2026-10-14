@@ -1,6 +1,7 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 
 import io.github.originalrecipe1.unfurlit.data.network.UnsafeNetworkTargetException
+import io.github.originalrecipe1.unfurlit.domain.model.BlockingPlatform
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import kotlinx.coroutines.TimeoutCancellationException
 import java.io.IOException
@@ -43,12 +44,12 @@ internal fun networkBlock(message: String): ExtractionError.NetworkBlocked? = BL
     ?.let { (_, platform) -> ExtractionError.NetworkBlocked(platform) }
 
 private val BLOCKS = listOf(
-    Regex("""\bsign in to confirm you['’]re not a bot\b""", RegexOption.IGNORE_CASE) to "YouTube",
+    Regex("""\bsign in to confirm you['’]re not a bot\b""", RegexOption.IGNORE_CASE) to BlockingPlatform.YouTube,
     // gallery-dl quotes the text of Reddit's block page.
-    Regex("""\bblocked by network security\b""", RegexOption.IGNORE_CASE) to "Reddit",
+    Regex("""\bblocked by network security\b""", RegexOption.IGNORE_CASE) to BlockingPlatform.Reddit,
     // gallery-dl's HttpError for the same block, which Reddit sends with reason "Blocked".
-    Regex("""'403 blocked' for 'https://(?:[\w-]+\.)*(?:reddit\.com|redd\.it)[/'?]""", RegexOption.IGNORE_CASE) to "Reddit",
+    Regex("""'403 blocked' for 'https://(?:[\w-]+\.)*(?:reddit\.com|redd\.it)[/'?]""", RegexOption.IGNORE_CASE) to BlockingPlatform.Reddit,
     // Pinned yt-dlp (reddit.py) raises this only when anonymous and the .json response
     // isn't JSON, i.e. Reddit served its block page instead.
-    Regex("""\[reddit] [0-9a-z]+: account authentication is required\b""", RegexOption.IGNORE_CASE) to "Reddit",
+    Regex("""\[reddit] [0-9a-z]+: account authentication is required\b""", RegexOption.IGNORE_CASE) to BlockingPlatform.Reddit,
 )

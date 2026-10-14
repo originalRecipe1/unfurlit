@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import io.github.originalrecipe1.unfurlit.domain.model.BlockingPlatform
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.R
 import io.github.originalrecipe1.unfurlit.domain.model.canRetry
@@ -271,8 +272,8 @@ private val ExtractionError.recoveryRes: Int
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
         // YouTube's bot check depends on the IP, so another connection can help; Reddit's block doesn't.
         is ExtractionError.NetworkBlocked -> when (platform) {
-            "Reddit" -> R.string.error_network_blocked_recovery_reddit
-            else -> R.string.error_network_blocked_recovery_network
+            BlockingPlatform.YouTube -> R.string.error_network_blocked_recovery_network
+            BlockingPlatform.Reddit -> R.string.error_network_blocked_recovery_reddit
         }
         ExtractionError.NetworkFailure -> R.string.error_network_failure_recovery
         ExtractionError.Timeout -> R.string.error_timeout_recovery
@@ -282,7 +283,7 @@ private val ExtractionError.recoveryRes: Int
 /** Only the blocked-network strings name the platform; ones that spell it out ignore the argument. */
 @Composable
 private fun ExtractionError.text(@StringRes id: Int): String =
-    if (this is ExtractionError.NetworkBlocked) stringResource(id, platform) else stringResource(id)
+    if (this is ExtractionError.NetworkBlocked) stringResource(id, platform.displayName) else stringResource(id)
 
 @Composable
 private fun IdleContent(

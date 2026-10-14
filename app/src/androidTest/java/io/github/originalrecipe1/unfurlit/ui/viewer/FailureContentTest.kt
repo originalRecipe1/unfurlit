@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import io.github.originalrecipe1.unfurlit.domain.model.BlockingPlatform
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.ui.theme.UnfurlitTheme
 import org.junit.Assert.assertEquals
@@ -46,7 +47,7 @@ class FailureContentTest {
         var retries = 0
         compose.setContent {
             UnfurlitTheme {
-                FailureContent(ExtractionError.NetworkBlocked("Reddit"), { retries++ }, {}, {})
+                FailureContent(ExtractionError.NetworkBlocked(BlockingPlatform.Reddit), { retries++ }, {}, {})
             }
         }
         compose.onNodeWithText("Reddit blocked this request").assertIsDisplayed()
@@ -63,7 +64,7 @@ class FailureContentTest {
         var retries = 0
         compose.setContent {
             UnfurlitTheme {
-                FailureContent(ExtractionError.NetworkBlocked("YouTube"), { retries++ }, {}, {})
+                FailureContent(ExtractionError.NetworkBlocked(BlockingPlatform.YouTube), { retries++ }, {}, {})
             }
         }
         compose.onNodeWithText("YouTube blocked this request").assertIsDisplayed()

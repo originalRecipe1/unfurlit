@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.gallerydl
 
+import io.github.originalrecipe1.unfurlit.domain.model.BlockingPlatform
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
@@ -85,7 +86,7 @@ class GalleryDlJsonParserTest {
 
     @Test
     fun redditNetworkBlocksAreNotSignInFailures() {
-        val reddit = ExtractionError.NetworkBlocked("Reddit")
+        val reddit = ExtractionError.NetworkBlocked(BlockingPlatform.Reddit)
         // Messages from live run 38414484055; its log redacts URLs, so these URLs are examples.
         assertError(reddit, message("AbortExtraction", 0, "\"You've been blocked by network security.\""))
         assertError(reddit, message("HttpError", 403, "'403 Blocked' for 'https://www.reddit.com/r/pics/comments/abc/'"))

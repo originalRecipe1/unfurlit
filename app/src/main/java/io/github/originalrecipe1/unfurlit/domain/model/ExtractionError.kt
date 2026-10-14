@@ -5,10 +5,16 @@ sealed interface ExtractionError {
     data object MediaUnavailable : ExtractionError
     data object AuthenticationRequired : ExtractionError
     /** The platform refused this network (bot check or IP block), not the account or post. */
-    data class NetworkBlocked(val platform: String) : ExtractionError
+    data class NetworkBlocked(val platform: BlockingPlatform) : ExtractionError
     data object NetworkFailure : ExtractionError
     data object Timeout : ExtractionError
     data object ExtractionFailed : ExtractionError
+}
+
+/** Platforms whose network blocks the app recognizes; [displayName] is a brand name, not translated. */
+enum class BlockingPlatform(val displayName: String) {
+    YouTube("YouTube"),
+    Reddit("Reddit"),
 }
 
 class ExtractionException(

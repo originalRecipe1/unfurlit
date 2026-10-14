@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 
+import io.github.originalrecipe1.unfurlit.domain.model.BlockingPlatform
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -53,21 +54,32 @@ class ExtractionErrorMapperTest {
         // Messages from live run 38414484055, plus the ASCII-apostrophe variant.
         val cases = mapOf(
             "ERROR: [youtube] eRsGyueVLvQ: Sign in to confirm you’re not a bot. Use --cookies-from-browser or " +
-                "--cookies for the authentication." to "YouTube",
-            "ERROR: [youtube] eRsGyueVLvQ: Sign in to confirm you're not a bot." to "YouTube",
+                "--cookies for the authentication." to BlockingPlatform.YouTube,
+            "ERROR: [youtube] eRsGyueVLvQ: Sign in to confirm you're not a bot." to BlockingPlatform.YouTube,
             "ERROR: [Reddit] 6rrwyj: Account authentication is required. Use --cookies-from-browser or " +
-                "--cookies for the authentication." to "Reddit",
-            "gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"" to "Reddit",
-            "gallery-dl HttpError 403: '403 Blocked' for 'https://www.reddit.com/r/pics/comments/abc/'" to "Reddit",
+                "--cookies for the authentication." to BlockingPlatform.Reddit,
+            "gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"" to BlockingPlatform.Reddit,
+            "gallery-dl HttpError 403: '403 Blocked' for 'https://www.reddit.com/r/pics/comments/abc/'" to BlockingPlatform.Reddit,
         )
         cases.forEach { (message, platform) ->
             assertEquals(message, ExtractionError.NetworkBlocked(platform), RuntimeException(message).toDomainError())
         }
     }
 
+    @Test fun mapsRedditBlocksFromEitherEngineToReddit() {
+        mapOf(
+            "yt-dlp" to "ERROR: [Reddit] 6rrwyj: Account authentication is required.",
+            // GalleryDlJsonParser's detail text for the same block.
+            "gallery-dl" to "gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+        ).forEach { (engine, message) ->
+            val error = RuntimeException(message).toDomainError()
+            assertEquals(engine, BlockingPlatform.Reddit, (error as? ExtractionError.NetworkBlocked)?.platform)
+        }
+    }
+
     @Test fun findsBlocksBehindWrappersAndIoCauses() {
         val block = IOException("ERROR: [youtube] abc: Sign in to confirm you're not a bot.")
-        assertEquals(ExtractionError.NetworkBlocked("YouTube"),
+        assertEquals(ExtractionError.NetworkBlocked(BlockingPlatform.YouTube),
             RuntimeException("Extraction failed", block).toDomainError())
     }
 
