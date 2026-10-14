@@ -257,6 +257,7 @@ private val ExtractionError.titleRes: Int
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required
+        is ExtractionError.NetworkBlocked -> R.string.error_network_blocked
         ExtractionError.NetworkFailure -> R.string.error_network_failure
         ExtractionError.Timeout -> R.string.error_timeout
         ExtractionError.ExtractionFailed -> R.string.error_extraction_failed
@@ -268,10 +269,16 @@ private val ExtractionError.recoveryRes: Int
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url_recovery
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable_recovery
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
+        is ExtractionError.NetworkBlocked -> R.string.error_network_blocked_recovery
         ExtractionError.NetworkFailure -> R.string.error_network_failure_recovery
         ExtractionError.Timeout -> R.string.error_timeout_recovery
         ExtractionError.ExtractionFailed -> R.string.error_extraction_failed_recovery
     }
+
+/** Only the blocked-network strings name the platform. */
+@Composable
+private fun ExtractionError.text(@StringRes id: Int): String =
+    if (this is ExtractionError.NetworkBlocked) stringResource(id, platform) else stringResource(id)
 
 @Composable
 private fun IdleContent(
@@ -343,13 +350,13 @@ internal fun FailureContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(error.titleRes),
+            text = error.text(error.titleRes),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = stringResource(error.recoveryRes),
+            text = error.text(error.recoveryRes),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,

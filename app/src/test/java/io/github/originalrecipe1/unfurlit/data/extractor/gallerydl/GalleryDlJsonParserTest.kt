@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.json.JSONObject
 import org.junit.Test
 
 class GalleryDlJsonParserTest {
@@ -80,10 +81,25 @@ class GalleryDlJsonParserTest {
         assertError(ExtractionError.ExtractionFailed, error("ChallengeError", 403))
         assertError(ExtractionError.ExtractionFailed, error("KeyError"))
         assertError(ExtractionError.ExtractionFailed, error("AbortExtraction"))
-        assertError(
-            ExtractionError.AuthenticationRequired,
-            """{"error": {"type": "AbortExtraction", "status": 0, "message": "\"You've been blocked by network security.\""}}""",
-        )
+    }
+
+    @Test
+    fun redditNetworkBlocksAreNotSignInFailures() {
+        val reddit = ExtractionError.NetworkBlocked("Reddit")
+        // Messages from live run 38414484055; its log redacts URLs, so these URLs are examples.
+        assertError(reddit, message("AbortExtraction", 0, "\"You've been blocked by network security.\""))
+        assertError(reddit, message("HttpError", 403, "'403 Blocked' for 'https://www.reddit.com/r/pics/comments/abc/'"))
+        assertError(reddit, message("HttpError", 403, "'403 Blocked' for 'https://oauth.reddit.com/api/info'"))
+        // The same reason phrase from an unverified site, and Reddit's other refusals, are unchanged.
+        assertError(ExtractionError.AuthenticationRequired,
+            message("HttpError", 403, "'403 Blocked' for 'https://reddit.com.example/x'"))
+        assertError(ExtractionError.AuthenticationRequired,
+            message("HttpError", 403, "'403 Forbidden' for 'https://www.reddit.com/r/pics/'"))
+        assertError(ExtractionError.AuthenticationRequired, message("AbortExtraction", 0, "Blocked by the firewall"))
+        assertError(ExtractionError.AuthenticationRequired,
+            message("AbortExtraction", 0, "blocked by network securityOther"))
+        assertError(ExtractionError.AuthenticationRequired,
+            message("AuthorizationError", 0, "blocked by network security"))
     }
 
     @Test
@@ -108,6 +124,9 @@ class GalleryDlJsonParserTest {
 
     private fun error(type: String, status: Int = 0) =
         """{"error": {"type": "$type", "status": $status, "message": "details"}}"""
+
+    private fun message(type: String, status: Int, message: String) =
+        JSONObject().put("error", JSONObject().put("type", type).put("status", status).put("message", message)).toString()
 
     private fun assertError(expected: ExtractionError, output: String) {
         try {

@@ -41,4 +41,20 @@ class FailureContentTest {
         compose.onNodeWithText("Try again").performClick()
         compose.runOnIdle { assertEquals(1, retries) }
     }
+
+    @Test fun networkBlockNamesThePlatformAndOffersRetry() {
+        var retries = 0
+        compose.setContent {
+            UnfurlitTheme {
+                FailureContent(ExtractionError.NetworkBlocked("Reddit"), { retries++ }, {}, {})
+            }
+        }
+        compose.onNodeWithText("Reddit blocked this request").assertIsDisplayed()
+        compose.onNodeWithText(
+            "Reddit blocked this request from your network. Try again later or on a different connection.",
+        ).assertIsDisplayed()
+        compose.onNodeWithText("Sign-in may be needed").assertDoesNotExist()
+        compose.onNodeWithText("Try again").performClick()
+        compose.runOnIdle { assertEquals(1, retries) }
+    }
 }
