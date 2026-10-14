@@ -269,13 +269,17 @@ private val ExtractionError.recoveryRes: Int
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url_recovery
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable_recovery
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
-        is ExtractionError.NetworkBlocked -> R.string.error_network_blocked_recovery
+        // YouTube's bot check depends on the IP, so another connection can help; Reddit's block doesn't.
+        is ExtractionError.NetworkBlocked -> when (platform) {
+            "Reddit" -> R.string.error_network_blocked_recovery_reddit
+            else -> R.string.error_network_blocked_recovery_network
+        }
         ExtractionError.NetworkFailure -> R.string.error_network_failure_recovery
         ExtractionError.Timeout -> R.string.error_timeout_recovery
         ExtractionError.ExtractionFailed -> R.string.error_extraction_failed_recovery
     }
 
-/** Only the blocked-network strings name the platform. */
+/** Only the blocked-network strings name the platform; ones that spell it out ignore the argument. */
 @Composable
 private fun ExtractionError.text(@StringRes id: Int): String =
     if (this is ExtractionError.NetworkBlocked) stringResource(id, platform) else stringResource(id)

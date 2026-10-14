@@ -42,7 +42,7 @@ class FailureContentTest {
         compose.runOnIdle { assertEquals(1, retries) }
     }
 
-    @Test fun networkBlockNamesThePlatformAndOffersRetry() {
+    @Test fun redditBlockNamesThePlatformWithoutSuggestingAnotherConnection() {
         var retries = 0
         compose.setContent {
             UnfurlitTheme {
@@ -51,9 +51,25 @@ class FailureContentTest {
         }
         compose.onNodeWithText("Reddit blocked this request").assertIsDisplayed()
         compose.onNodeWithText(
-            "Reddit blocked this request from your network. Try again later or on a different connection.",
+            "Reddit is currently blocking apps that aren’t signed in. Try again later.",
         ).assertIsDisplayed()
+        compose.onNodeWithText("different connection", substring = true).assertDoesNotExist()
         compose.onNodeWithText("Sign-in may be needed").assertDoesNotExist()
+        compose.onNodeWithText("Try again").performClick()
+        compose.runOnIdle { assertEquals(1, retries) }
+    }
+
+    @Test fun youTubeBlockSuggestsAnotherConnection() {
+        var retries = 0
+        compose.setContent {
+            UnfurlitTheme {
+                FailureContent(ExtractionError.NetworkBlocked("YouTube"), { retries++ }, {}, {})
+            }
+        }
+        compose.onNodeWithText("YouTube blocked this request").assertIsDisplayed()
+        compose.onNodeWithText(
+            "YouTube blocked this request from your network. Try again later or on a different connection.",
+        ).assertIsDisplayed()
         compose.onNodeWithText("Try again").performClick()
         compose.runOnIdle { assertEquals(1, retries) }
     }
