@@ -132,8 +132,9 @@ jobs:
           -Punfurlit.ci.x86_64=true
           -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
-      - name: Upload failed UI test reports
-        if: failure()
+      - name: Upload UI test reports
+        # Also on success, so a run shows which tests actually ran.
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: managed-device-test-reports
