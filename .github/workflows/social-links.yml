@@ -12,6 +12,8 @@ on:
 
 permissions:
   contents: read
+  # Download the previous run's classified results to compare BLOCKED cases.
+  actions: read
 
 concurrency:
   group: live-social-links
@@ -119,6 +121,20 @@ jobs:
             -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest \
             "-Pandroid.testInstrumentationRunnerArguments.linkId=$LINK_IDS"
 
+      - name: Fetch the previous run's classified results
+        if: always()
+        # Only feeds a warning; a missing or expired artifact must not fail the run.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow social-links.yml --branch main \
+            --status completed --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+          if [ -n "$previous" ]; then
+            gh run download "$previous" --repo "$GITHUB_REPOSITORY" --name social-link-results \
+              --dir "$RUNNER_TEMP/previous-social-links"
+          fi
+
       - name: Classify results and fail on unexpected problems
         if: always()
         shell: bash
@@ -139,6 +155,7 @@ jobs:
             --test-step-outcome "${{ steps.live_tests.outcome }}" \
             "${retry[@]}" \
             --json-output app/build/reports/social-links/results.json \
+            --previous-json "$RUNNER_TEMP/previous-social-links/reports/social-links/results.json" \
             | tee -a "$GITHUB_STEP_SUMMARY" app/build/reports/social-links/summary.md
 
       - name: Upload per-link test reports

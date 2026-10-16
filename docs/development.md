@@ -435,7 +435,8 @@ After the tests, `scripts/social_links_report.py` writes a Markdown table of eve
 selected case, grouped by media type, to the workflow's job summary. It reports
 **PASS**, **BLOCKED**, **LOCAL-ONLY**, **KNOWN**, and **FAIL** counts separately:
 
-- **BLOCKED** requires `AuthenticationRequired` and the exact upstream message
+- **BLOCKED** requires `NetworkBlocked` (or `AuthenticationRequired`, as builds
+  before that error reported these blocks) and the exact upstream message
   "Sign in to confirm you're not a bot" (including the curly-apostrophe spelling),
   "blocked by network security", "403 Blocked", or
   `[Reddit] <id>: Account authentication is required`. The last pattern requires
@@ -443,6 +444,11 @@ selected case, grouped by media type, to the workflow's job summary. It reports
   `.json` response is not JSON. The phrase alone, or a different extractor prefix,
   does not qualify. "Please sign in" is not a runner-block pattern; it is the
   YouTube regression signature from 1.3.0.
+  Vimeo's "The web client only works when logged-in" is BLOCKED only when an
+  earlier failure log of the same case shows `HTTP Error 401: Unauthorized` for
+  the same video: some runner addresses get 401 from the player route, while the
+  unlisted fixture plays from a residential connection. The app keeps reporting
+  that case as `AuthenticationRequired`, since a 401 alone does not prove a block.
 - **LOCAL-ONLY** applies to `youtube-shorts-sign-in-fallback` only when the report
   runs with `--runner`, as it does in the workflow. Its actual outcome is always
   reported and never fails the runner job, whether it passes or fails. Without
@@ -461,7 +467,9 @@ selected case, grouped by media type, to the workflow's job summary. It reports
 The report determines the job result: unexpected failures, incomplete runs,
 and test-run errors fail the job. The source build is also required to succeed.
 After the full test pass, the workflow selects every completed `NetworkFailure`
-or `Timeout` case for one extra pass. No other
+or `Timeout` case for one extra pass. DNS resolver errors ("No address associated
+with hostname", "Temporary failure in name resolution", "Name or service not
+known") are `NetworkFailure`, so they are retried too. No other
 outcome is retried, and the extra pass never schedules another retry. Raw reports
 from the first pass are preserved before retrying.
 
@@ -479,6 +487,9 @@ to receive that classification.
 Reports, classified JSON, and logcat are uploaded even on failure, including
 the app's redacted extraction messages. Review failures for site changes and
 deleted fixtures before changing an expectation. No cookies or accounts are used.
+The report compares its BLOCKED cases with the latest completed run on `main` and
+adds a warning annotation naming cases that became or stopped being BLOCKED. Only
+cases both runs selected are compared, and the warning never changes the result.
 This checks extraction; playback, seeking and image rendering still need the
 manual viewer checks above.
 

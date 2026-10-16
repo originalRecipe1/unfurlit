@@ -1,6 +1,7 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.gallerydl
 
 import io.github.originalrecipe1.unfurlit.data.extractor.MediaRequestHeaders
+import io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.networkBlock
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
@@ -65,12 +66,17 @@ internal object GalleryDlJsonParser {
 
     private fun JSONObject.toDomainError(): ExtractionError {
         val status = optInt("status", 0)
-        return when (text("type")) {
+        val type = text("type")
+        // Reddit's block page ("blocked by network security") or its '403 Blocked' response.
+        if (type == "AbortExtraction" || type == "HttpError") {
+            text("message")?.let(::networkBlock)?.let { return it }
+        }
+        return when (type) {
             "NoExtractorError" -> ExtractionError.UnsupportedUrl
             "NotFoundError" -> ExtractionError.MediaUnavailable
             "AuthRequired", "AuthorizationError", "AuthenticationError" ->
                 ExtractionError.AuthenticationRequired
-            // e.g. Reddit's "You've been blocked by network security" page.
+            // Unverified block pages from other sites keep the earlier sign-in mapping.
             "AbortExtraction" -> if (text("message")?.contains("blocked", ignoreCase = true) == true) {
                 ExtractionError.AuthenticationRequired
             } else {

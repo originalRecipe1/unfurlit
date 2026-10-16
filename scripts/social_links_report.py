@@ -29,7 +29,7 @@ SUCCESS = "success"
 MEDIA_KINDS = ("video", "image", "audio")
 KEYS = {"id", "url", "expected", "media", "count", "minCount", "soundtrack"}
 ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-ERROR_NAME = re.compile(r"data object (\w+)\s*:\s*ExtractionError")
+ERROR_NAME = re.compile(r"data (?:object|class) (\w+)(?:\([^)]*\))?\s*:\s*ExtractionError")
 EXCEPTION_PREFIX = re.compile(r"^(?:[a-z]\w*\.)+\w*(?:Error|Exception|Failure):\s*")
 # Must match the assertion message in SocialLinksTest.
 MESSAGE = re.compile(
@@ -65,6 +65,14 @@ RUNNER_BLOCK_MESSAGES = (
     # the same authentication phrase from another extractor is not a runner block.
     re.compile(r"\[Reddit\] [0-9a-z]+: Account authentication is required(?!\w)"),
 )
+# Vimeo answers an unlisted video's player config with 401 on some runner addresses
+# (run 38414484055) while the same link plays from a residential connection; the app
+# then reports the page route's login wall. Require both messages for the same video.
+VIMEO_PLAYER_401 = re.compile(r"\[vimeo\] (?P<id>[0-9]+): Unable to download webpage: HTTP Error 401: Unauthorized(?!\w)")
+VIMEO_LOGIN_WALL = re.compile(r"\[vimeo\] (?P<id>[0-9]+): The web client only works when logged-in(?!\w)")
+# The app reports these blocks as NetworkBlocked; runs of earlier builds reported
+# AuthenticationRequired. Either way, the reason must still match a block message.
+BLOCK_OBSERVATIONS = {"NetworkBlocked", "AuthenticationRequired"}
 # "Please sign in" is the 1.3.0 regression signature, not a runner-block pattern.
 # CI reports this case without gating; local runs still check it for that regression.
 LOCAL_ONLY_CASES = {"youtube-shorts-sign-in-fallback"}
@@ -78,6 +86,8 @@ class Outcome:
     seconds: float | None = None
     reason: str | None = None
     initial: Outcome | None = None
+    # Earlier app failure logs of the same case, e.g. a first route before a fallback.
+    diagnostics: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -118,15 +128,26 @@ def classify(case: dict, outcome: Outcome, *, runner: bool = False) -> Classific
     same_expectation = issue is not None and case.get("expected") == SUCCESS and expectation(case) == issue.expected
     if outcome.passed:
         return Classification("PASS", issue.number if same_expectation else None, outcome.initial is not None)
-    # Only a normal expectation assertion can be excused. A timeout/crash with
-    # an authentication message elsewhere in logcat must remain a failure.
-    if (outcome.observed == "AuthenticationRequired" and outcome.problems == "wrong outcome"
-            and outcome.reason and any(message.search(outcome.reason) for message in RUNNER_BLOCK_MESSAGES)):
+    if is_runner_block(outcome):
         return Classification("BLOCKED")
     if (same_expectation and outcome.observed == issue.observed
             and outcome.problems == issue.problems and outcome.reason == issue.reason):
         return Classification("KNOWN", issue.number)
     return Classification("FAIL")
+
+
+def is_runner_block(outcome: Outcome) -> bool:
+    # Only a normal expectation assertion can be excused. A timeout/crash with
+    # an authentication message elsewhere in logcat must remain a failure.
+    if outcome.observed not in BLOCK_OBSERVATIONS or outcome.problems != "wrong outcome" or not outcome.reason:
+        return False
+    if any(message.search(outcome.reason) for message in RUNNER_BLOCK_MESSAGES):
+        return True
+    login = VIMEO_LOGIN_WALL.search(outcome.reason)
+    return login is not None and any(
+        (player := VIMEO_PLAYER_401.search(detail)) is not None and player["id"] == login["id"]
+        for detail in outcome.diagnostics
+    )
 
 
 def complete_outcomes(cases: list[dict], outcomes: dict[str, Outcome]) -> dict[str, Outcome]:
@@ -290,21 +311,22 @@ def read_results(directory: Path) -> dict[str, Outcome]:
     # Cases run one at a time, so the app's last failure log before a case's own line is
     # the reason that case failed.
     for path in sorted(directory.rglob("*.txt")):
-        reason = None
+        details: list[str] = []
         for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
             if diagnostic := DIAGNOSTIC.search(line):
-                reason = diagnostic["detail"]
+                details.append(diagnostic["detail"])
                 continue
             logged = LOG_LINE.search(line)
             if logged and logged["id"] in outcomes:
                 outcome = outcomes[logged["id"]]
                 outcome.observed = logged["observed"]
                 outcome.seconds = float(logged["seconds"])
-                if not outcome.passed and reason:
+                if not outcome.passed and details:
                     # Classify the complete redacted message; truncate only for display.
-                    outcome.reason = reason
+                    outcome.reason = details[-1]
+                    outcome.diagnostics = tuple(details[:-1])
             if logged:
-                reason = None
+                details = []
     return outcomes
 
 
@@ -411,6 +433,22 @@ def render(cases: list[dict], outcomes: dict[str, Outcome], run_problems: list[s
     return "\n".join(lines) + "\n"
 
 
+def blocked_changes(previous: Path, selected: list[dict], outcomes: dict[str, Outcome], *, runner: bool) -> str | None:
+    """Describes how BLOCKED cases differ from a previous run's classified JSON, if they do."""
+    try:
+        before = {case["id"]: case["status"] for case in json.loads(previous.read_text(encoding="utf-8"))["cases"]}
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    complete = complete_outcomes(selected, outcomes)
+    # Only cases both runs selected; a partial run must not look like a change.
+    compared = [case for case in selected if case["id"] in before]
+    now = {case["id"] for case in compared if classify(case, complete[case["id"]], runner=runner).status == "BLOCKED"}
+    was = {case["id"] for case in compared if before[case["id"]] == "BLOCKED"}
+    changes = [f"{label}: {', '.join(sorted(ids))}" for label, ids in
+               (("newly BLOCKED", now - was), ("no longer BLOCKED", was - now)) if ids]
+    return "; ".join(changes) or None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fixture", type=Path, default=FIXTURE)
@@ -428,6 +466,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--retry-step-outcome", choices=("success", "failure", "skipped", "cancelled", ""),
                         help="GitHub outcome of the extra test pass")
     parser.add_argument("--json-output", type=Path, help="Also save classified results as JSON")
+    parser.add_argument("--previous-json", type=Path,
+                        help="Classified JSON of the previous run; warn when the BLOCKED cases differ")
     args = parser.parse_args(argv)
 
     cases = load_cases(args.fixture)
@@ -471,12 +511,18 @@ def main(argv: list[str] | None = None) -> int:
             payload["cases"].append({
                 "id": case["id"], "status": classification.status, "issue": classification.issue,
                 "expected": expectation(case), "observed": outcome.observed, "problems": outcome.problems,
-                "seconds": outcome.seconds, "reason": outcome.reason,
+                "seconds": outcome.seconds, "reason": outcome.reason, "diagnostics": list(outcome.diagnostics),
                 "retried": outcome.initial is not None,
                 "attempts": [attempt_data(attempt) for attempt in (outcome.initial, outcome) if attempt is not None],
             })
         args.json_output.parent.mkdir(parents=True, exist_ok=True)
         args.json_output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if args.previous_json:
+        # A GitHub annotation; on stderr so it stays out of the Markdown summary.
+        if not args.previous_json.is_file():
+            print("::notice title=BLOCKED cases::No previous run results to compare with", file=sys.stderr)
+        elif change := blocked_changes(args.previous_json, selected, outcomes, runner=args.runner):
+            print(f"::warning title=BLOCKED cases changed::{change}", file=sys.stderr)
     sys.stdout.write(render(selected, outcomes, run_problems, runner=args.runner))
     return int(counts["FAIL"] > 0 or bool(run_problems))
 

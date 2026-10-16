@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import io.github.originalrecipe1.unfurlit.domain.model.BlockingPlatform
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.R
 import io.github.originalrecipe1.unfurlit.domain.model.canRetry
@@ -257,6 +258,7 @@ private val ExtractionError.titleRes: Int
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required
+        is ExtractionError.NetworkBlocked -> R.string.error_network_blocked
         ExtractionError.NetworkFailure -> R.string.error_network_failure
         ExtractionError.Timeout -> R.string.error_timeout
         ExtractionError.ExtractionFailed -> R.string.error_extraction_failed
@@ -268,10 +270,20 @@ private val ExtractionError.recoveryRes: Int
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url_recovery
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable_recovery
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
+        // YouTube's bot check depends on the IP, so another connection can help; Reddit's block doesn't.
+        is ExtractionError.NetworkBlocked -> when (platform) {
+            BlockingPlatform.YouTube -> R.string.error_network_blocked_recovery_network
+            BlockingPlatform.Reddit -> R.string.error_network_blocked_recovery_reddit
+        }
         ExtractionError.NetworkFailure -> R.string.error_network_failure_recovery
         ExtractionError.Timeout -> R.string.error_timeout_recovery
         ExtractionError.ExtractionFailed -> R.string.error_extraction_failed_recovery
     }
+
+/** Only the blocked-network strings name the platform; ones that spell it out ignore the argument. */
+@Composable
+private fun ExtractionError.text(@StringRes id: Int): String =
+    if (this is ExtractionError.NetworkBlocked) stringResource(id, platform.displayName) else stringResource(id)
 
 @Composable
 private fun IdleContent(
@@ -343,34 +355,36 @@ internal fun FailureContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(error.titleRes),
+            text = error.text(error.titleRes),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = stringResource(error.recoveryRes),
+            text = error.text(error.recoveryRes),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(24.dp))
+        // Reddit refuses signed-out apps on every network, so the browser is the likelier way in.
+        val openFirst = !error.canRetry || error == ExtractionError.NetworkBlocked(BlockingPlatform.Reddit)
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Button(
-                onClick = if (error.canRetry) onRetry else onOpenOriginal,
+                onClick = if (openFirst) onOpenOriginal else onRetry,
                 modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
             ) {
-                Text(stringResource(if (error.canRetry) R.string.action_try_again else R.string.action_open_link))
+                Text(stringResource(if (openFirst) R.string.action_open_link else R.string.action_try_again))
             }
             if (error.canRetry) {
                 OutlinedButton(
-                    onClick = onOpenOriginal,
+                    onClick = if (openFirst) onRetry else onOpenOriginal,
                     modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
                 ) {
-                    Text(stringResource(R.string.action_open_link))
+                    Text(stringResource(if (openFirst) R.string.action_try_again else R.string.action_open_link))
                 }
             }
             TextButton(

@@ -26,7 +26,7 @@ class FixtureTest(unittest.TestCase):
         self.assertEqual([], report.validate(report.load_cases(), report.error_names()))
 
     def test_error_names_come_from_the_domain_model(self):
-        self.assertTrue({"UnsupportedUrl", "MediaUnavailable", "ExtractionFailed"} <= report.error_names())
+        self.assertTrue({"UnsupportedUrl", "MediaUnavailable", "ExtractionFailed", "NetworkBlocked"} <= report.error_names())
 
     def test_reports_invalid_entries(self):
         cases = [
@@ -131,6 +131,13 @@ class ReportTest(unittest.TestCase):
         self.assertIsNone(outcomes["missing-page"].reason)
         self.assertIn("- `yt-video` (BLOCKED): ERROR: [youtube] abc: Sign in to confirm you're not a bot", markdown)
 
+    def test_keeps_earlier_app_failure_logs_of_a_failed_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            write_reference_run(Path(directory), {"vimeo-unlisted": VIMEO_RUNNER_BLOCK}, {"vimeo-unlisted": VIMEO_LOGCAT})
+            outcome = report.read_results(Path(directory))["vimeo-unlisted"]
+        self.assertEqual(VIMEO_LOGIN_WALL, outcome.reason)
+        self.assertEqual(VIMEO_RUNNER_BLOCK.diagnostics, outcome.diagnostics)
+
     def test_renders_a_table_per_media_group(self):
         _, markdown = self.render()
         self.assertIn("**PASS 2 · BLOCKED 1 · LOCAL-ONLY 0 · KNOWN 0 · FAIL 2**", markdown)
@@ -161,6 +168,41 @@ REDDIT_AUTH_REASON = (
     "Use --cookies-from-browser or --cookies for the authentication. "
     "See <url> for how to manually pass cookies"
 )
+
+
+BLOCKED_REFERENCE_CASES = {
+    "youtube-video": "YouTube", "youtube-short-link": "YouTube", "youtube-big-buck-bunny": "YouTube",
+    "youtube-shorts": "YouTube", "reddit-video": "Reddit", "reddit-native-video": "Reddit",
+    "reddit-gallery-share": "Reddit", "reddit-external-streamable": "Reddit",
+}
+
+# Exact vimeo-unlisted failure logs from run 38414484055: the player route got 401,
+# gallery-dl has no Vimeo extractor, and the page route then hit the login wall.
+GALLERY_DL_NO_EXTRACTOR = "UnsupportedUrl | gallery-dl NoExtractorError 0: None"
+VIMEO_PLAYER_401 = (
+    "ExtractionFailed | ERROR: [vimeo] 392479337: Unable to download webpage: "
+    "HTTP Error 401: Unauthorized (caused by <HTTPError 401: Unauthorized>)"
+)
+VIMEO_LOGIN_WALL = (
+    "AuthenticationRequired | ERROR: [vimeo] 392479337: The web client only works when logged-in. "
+    "Use --cookies, --cookies-from-browser, --username and --password, --netrc-cmd, or --netrc (vimeo) "
+    "to provide account credentials. See <url> for how to manually pass cookies"
+)
+VIMEO_LOGCAT = "".join(
+    f"10-13 14:38:{time}  1711  1870 E YtDlpExtractor: Extraction failed (ExtractionException): {detail}\n"
+    for time, detail in [("50.462", GALLERY_DL_NO_EXTRACTOR), ("50.463", VIMEO_PLAYER_401),
+                         ("54.788", GALLERY_DL_NO_EXTRACTOR), ("54.789", VIMEO_LOGIN_WALL)]
+) + "10-13 14:38:54.789  1711  1870 I SocialLinksTest: vimeo-unlisted: AuthenticationRequired in 8.5 s\n"
+VIMEO_RUNNER_BLOCK = report.Outcome(
+    False, "AuthenticationRequired", "wrong outcome", reason=VIMEO_LOGIN_WALL,
+    diagnostics=(GALLERY_DL_NO_EXTRACTOR, VIMEO_PLAYER_401, GALLERY_DL_NO_EXTRACTOR),
+)
+
+
+def as_network_blocked(outcome, platform):
+    """The same failure as reported by builds with ExtractionError.NetworkBlocked."""
+    reason = outcome.reason.replace("AuthenticationRequired", f"NetworkBlocked(platform={platform})", 1)
+    return replace(outcome, observed="NetworkBlocked", reason=reason)
 
 
 # Test-only exception; the real Pixiv failure must now fail the live gate.
@@ -208,6 +250,41 @@ class ClassifierTest(unittest.TestCase):
         for reason in [original, original.replace("you’re", "you're")]:
             with self.subTest(reason=reason):
                 self.assertEqual("BLOCKED", self.classify("youtube-video", reason=reason).status)
+
+    def test_network_blocked_observations_remain_blocked(self):
+        for name, platform in BLOCKED_REFERENCE_CASES.items():
+            with self.subTest(name=name):
+                outcome = as_network_blocked(REFERENCE_OUTCOMES[name], platform)
+                self.assertTrue(outcome.reason.startswith(f"NetworkBlocked(platform={platform}) | "))
+                self.assertEqual("BLOCKED", report.classify(CASES_BY_ID[name], outcome).status)
+        reddit = as_network_blocked(replace(REFERENCE_OUTCOMES["reddit-video"], reason=REDDIT_AUTH_REASON), "Reddit")
+        self.assertEqual("BLOCKED", report.classify(CASES_BY_ID["reddit-video"], reddit).status)
+
+    def test_network_blocked_still_needs_a_block_message_and_an_expectation_assertion(self):
+        blocked = as_network_blocked(REFERENCE_OUTCOMES["youtube-video"], "YouTube")
+        for changes in [{"reason": None}, {"reason": "NetworkBlocked(platform=YouTube) | Please sign in."},
+                        {"problems": ""}, {"problems": "test timed out"}]:
+            with self.subTest(changes=changes):
+                self.assertEqual("FAIL", report.classify(CASES_BY_ID["youtube-video"], replace(blocked, **changes)).status)
+
+    def test_vimeo_player_401_before_the_login_wall_is_a_runner_block(self):
+        self.assertEqual("BLOCKED", report.classify(CASES_BY_ID["vimeo-unlisted"], VIMEO_RUNNER_BLOCK).status)
+
+    def test_vimeo_login_wall_without_a_player_401_for_the_same_video_still_fails(self):
+        for changes in [
+            {"diagnostics": ()},
+            {"diagnostics": (GALLERY_DL_NO_EXTRACTOR,)},
+            {"diagnostics": (VIMEO_PLAYER_401.replace("392479337", "76979871"),)},
+            {"diagnostics": (VIMEO_PLAYER_401.replace("401: Unauthorized", "403: Forbidden"),)},
+            {"diagnostics": (VIMEO_PLAYER_401.replace("Unauthorized", "UnauthorizedOther"),)},
+            # The login wall must be the final error, not an earlier one.
+            {"reason": VIMEO_PLAYER_401, "diagnostics": (VIMEO_LOGIN_WALL,)},
+            {"observed": "ExtractionFailed"},
+            {"problems": "test timed out after 210000 milliseconds"},
+        ]:
+            with self.subTest(changes=changes):
+                outcome = replace(VIMEO_RUNNER_BLOCK, **changes)
+                self.assertEqual("FAIL", report.classify(CASES_BY_ID["vimeo-unlisted"], outcome).status)
 
     def test_exact_reddit_anonymous_non_json_error_from_run_37477290395(self):
         self.assertEqual("BLOCKED", self.classify("reddit-video", reason=REDDIT_AUTH_REASON).status)
@@ -310,7 +387,7 @@ class ClassifierTest(unittest.TestCase):
         self.assertEqual("BLOCKED", report.classify(CASES_BY_ID["youtube-video"], parsed).status)
 
 
-def write_reference_run(folder, outcomes):
+def write_reference_run(folder, outcomes, logs=None):
     suite = ElementTree.Element("testsuite")
     for name, outcome in outcomes.items():
         case = ElementTree.SubElement(suite, "testcase", {
@@ -327,17 +404,20 @@ def write_reference_run(folder, outcomes):
         if outcome.reason:
             log += f"10-06 13:40:00.000  1714  1736 E YtDlpExtractor: Extraction failed (ExtractionException): {outcome.reason}\n"
         log += f"10-06 13:40:01.000  1714  1736 I SocialLinksTest: {name}: {outcome.observed} in 1.0 s\n"
+        # Captured logcat replaces the generated one.
+        log = (logs or {}).get(name, log)
         (folder / f"logcat-{name}.txt").write_text(log)
     ElementTree.ElementTree(suite).write(folder / "TEST-results.xml", encoding="utf-8")
 
 
 class ReportGateTest(unittest.TestCase):
-    def invoke(self, outcomes, *, selected="", step="failure", runner=False, retries=None, retry_step="success"):
+    def invoke(self, outcomes, *, selected="", step="failure", runner=False, retries=None, retry_step="success",
+               logs=None):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             initial = folder / "initial"
             initial.mkdir()
-            write_reference_run(initial, outcomes)
+            write_reference_run(initial, outcomes, logs)
             retry_args = []
             if retries is not None:
                 retry = folder / "retry"
@@ -363,6 +443,28 @@ class ReportGateTest(unittest.TestCase):
         self.assertIn("**PASS 50 · BLOCKED 8 · LOCAL-ONLY 0 · KNOWN 0 · FAIL 4**", markdown)
         self.assertNotIn("KNOWN (#37)", markdown)
         self.assertEqual("FAIL", next(case for case in data["cases"] if case["id"] == "x-mixed-media")["status"])
+
+    def test_runner_gate_accepts_network_blocked_observations(self):
+        outcomes = {name: as_network_blocked(REFERENCE_OUTCOMES[name], platform)
+                    for name, platform in BLOCKED_REFERENCE_CASES.items()}
+        status, data, markdown = self.invoke(outcomes, selected=",".join(outcomes), runner=True)
+        self.assertEqual(0, status)
+        self.assertEqual({"PASS": 0, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 0}, data["counts"])
+        self.assertEqual({"NetworkBlocked"}, {case["observed"] for case in data["cases"]})
+        self.assertIn("| BLOCKED | [youtube-video]", markdown)
+
+    def test_runner_gate_accepts_the_vimeo_runner_block_from_run_38414484055(self):
+        outcomes = {"vimeo-unlisted": VIMEO_RUNNER_BLOCK}
+        status, data, _ = self.invoke(outcomes, selected="vimeo-unlisted", runner=True,
+                                      logs={"vimeo-unlisted": VIMEO_LOGCAT})
+        self.assertEqual(0, status)
+        self.assertEqual("BLOCKED", data["cases"][0]["status"])
+        self.assertEqual(list(VIMEO_RUNNER_BLOCK.diagnostics), data["cases"][0]["diagnostics"])
+        without_401 = VIMEO_LOGCAT.replace(VIMEO_PLAYER_401, GALLERY_DL_NO_EXTRACTOR)
+        status, data, _ = self.invoke(outcomes, selected="vimeo-unlisted", runner=True,
+                                      logs={"vimeo-unlisted": without_401})
+        self.assertEqual(1, status)
+        self.assertEqual("FAIL", data["cases"][0]["status"])
 
     def test_missing_x_photo_fails_the_runner_gate(self):
         status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected="x-mixed-media", runner=True)
@@ -610,6 +712,67 @@ class ReportGateTest(unittest.TestCase):
         self.assertEqual(1, status)
         self.assertEqual(1, data["counts"]["PASS"])
         self.assertIn("retry step failed without a recorded case failure", data["run_problems"][0])
+
+
+def previous_run(directory, statuses):
+    path = Path(directory) / "previous.json"
+    path.write_text(json.dumps({"cases": [{"id": name, "status": status} for name, status in statuses.items()]}))
+    return path
+
+
+class BlockedChangeTest(unittest.TestCase):
+    BLOCKED = {name: "BLOCKED" for name in BLOCKED_REFERENCE_CASES}
+
+    def changes(self, statuses, outcomes=REFERENCE_OUTCOMES, selected=REFERENCE_CASES):
+        with tempfile.TemporaryDirectory() as directory:
+            return report.blocked_changes(previous_run(directory, statuses), selected, outcomes, runner=True)
+
+    def test_same_blocked_cases_are_not_a_change(self):
+        self.assertIsNone(self.changes(self.BLOCKED | {"x-video": "PASS"}))
+
+    def test_reports_newly_and_no_longer_blocked_cases(self):
+        before = dict(self.BLOCKED, **{"youtube-video": "PASS", "x-video": "BLOCKED"})
+        self.assertEqual("newly BLOCKED: youtube-video; no longer BLOCKED: x-video", self.changes(before))
+
+    def test_only_cases_both_runs_selected_are_compared(self):
+        # The previous run skipped youtube-video; this run did not select x-video.
+        before = {name: status for name, status in self.BLOCKED.items() if name != "youtube-video"}
+        before["unknown-case"] = "BLOCKED"
+        selected = [case for case in REFERENCE_CASES if case["id"] != "x-video"]
+        self.assertIsNone(self.changes(before | {"x-video": "BLOCKED"}, selected=selected))
+
+    def test_unreadable_previous_results_are_ignored(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for content in ["", "[]", "{\"cases\": [{\"status\": \"BLOCKED\"}]}"]:
+                path = Path(directory) / "previous.json"
+                path.write_text(content)
+                self.assertIsNone(report.blocked_changes(path, REFERENCE_CASES, REFERENCE_OUTCOMES, runner=True))
+            self.assertIsNone(report.blocked_changes(Path(directory) / "missing.json", REFERENCE_CASES,
+                                                     REFERENCE_OUTCOMES, runner=True))
+
+    def test_the_report_annotates_on_stderr_without_changing_the_result(self):
+        outcomes = {name: REFERENCE_OUTCOMES[name] for name in BLOCKED_REFERENCE_CASES}
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            write_reference_run(folder, outcomes)
+            fixture = folder / "reference-cases.json"
+            fixture.write_text(json.dumps(REFERENCE_CASES))
+            for statuses, annotation in [
+                (dict(self.BLOCKED, **{"youtube-video": "PASS"}),
+                 "::warning title=BLOCKED cases changed::newly BLOCKED: youtube-video\n"),
+                (self.BLOCKED, ""),
+                (None, "::notice title=BLOCKED cases::No previous run results to compare with\n"),
+            ]:
+                previous = folder / "missing.json" if statuses is None else previous_run(directory, statuses)
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    status = report.main(["--fixture", str(fixture), "--results", str(folder), "--runner",
+                                          "--link-ids", ",".join(outcomes), "--test-step-outcome", "failure",
+                                          "--previous-json", str(previous)])
+                with self.subTest(annotation=annotation):
+                    self.assertEqual(0, status)
+                    self.assertEqual(annotation, stderr.getvalue())
+                    self.assertNotIn("::", stdout.getvalue())
 
 
 class RetrySelectionTest(unittest.TestCase):
