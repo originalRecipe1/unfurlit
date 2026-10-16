@@ -2,9 +2,14 @@ package io.github.originalrecipe1.unfurlit.ui.viewer
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
+import android.os.Build
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.net.toUri
@@ -52,6 +57,9 @@ import androidx.media3.common.util.UnstableApi
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.R
 import io.github.originalrecipe1.unfurlit.domain.model.canRetry
+import io.github.originalrecipe1.unfurlit.intents.LinkHandler
+import io.github.originalrecipe1.unfurlit.intents.OpenLinkTarget
+import io.github.originalrecipe1.unfurlit.intents.OpenLinkTargets
 import io.github.originalrecipe1.unfurlit.ui.components.PredictiveBackSurface
 import io.github.originalrecipe1.unfurlit.ui.components.UnfurlitTopAppBar
 import io.github.originalrecipe1.unfurlit.ui.player.LocalPictureInPicture
@@ -237,19 +245,55 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
-// Unfurlit handles these links itself, so a browser is selected explicitly. The selector
-// only picks the browser app; the VIEW intent it receives still carries the URL.
+// Unfurlit handles these links itself, so the target is picked from the other apps that can
+// open them: the site's own app or a browser.
 private fun Context.openOriginal(url: String) {
-    val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
-        addCategory(Intent.CATEGORY_BROWSABLE)
-        selector = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_BROWSER)
+    val viewIntent = Intent(Intent.ACTION_VIEW, url.toUri()).addCategory(Intent.CATEGORY_BROWSABLE)
+    val target = OpenLinkTargets.select(
+        ownPackage = packageName,
+        defaultHandler = packageManager.defaultLinkHandler(viewIntent)?.activityInfo?.toLinkHandler(),
+        handlers = packageManager.linkHandlers(viewIntent).map { it.activityInfo.toLinkHandler() },
+    )
+    val launchIntent = when (target) {
+        is OpenLinkTarget.Handler -> Intent(viewIntent).setClassName(
+            target.handler.packageName,
+            target.handler.className,
+        )
+        is OpenLinkTarget.Chooser -> Intent.createChooser(viewIntent, null).putExtra(
+            Intent.EXTRA_EXCLUDE_COMPONENTS,
+            target.excluded.map { ComponentName(it.packageName, it.className) }.toTypedArray(),
+        )
+        OpenLinkTarget.None -> null
     }
-    try {
-        startActivity(browserIntent)
+    val opened = launchIntent != null && try {
+        startActivity(launchIntent)
+        true
     } catch (_: ActivityNotFoundException) {
-        Toast.makeText(this, R.string.open_link_failed, Toast.LENGTH_SHORT).show()
+        false
     }
+    if (!opened) Toast.makeText(this, R.string.open_link_failed, Toast.LENGTH_SHORT).show()
 }
+
+private fun ActivityInfo.toLinkHandler() = LinkHandler(packageName, name)
+
+// MATCH_ALL keeps the system from narrowing web-link results down to the preferred app.
+private const val LINK_HANDLER_FLAGS = PackageManager.MATCH_DEFAULT_ONLY or PackageManager.MATCH_ALL
+
+private fun PackageManager.linkHandlers(intent: Intent): List<ResolveInfo> =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(LINK_HANDLER_FLAGS.toLong()))
+    } else {
+        @Suppress("DEPRECATION")
+        queryIntentActivities(intent, LINK_HANDLER_FLAGS)
+    }
+
+private fun PackageManager.defaultLinkHandler(intent: Intent): ResolveInfo? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        resolveActivity(intent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
+    } else {
+        @Suppress("DEPRECATION")
+        resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+    }
 
 @get:StringRes
 private val ExtractionError.titleRes: Int
