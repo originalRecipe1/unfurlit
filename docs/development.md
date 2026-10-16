@@ -26,27 +26,34 @@ Build and run tests:
 With an emulator or device selected through `ANDROID_SERIAL`, run the deterministic
 Compose tests with `./gradlew connectedDebugAndroidTest`. CI runs the same tests
 on an AOSP API 30 Gradle-managed device. Normal debug builds contain only
-`arm64-v8a` native libraries. CI opts into an x86_64 debug APK for its emulator:
+`arm64-v8a` native libraries. CI opts into an x86_64 debug APK for its emulator.
+To run the API 30 managed device locally:
 
 ```bash
-./gradlew pixel2Api30DebugAndroidTest -Punfurlit.ci.x86_64=true
+./gradlew pixel2Api30DebugAndroidTest -Punfurlit.ci.x86_64=true \
+  -Pandroid.testoptions.manageddevices.emulator.gpu=swangle_indirect
 ```
 
-The same option works with `assembleDebug` or `connectedDebugAndroidTest` for
+The x86_64 APK option also works with `assembleDebug` or `connectedDebugAndroidTest` for
 local x86_64 emulator testing. Release APKs always contain only `arm64-v8a`,
 even when this option is set. Live extraction tests run in a separate weekly/manual workflow so
 platform rate limits and datacenter blocking cannot make pull requests flaky.
 
-If the API 36 emulator's software renderer crashes during boot, cold-boot it
-with `-gpu host -feature -Vulkan -no-snapshot`:
+Use `swangle_indirect` for local managed-device runs. On SELinux-enforcing hosts,
+`swiftshader_indirect` can crash when SwiftShader's GLES JIT triggers an
+`execheap` denial in `RenderThread`. Pass the override on the local command line;
+CI keeps its configured renderer.
+
+For a manually started local emulator, select the same renderer at startup:
 
 ```bash
-"$ANDROID_HOME/emulator/emulator" -avd "<avd-name>" -no-window -no-audio -gpu host -feature -Vulkan -no-snapshot
+"$ANDROID_HOME/emulator/emulator" -avd "<avd-name>" -no-window -no-audio -gpu swangle_indirect -no-snapshot
 ANDROID_SERIAL="<emulator-serial>" ./gradlew connectedDebugAndroidTest -Punfurlit.ci.x86_64=true
 ```
 
 Replace the placeholders with the selected AVD name and the serial reported by
-`adb devices`. CI uses its configured software renderer.
+`adb devices`. The Gradle GPU override only controls managed devices; connected
+tests use the renderer selected when the emulator was started.
 
 Release builds use R8 code optimization and resource shrinking, including the
 optimized resource shrinker for AGP 8.13. CI also builds the release APK so
@@ -483,13 +490,23 @@ This checks extraction; playback, seeking and image rendering still need the
 manual viewer checks above.
 
 To rerun selected cases, start the workflow manually with comma-separated case IDs in
-**link_ids**. Against a connected x86_64 emulator:
+**link_ids**. To run all live cases locally on the API 30 managed device:
+
+```bash
+./gradlew pixel2Api30DebugAndroidTest -Punfurlit.ci.x86_64=true \
+  -Pandroid.testoptions.manageddevices.emulator.gpu=swangle_indirect \
+  -Pandroid.testInstrumentationRunnerArguments.liveLinks=true \
+  -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest
+python3 scripts/social_links_report.py --results app/build/outputs/androidTest-results/managedDevice/debug/pixel2Api30
+```
+
+Against a connected x86_64 emulator started with the local renderer above:
 
 ```bash
 ./gradlew connectedDebugAndroidTest -Punfurlit.ci.x86_64=true \
   -Pandroid.testInstrumentationRunnerArguments.liveLinks=true \
   -Pandroid.testInstrumentationRunnerArguments.class=io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest
-python3 scripts/social_links_report.py
+python3 scripts/social_links_report.py --results app/build/outputs/androidTest-results/connected
 ```
 
 When selecting cases with the instrumentation `linkId` argument, pass the same
