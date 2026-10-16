@@ -206,7 +206,7 @@ The recipe was merged on 2026-10-14; auto-update remains disabled.
 ## 32-bit ARM support
 
 A reviewer on !47809 also raised that release builds support only arm64.
-32-bit ARM is deferred beyond the first F-Droid release: reproducible per-ABI
+32-bit ARM remains deferred: reproducible per-ABI
 APKs need matching per-ABI upstream releases and a new `versionCode` scheme.
 The existing ABI filters, release assets, and version-code scheme remain in
-place for the first release.
+place.

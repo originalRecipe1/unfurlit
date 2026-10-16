@@ -278,14 +278,16 @@ starting while offscreen when possible.
 The same list presenter retains existing rows during that load, avoiding a blank
 loading-screen flash. Errors expose Retry without discarding already shown rows. Tests traverse 10,000 synthetic visits in both directions, including
 timestamp ties, and exercise page eviction/reloading, deletion, clear, insertion,
-and reopening History. This bounds metadata work and retention; it is not a claim
-of constant disk use or a measured maximum history capacity.
+and reopening History. These tests exercise paging beyond the production
+retention cap; paging bounds metadata work and in-memory retention.
 
-Each saved thumbnail is at most 48 KiB. Ten thousand thumbnails could therefore
-occupy about 469 MiB before SQLite overhead; actual artwork is often smaller.
-There is no automatic retention limit. SQLite reuses deleted pages, so clearing
-history does not necessarily shrink the database file immediately. Any future
-retention policy should be user-controlled rather than silently deleting visits.
+History keeps the 1,000 most recent visits (`MAX_ENTRIES = 1_000` in
+`SqliteHistoryRepository.kt`). Each `record()` removes older visits, including
+the thumbnail blobs stored in their rows. `HistoryThumbnailLoader` saves at most
+48 KiB per thumbnail, so retained thumbnails total at most 46.875 MiB (about
+47 MiB) before SQLite overhead; actual artwork is often smaller. SQLite reuses
+deleted pages, so clearing history does not necessarily shrink the database
+file immediately.
 
 ## Tests and manual checks
 

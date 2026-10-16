@@ -3,8 +3,7 @@
 ## Reddit signed-out block — 2026-10-14
 
 **Verified observations:** signed-out Reddit access started failing around
-2026-10-13/14 across every tested network (Wi-Fi, mobile data, desktop and GitHub
-runners). yt-dlp reports `Account authentication is required`; gallery-dl's
+2026-10-13/14 across every tested network (Wi-Fi, mobile data and desktop). yt-dlp reports `Account authentication is required`; gallery-dl's
 existing OAuth retry receives HTTP 403. Direct `i.redd.it` and `v.redd.it` media
 links still worked on 2026-10-14; future availability is not guaranteed.
 
