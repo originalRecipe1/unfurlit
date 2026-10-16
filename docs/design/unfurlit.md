@@ -30,17 +30,16 @@ consistent with that source when changing the silhouette.
 
 ## Compatibility
 
-Unfurlit 1.0.0 uses `io.github.originalrecipe1.unfurlit` for both its application
+Since 1.0.0, Unfurlit uses `io.github.originalrecipe1.unfurlit` for both its application
 ID and source namespace. This is a new installation, not an upgrade to
-`org.peek.app`. Old installations and their history remain intact; there is no
+the old Peek app. Old installations and their history remain intact; there is no
 history migration. Its private database is named `unfurlit-history.db`.
 
 The signing identity and extractor build compatibility aliases remain stable.
 The GitHub repository is now `originalRecipe1/unfurlit`. Existing media features
 are retained. Home
 supports animated Home/History paging and predictive Back; see
-[`history-navigation.md`](history-navigation.md). The release remains version
-1.0.0, build 7, since it has not been published.
+[`history-navigation.md`](history-navigation.md).
 
 ## History presentation
 
@@ -65,13 +64,8 @@ The following references intentionally retain the old spelling:
 
 - `peek.ytdlp.*`: aliases accepted for older local build commands; current commands
   use `unfurlit.ytdlp.*`.
-- `org.peek.app`: the existing GitLab submission branch, pending the manual
-  metadata update described below.
+- `org.peek.app`: the historical fdroiddata fork branch name used for submission.
 - Historical release notes, compatibility explanations, and old test observations.
-
-The existing GitLab MR title still needs the user's manual change to
-**New app: Unfurlit**, alongside replacing the old metadata filename with
-`io.github.originalrecipe1.unfurlit.yml` after the signed 1.0.0 release exists.
 
 ## Name research
 
@@ -80,37 +74,3 @@ Google Play, Apple's App Store, F-Droid, GitLab, and Codeberg found no app named
 Unfurlit. GitHub's repository-name search returned zero results. These are
 preliminary discovery results and do not establish exclusive rights or prove
 the absence of unindexed uses.
-
-The earlier [`rebrand-concepts.html`](rebrand-concepts.html) remains an
-exploration board, not a specification of app behavior or a release screenshot.
-
-## Validation on September 12, 2026
-
-- 44 Android unit tests, 5 release-updater tests, and 17 UI instrumentation tests passed; UI tests ran on an
-  Android 16 / API 36 emulator. They cover full navigation, short/diagonal
-  swipes, bidirectional paging, movement before release, retained typed input,
-  button navigation, predictive Back cancellation/completion, and both edges.
-  History tests cover row/remove actions, clear confirmation, empty state,
-  database migration, thumbnail persistence, and deletion during preview loading.
-- Debug APK, test APK, Android lint, and the offline source-extractor release
-  build passed. Lint reports dependency-update notices; the monochrome icon
-  warning has been resolved.
-- The release APK reports `Unfurlit`, version code 7, application ID
-  `io.github.originalrecipe1.unfurlit`. Its embedded extractor matches the locally source-built hash.
-- Light and dark screens were inspected, and changing the emulator's
-  personalized system palette changed the app's accent colors.
-- A live YouTube Big Buck Bunny link played and created a history entry with
-  a locally stored thumbnail. The History layout was checked in light/dark
-  modes and at 150% font size.
-  The four store screenshots show the actual app: light home, playback,
-  history, and dark home. The existing film attribution is retained.
-- With the new application ID, all 17 UI tests and live TikTok playback
-  passed on the emulator. A preview build installed and launched on a physical
-  ARM64 phone, but its initial media request timed out before extraction;
-  playback under this ID was not confirmed.
-- The prepared F-Droid recipe passed `fdroid lint` and `fdroid rewritemeta`
-  using official F-Droid category/anti-feature definitions. Full F-Droid source
-  scanning and signed-binary reproducibility verification await the new release.
-
-The rebrand is prepared for review. No 1.0.0 release has been published and the
-live F-Droid submission still references v5.

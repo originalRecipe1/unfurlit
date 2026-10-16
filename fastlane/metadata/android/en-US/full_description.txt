@@ -11,10 +11,14 @@ with notification and lock-screen controls.
 Supported links and media:
 
 - YouTube: videos and Shorts.
+- Vimeo: videos, including unlisted links with an access hash.
 - Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
 - TikTok: videos and photo posts, including available photo soundtracks.
 - Reddit and X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
+- Bandcamp: audio tracks.
+- Tumblr: native videos, photos and mixed photo/video posts.
+- Pixiv: public illustrations and multi-page artwork (no Ugoira animations).
 - Imgur, Bluesky, Flickr and many other sites: photos and galleries.
 
 Other sites may work too; audio and galleries depend on the source. Availability

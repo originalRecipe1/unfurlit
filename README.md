@@ -46,16 +46,17 @@ open; signing in is not available.
 
 ## Site compatibility
 
-On **2026-10-09**, the full local API 36 emulator run of the **1.4.0 release
-candidate** passed **63/64 cases**, including 5 expected-error checks. X mixed
-video/photo posts, Tumblr photos and videos, and public Pixiv artwork passed.
-The only failure was an intermittent YouTube playback HTTP 403; the same APK
-passed a separate retry. The first-pass count remains 63/64.
+On **2026-10-10**, **1.4.1 passed 64/64 extraction fixtures**, including five
+expected-error checks. This emulator run checks extraction, not full playback
+of every fixture. The **1.4.1 release-build phone test passed on a Pixel 7 /
+Android 17**, including the required links and History thumbnails after restart.
+See the [extraction baseline](docs/social-link-baseline.md#141--2026-10-10)
+and [phone record](docs/releases/1.4.1-phone-test.md) for scope and limitations.
 
-These checks used the debug-based link-check harness for extraction, image
-rendering and short playback samples. Testing the optimized release APK on a
-physical phone is still pending. See the
-[dated results, failure triage and per-case outcomes](docs/social-link-baseline.md#140--2026-10-09)
-for the environment and limits. Availability can change.
+**Reddit — 2026-10-14:** Reddit currently blocks signed-out apps. Current development
+builds show a Reddit-specific message with **Open link** for blocked posts.
+Direct `i.redd.it` and `v.redd.it` media links still opened in observations on
+2026-10-14; this is not a guarantee of continued availability. See the
+[dated Reddit note](docs/social-link-baseline.md#reddit-signed-out-block--2026-10-14).
 
 [Report a bug](https://github.com/originalRecipe1/unfurlit/issues) · [Build from source](docs/development.md#build) · [GPL-3.0-only](LICENSE)

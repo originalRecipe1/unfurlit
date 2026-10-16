@@ -148,7 +148,7 @@ source_sha="$(sha256sum "$source_file" | awk '{print $1}')"
 This path performs no extractor download during Gradle execution. Gradle verifies
 the supplied archive's checksum and embedded version before packaging it.
 Targeted YouTube extraction checks passed on the API 30 emulator with the
-source-built engine; physical-phone playback still needs confirmation.
+source-built engine; YouTube also passed the [1.4.1 release phone test](releases/1.4.1-phone-test.md).
 
 The source build includes yt-dlp's required JavaScript challenge solver from the
 pinned `third_party/yt-dlp-ejs` source, using its npm lockfile. `npm ci` needs
@@ -160,8 +160,8 @@ downloading the upstream EJS wheel. PR CI builds a debug APK with the official
 asset, then verifies APK builds using the source-built extractor;
 the update workflow also compares its solver scripts byte for byte with the
 checksum-verified official release. Run `python3 scripts/update_yt_dlp_notices.py`
-after changing these pins; CI checks that the notices match. The 1.3.1 F-Droid recipe builds EJS from source; see
-[the validation and remaining review work](automation-and-fdroid.md#f-droid-auto-update-configuration).
+after changing these pins; CI checks that the notices match. The current F-Droid recipe builds EJS from source; see
+[the validation and publication status](automation-and-fdroid.md#f-droid-auto-update-configuration).
 
 YouTube requests also include the public embedded player client alongside yt-dlp's defaults, because
 some public Shorts ask the default clients to sign in while remaining embeddable.
@@ -245,7 +245,8 @@ loads `old.reddit.com` for the anonymous session cookie that Reddit's JSON pages
 expect (as yt-dlp does); if Reddit still answers with its network-security block
 page, it retries once through Reddit's OAuth API with gallery-dl's own client ID. Its pure Python logic is tested
 by `scripts/tests/test_gallery_dl_entry.py`; `PythonRuntimeTest` also runs it on
-the device runtime without network access.
+the device runtime without network access. Both Reddit steps are currently blocked
+for signed-out clients; see the [2026-10-14 baseline note](social-link-baseline.md#reddit-signed-out-block--2026-10-14).
 
 Before the first extraction in each app process, Unfurlit verifies the app-private
 extractor copy against the bundled checksum and atomically refreshes it when it
@@ -312,11 +313,16 @@ reusable checklist into a release-specific test record under
 [`docs/releases/`](releases/) and record the APK revision, test date and outcomes there.
 
 - On a fresh release-build install, perform one extraction and record user data
-  excluding cache and app size. Compare with the owner-reported 1.4.0 release
-  baseline of **45.29 MB user data / 37.94 MB app size** after use; record the
+  excluding cache and app size. Compare with the owner-reported [1.4.1 release
+  baseline](releases/1.4.1-phone-test.md) of **44.76 MB user data excluding cache /
+  36.75 MB app size** after one extraction; record the
   workload difference as well as the phone, Android version and APK hash.
-- Update from the **1.4.0 release** without clearing data, extract a link to trigger
+- Update from the **previous release** without clearing data, extract a link to trigger
   runtime replacement, and confirm that saved History entries and thumbnails remain.
+- Open a Reddit post and confirm the Reddit block message appears; **Open link**
+  must open the Reddit app or browser rather than show a toast.
+- On a non-Reddit extraction failure, confirm **Open link** opens the default
+  app or an app chooser.
 - Open `x-mixed-media` and confirm that both the video and the photo appear.
 - Open `x-video` and confirm that it does not feel slower compared with the
   previous release.
@@ -389,8 +395,6 @@ signing, source builds, and publishing.
 
 The application is licensed under [GPL-3.0-only](../LICENSE). Keep the
 [third-party notices](../THIRD_PARTY_NOTICES.md) current when changing dependencies.
-
-[All documentation](README.md)
 
 ## Social-link regression pipeline
 
@@ -622,3 +626,5 @@ frame archives remain unsupported; their still preview is never reported as the
 artwork. No cookies or credentials are sent. The `pixiv-artwork` fixture retains
 its one-image expectation; a return to the refresh-token error now fails the live
 report instead of being classified KNOWN (#39).
+
+[All documentation](README.md)
