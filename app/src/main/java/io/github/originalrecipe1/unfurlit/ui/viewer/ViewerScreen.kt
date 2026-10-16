@@ -270,6 +270,9 @@ private fun Context.openOriginal(url: String) {
         true
     } catch (_: ActivityNotFoundException) {
         false
+    } catch (_: SecurityException) {
+        // A handler can be listed yet guarded by a permission Unfurlit doesn't hold.
+        false
     }
     if (!opened) Toast.makeText(this, R.string.open_link_failed, Toast.LENGTH_SHORT).show()
 }
