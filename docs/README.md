@@ -5,6 +5,9 @@
 - [Python runtime storage](python-runtime-storage.md) — retained dependencies, runtime trimming, and before/after measurements.
 - [Social-link baseline](social-link-baseline.md) — dated compatibility and playback checks.
 - [Release automation and F-Droid](automation-and-fdroid.md) — versions, signing, the merged F-Droid recipe, and publication status.
+- [1.4.2 phone test](releases/1.4.2-phone-test.md) — blank release-candidate checklist and merge-commit handoff gate.
+- [1.4.2 emulator upgrade test](releases/1.4.2-emulator-test.md) — release update and History/thumbnail retention on API 30/36.
+- [1.4.2 F-Droid draft](fdroid/1.4.2-draft.md) — recipe and prerelease validation status.
 - [1.4.1 phone test](releases/1.4.1-phone-test.md) — owner results recorded, PASS, and merge-commit APK handoff.
 - [1.4.1 emulator upgrade test](releases/1.4.1-emulator-test.md) — release upgrade, History and runtime replacement on API 30/36.
 - [F-Droid 1.4.1 validation](fdroid/validation-1.4.1.md) — reproducibility and scanner results.

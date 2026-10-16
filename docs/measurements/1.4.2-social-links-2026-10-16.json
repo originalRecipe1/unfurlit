@@ -1,0 +1,1391 @@
+{
+  "runner": false,
+  "counts": {
+    "PASS": 54,
+    "BLOCKED": 10,
+    "LOCAL-ONLY": 0,
+    "KNOWN": 0,
+    "FAIL": 0
+  },
+  "retries": {
+    "retried": 0,
+    "passed": 0
+  },
+  "run_problems": [],
+  "cases": [
+    {
+      "id": "youtube-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+      "problems": "",
+      "seconds": 20.6,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+          "problems": "",
+          "seconds": 20.6,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "youtube-short-link",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+      "problems": "",
+      "seconds": 18.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+          "problems": "",
+          "seconds": 18.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "youtube-big-buck-bunny",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+      "problems": "",
+      "seconds": 22.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+          "problems": "",
+          "seconds": 22.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "youtube-shorts",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+      "problems": "",
+      "seconds": 26.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+          "problems": "",
+          "seconds": 26.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "youtube-shorts-sign-in-fallback",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+      "problems": "",
+      "seconds": 25.7,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive, separate audio), from Youtube",
+          "problems": "",
+          "seconds": 25.7,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "vimeo-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Hls, separate audio), from Vimeo",
+      "problems": "",
+      "seconds": 11.2,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Hls, separate audio), from Vimeo",
+          "problems": "",
+          "seconds": 11.2,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "vimeo-player",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Hls, separate audio), from Vimeo",
+      "problems": "",
+      "seconds": 6.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Hls, separate audio), from Vimeo",
+          "problems": "",
+          "seconds": 6.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "vimeo-unlisted",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Hls), from Vimeo",
+      "problems": "",
+      "seconds": 8.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Hls), from Vimeo",
+          "problems": "",
+          "seconds": 8.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tumblr-native-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from Tumblr",
+      "problems": "",
+      "seconds": 0.7,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from Tumblr",
+          "problems": "",
+          "seconds": 0.7,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "reddit-video",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 17.2,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 17.2,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-native-video",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 13.4,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 13.4,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "x-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Hls, separate audio), from Twitter",
+      "problems": "",
+      "seconds": 4.2,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Hls, separate audio), from Twitter",
+          "problems": "",
+          "seconds": 4.2,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "x-second-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Hls), from Twitter",
+      "problems": "",
+      "seconds": 4.5,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Hls), from Twitter",
+          "problems": "",
+          "seconds": 4.5,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "x-animated-gif",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from Twitter",
+      "problems": "",
+      "seconds": 4.1,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from Twitter",
+          "problems": "",
+          "seconds": 4.1,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "instagram-post",
+      "status": "PASS",
+      "issue": null,
+      "expected": "3 videos",
+      "observed": "success: 3 videos (Progressive), from Instagram",
+      "problems": "",
+      "seconds": 6.5,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 3 videos (Progressive), from Instagram",
+          "problems": "",
+          "seconds": 6.5,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "instagram-reel",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from Instagram",
+      "problems": "",
+      "seconds": 4.7,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from Instagram",
+          "problems": "",
+          "seconds": 4.7,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "instagram-video-carousel",
+      "status": "PASS",
+      "issue": null,
+      "expected": "2 videos",
+      "observed": "success: 2 videos (Progressive), from Instagram",
+      "problems": "",
+      "seconds": 7.3,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 2 videos (Progressive), from Instagram",
+          "problems": "",
+          "seconds": 7.3,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tiktok-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from TikTok",
+      "problems": "",
+      "seconds": 4.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from TikTok",
+          "problems": "",
+          "seconds": 4.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tiktok-second-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from TikTok",
+      "problems": "",
+      "seconds": 4.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from TikTok",
+          "problems": "",
+          "seconds": 4.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "bluesky-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from Bluesky",
+      "problems": "",
+      "seconds": 4.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from Bluesky",
+          "problems": "",
+          "seconds": 4.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "imgur-gifv",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from Imgur",
+      "problems": "",
+      "seconds": 8.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from Imgur",
+          "problems": "",
+          "seconds": 8.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "peertube-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Hls), from PeerTube",
+      "problems": "",
+      "seconds": 7.3,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Hls), from PeerTube",
+          "problems": "",
+          "seconds": 7.3,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "dailymotion-video",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Hls), from Dailymotion",
+      "problems": "",
+      "seconds": 5.9,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Hls), from Dailymotion",
+          "problems": "",
+          "seconds": 5.9,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "twitch-clip",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from TwitchClips",
+      "problems": "",
+      "seconds": 4.3,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from TwitchClips",
+          "problems": "",
+          "seconds": 4.3,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "direct-video-file",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "success: 1 video (Progressive), from Generic",
+      "problems": "",
+      "seconds": 6.6,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video (Progressive), from Generic",
+          "problems": "",
+          "seconds": 6.6,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "instagram-photo-carousel",
+      "status": "PASS",
+      "issue": null,
+      "expected": "11 images",
+      "observed": "success: 11 images, from Instagram",
+      "problems": "",
+      "seconds": 3.2,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 11 images, from Instagram",
+          "problems": "",
+          "seconds": 3.2,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "instagram-eight-photo-post",
+      "status": "PASS",
+      "issue": null,
+      "expected": "8 images",
+      "observed": "success: 8 images, from Instagram",
+      "problems": "",
+      "seconds": 1.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 8 images, from Instagram",
+          "problems": "",
+          "seconds": 1.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "instagram-single-photo",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Instagram",
+      "problems": "",
+      "seconds": 1.9,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Instagram",
+          "problems": "",
+          "seconds": 1.9,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tiktok-photos-with-audio",
+      "status": "PASS",
+      "issue": null,
+      "expected": "3 images, with soundtrack",
+      "observed": "success: 3 images, soundtrack, from TikTok",
+      "problems": "",
+      "seconds": 2.8,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 3 images, soundtrack, from TikTok",
+          "problems": "",
+          "seconds": 2.8,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tiktok-photo-link",
+      "status": "PASS",
+      "issue": null,
+      "expected": "16 images, with soundtrack",
+      "observed": "success: 16 images, soundtrack, from TikTok",
+      "problems": "",
+      "seconds": 0.8,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 16 images, soundtrack, from TikTok",
+          "problems": "",
+          "seconds": 0.8,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tiktok-single-photo",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, soundtrack, from TikTok",
+      "problems": "",
+      "seconds": 0.8,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, soundtrack, from TikTok",
+          "problems": "",
+          "seconds": 0.8,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "reddit-image-post",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 18.2,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 18.2,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-gallery",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "3 images",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 8.9,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 8.9,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-gallery-comments",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "3 images",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 18.0,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 18.0,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-gallery-share",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "4 images",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 16.7,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 16.7,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-gallery-short",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "3 images",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 19.1,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 19.1,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-external-imgur",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 16.8,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 16.8,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-external-streamable",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "1 video",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 15.6,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 15.6,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "reddit-direct-image",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 9.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Reddit",
+          "problems": "",
+          "seconds": 9.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "reddit-preview-image",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 7.7,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Reddit",
+          "problems": "",
+          "seconds": 7.7,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "reddit-image-link-wrapper",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 7.2,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Reddit",
+          "problems": "",
+          "seconds": 7.2,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "reddit-mirror-post",
+      "status": "BLOCKED",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "NetworkBlocked",
+      "problems": "wrong outcome",
+      "seconds": 14.3,
+      "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
+      "diagnostics": [
+        "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+      ],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": false,
+          "observed": "NetworkBlocked",
+          "problems": "wrong outcome",
+          "seconds": 14.3,
+          "reason": "NetworkBlocked(platform=Reddit) | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+        }
+      ]
+    },
+    {
+      "id": "x-photo-post",
+      "status": "PASS",
+      "issue": null,
+      "expected": "4 images",
+      "observed": "success: 4 images, from X/Twitter",
+      "problems": "",
+      "seconds": 4.1,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 4 images, from X/Twitter",
+          "problems": "",
+          "seconds": 4.1,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "x-mixed-media",
+      "status": "PASS",
+      "issue": null,
+      "expected": "2 video+image",
+      "observed": "success: 1 video, 1 image (Progressive), from Twitter",
+      "problems": "",
+      "seconds": 6.1,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video, 1 image (Progressive), from Twitter",
+          "problems": "",
+          "seconds": 6.1,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "bluesky-image",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Bluesky",
+      "problems": "",
+      "seconds": 8.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Bluesky",
+          "problems": "",
+          "seconds": 8.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "imgur-image",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Imgur",
+      "problems": "",
+      "seconds": 5.3,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Imgur",
+          "problems": "",
+          "seconds": 5.3,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "imgur-album",
+      "status": "PASS",
+      "issue": null,
+      "expected": "19 images",
+      "observed": "success: 19 images, from Imgur",
+      "problems": "",
+      "seconds": 4.1,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 19 images, from Imgur",
+          "problems": "",
+          "seconds": 4.1,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "flickr-photo",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Flickr",
+      "problems": "",
+      "seconds": 12.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Flickr",
+          "problems": "",
+          "seconds": 12.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tumblr-photo-post",
+      "status": "PASS",
+      "issue": null,
+      "expected": "4 images",
+      "observed": "success: 4 images, from Tumblr",
+      "problems": "",
+      "seconds": 1.6,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 4 images, from Tumblr",
+          "problems": "",
+          "seconds": 1.6,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "tumblr-mixed-media",
+      "status": "PASS",
+      "issue": null,
+      "expected": "2 video+image",
+      "observed": "success: 1 video, 1 image (Progressive), from Tumblr",
+      "problems": "",
+      "seconds": 0.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 video, 1 image (Progressive), from Tumblr",
+          "problems": "",
+          "seconds": 0.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "mastodon-photos",
+      "status": "PASS",
+      "issue": null,
+      "expected": "4 images",
+      "observed": "success: 4 images, from Mastodon.social",
+      "problems": "",
+      "seconds": 9.3,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 4 images, from Mastodon.social",
+          "problems": "",
+          "seconds": 9.3,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "pixiv-artwork",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Pixiv",
+      "problems": "",
+      "seconds": 4.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Pixiv",
+          "problems": "",
+          "seconds": 4.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "pinterest-pin",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Pinterest",
+      "problems": "",
+      "seconds": 8.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Pinterest",
+          "problems": "",
+          "seconds": 8.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "wikimedia-commons-file",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Wikimedia",
+      "problems": "",
+      "seconds": 4.3,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Wikimedia",
+          "problems": "",
+          "seconds": 4.3,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "direct-image-file",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 image",
+      "observed": "success: 1 image, from Generic",
+      "problems": "",
+      "seconds": 4.1,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 image, from Generic",
+          "problems": "",
+          "seconds": 4.1,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "soundcloud-track",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 audio",
+      "observed": "success: 1 audio (Hls), from Soundcloud",
+      "problems": "",
+      "seconds": 11.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 audio (Hls), from Soundcloud",
+          "problems": "",
+          "seconds": 11.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "bandcamp-track",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 audio",
+      "observed": "success: 1 audio (Progressive), from Bandcamp",
+      "problems": "",
+      "seconds": 16.8,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 audio (Progressive), from Bandcamp",
+          "problems": "",
+          "seconds": 16.8,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "mixcloud-show",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 audio",
+      "observed": "success: 1 audio (Dash), from Mixcloud",
+      "problems": "",
+      "seconds": 9.5,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 audio (Dash), from Mixcloud",
+          "problems": "",
+          "seconds": 9.5,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "direct-audio-file",
+      "status": "PASS",
+      "issue": null,
+      "expected": "1 audio",
+      "observed": "success: 1 audio (Progressive), from Generic",
+      "problems": "",
+      "seconds": 1.7,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "success: 1 audio (Progressive), from Generic",
+          "problems": "",
+          "seconds": 1.7,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "non-media-page",
+      "status": "PASS",
+      "issue": null,
+      "expected": "UnsupportedUrl",
+      "observed": "UnsupportedUrl",
+      "problems": "",
+      "seconds": 7.7,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "UnsupportedUrl",
+          "problems": "",
+          "seconds": 7.7,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "missing-page",
+      "status": "PASS",
+      "issue": null,
+      "expected": "MediaUnavailable",
+      "observed": "MediaUnavailable",
+      "problems": "",
+      "seconds": 2.1,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "MediaUnavailable",
+          "problems": "",
+          "seconds": 2.1,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "imgur-missing-image",
+      "status": "PASS",
+      "issue": null,
+      "expected": "MediaUnavailable",
+      "observed": "MediaUnavailable",
+      "problems": "",
+      "seconds": 3.4,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "MediaUnavailable",
+          "problems": "",
+          "seconds": 3.4,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "invalid-scheme",
+      "status": "PASS",
+      "issue": null,
+      "expected": "UnsupportedUrl",
+      "observed": "UnsupportedUrl",
+      "problems": "",
+      "seconds": 0.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "UnsupportedUrl",
+          "problems": "",
+          "seconds": 0.0,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "private-address",
+      "status": "PASS",
+      "issue": null,
+      "expected": "UnsupportedUrl",
+      "observed": "UnsupportedUrl",
+      "problems": "",
+      "seconds": 0.0,
+      "reason": null,
+      "diagnostics": [],
+      "retried": false,
+      "attempts": [
+        {
+          "passed": true,
+          "observed": "UnsupportedUrl",
+          "problems": "",
+          "seconds": 0.0,
+          "reason": null
+        }
+      ]
+    }
+  ],
+  "date": "2026-10-16",
+  "version": "1.4.2",
+  "versionCode": 15,
+  "sourceRevision": "f9d66ab5ea0e24016891acdac1abe5396c86ff05",
+  "api": 30,
+  "abi": "x86_64",
+  "variant": "debug; source-built engines; production extraction settings",
+  "renderer": "swangle_indirect",
+  "gradleExit": 1,
+  "reportExit": 0,
+  "apkSha256": "b3ef283e47d11963b8c69bf13b724194129d3bfde58743aad9293c4c35cd4b02",
+  "fixtureSha256": "c4fe16f0202b1b9aa65a95315c4cd706f70e47a3406b13ab633e3dbe5e8a6b3e"
+}

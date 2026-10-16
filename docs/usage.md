@@ -76,8 +76,8 @@ Android 17**, including the required links and History thumbnails after restart.
 See the [extraction baseline](social-link-baseline.md#141--2026-10-10)
 and [phone record](releases/1.4.1-phone-test.md) for scope and limitations.
 
-**Reddit — 2026-10-14:** Reddit currently blocks signed-out apps. Current development
-builds show a Reddit-specific message with **Open link** for blocked posts.
+**Reddit — 2026-10-14:** Reddit currently blocks signed-out apps.
+1.4.2 and later show a Reddit-specific message with **Open link** for blocked posts.
 Direct `i.redd.it` and `v.redd.it` media links still opened in observations on
 2026-10-14; this is not a guarantee of continued availability. See the
 [dated Reddit note](social-link-baseline.md#reddit-signed-out-block--2026-10-14).

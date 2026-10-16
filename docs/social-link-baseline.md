@@ -1,5 +1,42 @@
 # Social-link baseline
 
+## 1.4.2 — 2026-10-16
+
+**Verified: all 64 fixtures completed — 54 PASS, 10 BLOCKED, 0 unexpected
+FAIL, 0 skips and 0 retries.** Blocked posts are not extraction passes.
+The run used API 30 / Android 11 x86_64 with `swangle_indirect`, a debug APK,
+source-built yt-dlp/EJS and gallery-dl, and production extraction settings.
+Candidate revision: `f9d66ab5ea0e24016891acdac1abe5396c86ff05` (1.4.2 / 15).
+The fixture and engine pins are unchanged from 1.4.1.
+
+The strict JUnit/Gradle run exited 1 for the ten Reddit posts; the existing
+classification script exited 0 with no incomplete or unexpected results.
+The blocked fixture IDs are identical to the earlier API 30 run at `1abc71f`
+on 2026-10-16. Their upstream messages match the
+[documented signed-out block](#reddit-signed-out-block--2026-10-14), which began
+after the 1.4.1 extraction baseline. No new extraction failure was observed.
+
+| Fixture | Classification | Evidence from this run |
+| --- | --- | --- |
+| `reddit-video` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-native-video` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-image-post` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery-comments` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery-share` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery-short` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-external-imgur` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-external-streamable` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-mirror-post` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+
+[All 64 outcomes and diagnostic reasons](measurements/1.4.2-social-links-2026-10-16.json)
+are recorded without local device identifiers. Direct Reddit media cases that
+passed are listed separately in that evidence; they do not establish that Reddit
+post extraction works. This sweep verifies extraction, not full-fixture playback.
+**Not verified:** the 1.4.2 physical-phone release checks; the
+[phone record](releases/1.4.2-phone-test.md) remains blank until the merged CI APK
+is tested by the owner.
+
 ## Reddit signed-out block — 2026-10-14
 
 **Verified observations:** signed-out Reddit access started failing around
@@ -12,8 +49,7 @@ Reddit-specific message with **Open link** as the primary button.
 [PR #64](https://github.com/originalRecipe1/unfurlit/pull/64) made that action
 use the default handler, or a chooser excluding Unfurlit. These are changes
 after the 1.4.1 release, not behavior verified by its earlier phone test.
-This note adds no full-suite run counts; the next full 64-link run belongs
-to the 1.4.2 release PR.
+The subsequent full 64-link run is recorded in the [1.4.2 section](#142--2026-10-16).
 
 ## 1.4.1 — 2026-10-10
 
