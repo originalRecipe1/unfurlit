@@ -59,7 +59,7 @@
     <string name="error_authentication_required_recovery">This site may require sign-in or restrict access to this post. Open the original in your browser to check.</string>
     <string name="error_network_blocked">%1$s blocked this request</string>
     <string name="error_network_blocked_recovery_network">%1$s blocked this request from your network. Try again later or on a different connection.</string>
-    <string name="error_network_blocked_recovery_reddit">Reddit is currently blocking apps that aren’t signed in. Try again later.</string>
+    <string name="error_network_blocked_recovery_reddit">Reddit is currently blocking apps that aren’t signed in. Use Open link to view it on Reddit, or try again later.</string>
     <string name="error_network_failure">Couldn’t reach this site</string>
     <string name="error_network_failure_recovery">Check your connection and try again. The site may also be temporarily unavailable.</string>
     <string name="error_timeout">This took too long</string>
