@@ -5,7 +5,7 @@ Issue [#54](https://github.com/originalRecipe1/unfurlit/issues/54), measured on
 **Decision: keep only the audited removals.** The stdlib stays unpacked and
 Python writes bytecode caches normally. The owner rejected the approximately
 one-second startup penalty of the zipped stdlib. Engine pins and app version
-remain unchanged; PR #58 targets the next release.
+were unchanged by PR #58; its trims shipped in 1.4.1.
 
 ## Runtime layout and updates
 
@@ -195,4 +195,5 @@ reports all nanosecond samples and engine/runtime hashes.
 [startup samples](measurements/python-runtime-trims-startup-2026-10-10.json), and
 [partial-ZIP estimate and cache inventory](measurements/python-runtime-partial-estimate-2026-10-10.json)
 contain no local emulator names, device serials or host-specific paths. The canonical
-F-Droid recipe remains pinned to published 1.4.0; this work does not change that release.
+F-Droid recipe now targets published 1.4.1, including these trims; see the
+[merged recipe and official build status](automation-and-fdroid.md#f-droid-submission-and-publication).

@@ -17,15 +17,20 @@ An in-content left swipe opens it; a right swipe returns. Pager position drives 
 and shadow treatment, so the pages move during the drag. The existing History
 and Back buttons animate between the same pages.
 
-From History, predictive Back moves History to the right to reveal Home on the
-left, matching the in-content return swipe regardless of the invoked system
-edge. Cancellation restores History. Navigation state changes
-after a page settles, rather than halfway through a drag or back preview.
+From History, predictive Back uses a cross-activity-style scale and fade, with
+a dimmed return screen underneath, vertical finger tracking and a spring-driven
+completion. It responds to either system edge; cancellation restores History.
+Button and in-content navigation retain the pager slide. Navigation state
+changes after the page settles or Back completes, not halfway through a preview.
 
 Home remains composed to retain typed input and scroll position. The viewer
 is removed when fully offscreen to release playback. Opening History from the
 viewer returns to that viewer; root paging into History is disabled on the
 viewer so image, gallery, and player gestures retain their existing behavior.
+
+History prepares its list at the top once fully hidden; cancelled Back gestures
+and updates during a visit retain its position. Rows load through Paging 3 and
+local thumbnails load on demand; see [History storage](../development.md#history-pagination-and-storage).
 
 The transition uses the app's current Material colors and Compose animation
 primitives. It adds no dependencies and uses the existing AndroidX versions.

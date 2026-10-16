@@ -5,7 +5,7 @@ engine changes frequently. Supported releases should use the newest app version
 available from the project or F-Droid.
 
 Please report vulnerabilities privately through GitHub's **Security → Report a
-vulnerability** flow once the repository is public. Do not include cookies,
+vulnerability** flow. Do not include cookies,
 authorization headers, private URLs, or account credentials in public issues.
 
 Ordinary site breakage is not a security vulnerability and can be reported in a

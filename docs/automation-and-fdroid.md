@@ -23,37 +23,30 @@ changing the major or minor version. Git tags use `v1.0.0`, APK assets use
 Local side-by-side builds append `-preview`; this is not part of the release tag.
 
 The extractor updater increments only the patch and build code and creates
-release notes for that build. Its tests run in Android CI. Review the F-Droid
-submission candidate separately before advancing it to a new app release.
+release notes for that build. Its tests run in Android CI. Submit the corresponding F-Droid
+metadata update separately after publishing a new app release.
 
-## Unfurlit rebrand submission
+## F-Droid submission and publication
 
-The [F-Droid merge request !47809](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/47809)
-proposes `metadata/io.github.originalrecipe1.unfurlit.yml` from the `org.peek.app`
-branch of the `originalRecipe1/fdroiddata` fork. `org.peek.app` is the retained
-branch name; the proposed metadata has not been merged into official `fdroiddata`.
+[MR !47809](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/47809) was
+merged by linsui on 2026-10-14 as squash commit `aed2ca8f`. The official
+[build log](https://monitor.f-droid.org/builds/log/io.github.originalrecipe1.unfurlit/14)
+records a successful 1.4.1 build on 2026-10-16 and
+`compared built binary to supplied reference binary successfully`.
+The package page returned HTTP 404 when checked on 2026-10-16; index publication
+is not yet verified.
 
-The local candidate is [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
-It targets Unfurlit `1.4.1`, version code 14, pinned to tag `v1.4.1` at commit
-`c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2`. This is the canonical local recipe;
-the earlier draft files have been retired. The metadata and
-[paste-ready MR text](fdroid/1.4.1-mr-comment.txt) have not been posted to GitLab.
-The gallery-dl source build from PR #53 and runtime trims from PR #58 are included
-in this release; issues #40 and #54 are closed.
-The candidate retains the `Unfurlit-%v.apk` release filename. Its application ID is
-`io.github.originalrecipe1.unfurlit`, and its repository and release URLs point to
-`originalRecipe1/unfurlit`. The signing certificate, extractor version, and
-source-build properties are retained.
+The [canonical recipe](fdroid/io.github.originalrecipe1.unfurlit.yml) is a
+byte-identical copy of official fdroiddata metadata as checked on 2026-10-16.
+It contains one build: 1.4.1 / 14 at
+`c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2`, and only the
+`Online Media Player` category. `org.peek.app` was the historical submission
+branch name in the fdroiddata fork. The release includes gallery-dl built from
+source (#53) and audited runtime trims (#58). See the
+[local 1.4.1 validation record](fdroid/validation-1.4.1.md).
 
-Published-release validation is recorded for [1.4.1](fdroid/validation-1.4.1.md).
-Earlier local validation is recorded for [1.0.0](fdroid/validation-1.0.0.md)
-and [1.0.1](fdroid/validation-1.0.1.md). The historical 1.3.1 comparison and
-remaining dependency-review questions are recorded below.
-Official F-Droid acceptance and publication are still pending.
-
-Store title, description, icon, and screenshots are imported from the release's
-`fastlane/metadata/android/en-US` directory. Changing only `AutoName` would not
-replace the old APK branding or its screenshots. See F-Droid's
+Store title, description, icon and screenshots come from the release's
+`fastlane/metadata/android/en-US` directory. See F-Droid's
 [metadata reference](https://f-droid.org/docs/Build_Metadata_Reference/) and
 [graphics documentation](https://f-droid.org/docs/All_About_Descriptions_Graphics_and_Screenshots/).
 
@@ -101,9 +94,8 @@ the source extractor into the APKs it verifies. Both solver files must match the
 checksum-verified official asset byte for byte, in normal Android CI as well as
 the updater workflow. Normal development builds use the
 official prebuilt yt-dlp asset. A human merge is the
-gate between an upstream extractor update and an app release. The local F-Droid
-candidate installs Debian Node.js and npm for the same build script; reviewer
-acceptance of its build dependencies is still pending.
+gate between an upstream extractor update and an app release. The merged F-Droid
+recipe installs Debian Node.js and npm for the same build script.
 
 ### Signed and reproducible GitHub APKs
 
@@ -133,184 +125,60 @@ byte-for-byte match for a tagged release.
 
 ## F-Droid auto-update configuration
 
-Official F-Droid metadata does not live in this repository. The proposed file is
-`metadata/io.github.originalrecipe1.unfurlit.yml` on the fork's `org.peek.app`
-branch, pending merge in !47809. The local Unfurlit candidate is
-[`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml),
-which targets `1.4.1` / 14 at commit
-`c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2`. It retains the historical 1.3.1 and
-1.4.0 blocks, including their original wheel-based behavior. Build 14 uses the
-source submodules and Gradle's gallery-dl preparation task; no gallery-dl or
-dependency wheels are used in that build. `Binaries`, `AllowedAPKSigningKeys`
-and `AutoUpdateMode: None` remain set.
+Official metadata lives in fdroiddata; this repository keeps a matching copy in
+[`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
+`AutoUpdateMode: None` means each new version needs a new fdroiddata merge
+request. Switching to `AutoUpdateMode: Version` is a possible future fdroiddata
+change, not a change already made. F-Droid controls its own build and publication
+queue; GitHub Actions cannot publish directly into its index.
 
-The [1.4.1 validation record](fdroid/validation-1.4.1.md) records the published
-APK comparison, exact canonical recipe, scanner exit codes and signature-copy
-result. The source build includes the recipe's unmodified `sudo` setup steps.
-**Verified on 2026-10-12:** the full build, source scanner and standalone APK
-scanners for the rebuilt and published APKs all exited 0. The unsigned rebuild
-matches the merge-commit CI artifact byte for byte. After signature copying,
-the complete rebuilt APK matches the published `v1.4.1` APK byte for byte;
-both have SHA-256
-`6b18c80ff099b4af9b21e21bb5ab8bd4e770a82b9033677161fbbe3f538ba8c9`.
-Diffoscope exited 0.
+The recipe retains `Binaries` and `AllowedAPKSigningKeys`. Build 14 uses source
+submodules and Gradle's gallery-dl preparation task, without gallery-dl wheels.
+**Verified locally on 2026-10-12:** the full build, source scanner and standalone
+APK scanners exited 0. The unsigned rebuild matched merge-commit CI byte for byte;
+after signature copying it matched the published v1.4.1 APK. Diffoscope exited 0.
+See the [complete validation record](fdroid/validation-1.4.1.md).
+The official build reproduced the published binary on 2026-10-16, as linked above.
 
-**Verified on 2026-10-10:** the recipe build of `c2a1b5c` passed with `Binaries`
-and `AllowedAPKSigningKeys` retained. After F-Droid copied the upstream signature,
-the rebuilt APK was byte-identical to the published `v1.4.0` APK; both have SHA-256
+### Historical validations
+
+Peek v5 at `737f6d09667fd774742933c6dbe792dc12fd22e8` passed metadata lint,
+source scanning, offline and empty-Gradle-cache builds on 2026-09-04.
+Its F-Droid rebuild matched the signed upstream APK and accepted the allowlisted
+certificate. SDK 36 supplemented the older platform in that validation image.
+
+The 1.4.0 recipe at `c2a1b5cacf4cf4e58e7eee3b14147d910d142b52` reproduced the
+published APK after signature copy on 2026-10-10; source and APK scanners exited 0.
+The signed APK SHA-256 was
 `7bbb9323f4c9acc367b0b987899c60b5e3ec8c4e5857359f6430ab74a13710b2`.
-The source scanner and APK scanners (rebuilt and published APKs) all exited 0.
-The successful 1.3.1 checks below are historical evidence.
-Its `sudo` commands install `git make nodejs npm python3 tar zip` from Debian.
-Its build block uses the current property names:
-
-```yaml
-build:
-  - ../scripts/build_yt_dlp_from_source.sh
-  - echo "unfurlit.ytdlp.file=$PWD/../build/yt-dlp-source/yt-dlp" >> ../gradle.properties
-  - echo "unfurlit.ytdlp.sha256=$(sha256sum ../build/yt-dlp-source/yt-dlp | awk '{print $1}')" >> ../gradle.properties
-```
-
-The previous Peek v5 recipe, pinned to
-`737f6d09667fd774742933c6dbe792dc12fd22e8`, was normalized and linted successfully
-in the official `fdroiddata` configuration with the `fdroidserver` container on
-2026-09-04. That source scan reported zero problems, and its offline build
-produced the expected unsigned APK with an embedded yt-dlp hash matching the
-source-built file. A second build starting with an empty Gradle cache confirmed
-that the declared repositories resolve the complete dependency graph; Android
-SDK 36 was mounted because the standalone image only bundled an older platform.
-The public `v0.1.0-experiment.5` tag resolves to the exact commit pinned above.
-For version code 5, `fdroid build` downloaded the developer-signed GitHub APK,
-successfully compared it with the F-Droid source rebuild, and accepted the
-allowlisted signing-certificate fingerprint shown in the metadata.
-Repeat these checks if the recipe changes before submission.
-
-Store text, the app icon, and phone screenshots are maintained in the upstream
-`fastlane/metadata/android/en-US` directory. F-Droid imports those assets from
-the tagged app source rather than from `fdroiddata`.
-
-Auto-update remains disabled locally with `AutoUpdateMode: None`. The original
-1.3.0 build block had no Node.js or npm and could not build releases containing
-the EJS solver. The current candidate retains 1.3.1's installation steps,
-but EJS and gallery-dl dependency acceptance is still unresolved.
-Restore `AutoUpdateMode: Version`
-only after reviewers accept the build approaches, the candidate targets the
-appropriate release tag, and it passes F-Droid validation (lint, scanner,
-offline build, an empty-cache build, and the signed release comparison).
-F-Droid can then update
-its build metadata from release tags and queue new builds. Publication is
-asynchronous and remains controlled by F-Droid.
-
-The earlier 1.3.0 candidate on !47809 lacked `yt_dlp_ejs` and had the YouTube
-regression fixed in 1.3.1. Playback checks are recorded separately in the
-[social-link baseline](social-link-baseline.md).
+These older build blocks are not in the merged recipe.
 
 ### EJS dependency choice and 1.3.1 validation
 
-Use `@rollup/wasm-node` 4.52.5 in the copied build tree. It avoids Rollup's
-platform-specific native packages and produces the official solver bytes under
-both Node.js 22 and Debian Node.js 20.19.2 / npm 9.2.0. The package's exact
-SHA-512 integrity is pinned in `scripts/prepare_ejs_wasm.py`. The script changes
-the copied manifest and lockfile only, retaining every unrelated dependency pin.
-A direct npm dependency alias is used because npm 9.2.0 rejects the equivalent
-`overrides` entry with `Invalid comparator`. `npm ci --omit=optional
---ignore-scripts --no-audit --no-fund` omits optional native dependencies and
-does not run install scripts. The optional macOS `fsevents` entry remains in the
-lockfile but is not installed.
+EJS uses integrity-pinned `@rollup/wasm-node` 4.52.5 in a copied build tree,
+leaving submodules unchanged. The WASM build dependency is not packaged in the
+APK. The 2026-10-05 source scan passed, but a separate installed-dependency scan
+reported that WASM file; the source scan precedes npm dependency downloads.
+This historical distinction remains relevant when auditing build dependencies.
 
-WASM is still a **prebuilt build dependency**. Its file is
-`node_modules/rollup/dist/wasm-node/bindings_wasm_bg.wasm`; it is not included in
-the APK. This choice is proposed for review, not presented as scanner approval.
-The Debian-only Rollup route is not viable with the upstream configuration:
-`astring` and `meriyah` are not packaged, and replacing plugins would no longer
-use the configuration whose byte identity has been verified.
-
-On 2026-10-05, the candidate was tested in
-`registry.gitlab.com/fdroid/fdroidserver:buildserver-trixie`, the image specified
-by [fdroiddata's CI](https://github.com/f-droid/fdroiddata/blob/9aa94c3af32e3470915da2267f1f12e3931dc230/.gitlab-ci.yml#L349).
-The pulled image digest was
-`sha256:9cb68105642ca4e7b295f0ceab10f069f5b3247dc18fa7c36046e9d81aa469a8`.
-Validation used fdroidserver commit `c21c177ff6d813697aaf9c988ca9fbb2b571b468`,
-the matching fdroiddata configuration, Debian Node.js 20.19.2 / npm 9.2.0,
-Java 21, and Android SDK 36.
-
-- **Verified:** `fdroid lint` passed, and the candidate's source scan reported
-  `0 problems found`.
-- **Verified:** a separate scan of the installed EJS dependency tree reported
-  `ERROR: Found WebAssembly binary file at node_modules/rollup/dist/wasm-node/bindings_wasm_bg.wasm`
-  and `1 problems found`. The normal source scan runs before the build script
-  downloads npm dependencies, so its zero count does not resolve this finding.
-- **Verified:** `fdroid build --verbose --test --on-server --no-tarball
-  io.github.originalrecipe1.unfurlit:12` built the unsigned APK from `f206f5f`
-  using the candidate's exact build steps. Diffoscope 297 returned exit 0 against
-  the unsigned APK from [CI run 37355691393](https://github.com/originalRecipe1/unfurlit/actions/runs/37355691393)
-  at that same commit. Both entire APKs have SHA-256
-  `4594cd0ce23ba3a6112a63f7ed5d8a5606f3d0ea43c78d1e899983d56b436d7e`.
-- **Verified after publication on 2026-10-05:** the recipe was re-pinned to the
-  `v1.3.1` tag at `c76c789` and the same `fdroid build` command exited 0. It
-  downloaded the published APK, successfully verified the rebuilt APK using
-  the upstream signature, and accepted the allowlisted signing certificate.
-  This resolves the pre-publication `Binaries` HTTP 404. The unsigned rebuild
-  SHA-256 is `07f3f08d749cb0915f6a0206c4955de9f4ada87ae96aba1d8cca167d6793ba72`;
-  the published signed APK SHA-256 is
-  `185d020bd664ffbe7c062c6e37f6970bb4747dc134dd0ad1ba5edb8566cc7ef4`.
-- **Not verified:** a network-isolated offline build of this candidate and
-  F-Droid dependency acceptance remain outstanding. Successful reproducibility
-  does not resolve the scanner's prebuilt-dependency findings.
-
-The full source-built yt-dlp hash is
-`1d641a354c1f2cca803ad8c6d841f5ab65ffcd0eb99ce6b358fc08c7d309ae86`
-in both the Node.js 22 build and the Debian build. The solver hashes match the
-official yt-dlp 2026.08.19 release:
-
-- `core.min.js`: `18da6ce0758b416e7ae645084f4f8801f9f9d59d6c477c05eaa0ff94ebd8cc00`
-- `lib.min.js`: `c55987fe697e5b9ee18830163f7af85327e9bb5c3e674b969d38c8d205eaa577`
-
-The local-file Gradle path never downloads the release asset and
-rejects checksum or version mismatches. The youtubedl-android runtime is resolved
-from Maven Central, a trusted Maven repository; it contains the native Python and
-QuickJS runtimes documented in `THIRD_PARTY_NOTICES.md`.
-
-Merge request !47809 originally proposed Peek v5. The prepared local update now
-targets Unfurlit 1.4.1 at `c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2`; the
-canonical metadata and final MR text have not been posted. The source-build work in
-[issue #40](https://github.com/originalRecipe1/unfurlit/issues/40) is complete;
-F-Droid reviewer acceptance remains pending.
-The completed local gallery-dl source build and reproducibility checks do not
-update the merge request automatically.
-Official F-Droid acceptance and publication remain pending. GitHub Actions cannot
-publish directly into the official repository; F-Droid detects tags and controls
-its own build and signing queue.
+At `f206f5f`, the unsigned APK matched CI (diffoscope exit 0); the published
+1.3.1 at `c76c789` subsequently passed signature-copy comparison and signer
+allowlisting. Solver bytes matched the official yt-dlp 2026.08.19 release under
+Node.js 22 and Debian Node.js 20.19.2 / npm 9.2.0. A network-isolated 1.3.1
+build was not verified. Validation used fdroidserver
+`c21c177ff6d813697aaf9c988ca9fbb2b571b468` and
+`registry.gitlab.com/fdroid/fdroidserver:buildserver-trixie`, image digest
+`sha256:9cb68105642ca4e7b295f0ceab10f069f5b3247dc18fa7c36046e9d81aa469a8`,
+with Java 21 and Android SDK 36. These are historical local identifiers, not
+claims about the official 2026-10-16 server configuration.
 
 ## gallery-dl image engine and F-Droid
 
-Releases 1.3.0 through 1.4.0 bundle the gallery-dl image engine, which
-`preparePinnedGalleryDl` assembled from six pinned, pure-Python PyPI wheels
-(gallery-dl and the requests stack). A reviewer on !47809 raised that these
-wheels are downloaded during Gradle's `preBuild`, outside the F-Droid scanner.
-The historical 1.4.0 block retains that build from 1.3.1. On 2026-10-05, all 428 `.py`
-files in the six hash-verified wheels were compared byte for byte against the
-matching upstream tags and hash-verified PyPI source distributions:
-
-| Package | Version | Upstream tag | `.py` files | Tag differences | Sdist differences |
-| --- | --- | --- | ---: | --- | --- |
-| gallery-dl | 1.32.13 | `v1.32.13` | 346 | None | None |
-| requests | 2.34.2 | `v2.34.2` | 19 | None | None |
-| urllib3 | 2.8.0 | `2.8.0` | 36 | Generated `urllib3/_version.py` is absent from the tag | None |
-| idna | 3.20 | `v3.20` | 10 | None | None |
-| certifi | 2026.7.22 | `2026.07.22` | 5 | None | None |
-| charset_normalizer | 3.5.1 | `3.5.1` | 12 | None | None |
-
-**Verified:** every wheel `.py` file matches its sdist, including urllib3's
-generated version file; there are no other missing or differing package `.py`
-files. `certifi/cacert.pem` also matches both the tag and sdist. All six wheels
-are pure Python and contain no native or WASM libraries. The chosen
-charset_normalizer wheel uses its Python files, without the optional compiled
-extensions or source `.pyx`/`.pxd` files.
-
-**Not verified:** reviewer acceptance of downloading these wheels outside the
-scanner for the historical builds. The source build below is included in
-released 1.4.1 and its canonical F-Droid recipe.
+Releases 1.3.0 through 1.4.0 assembled gallery-dl and its requests stack from
+six pinned pure-Python wheels. On 2026-10-05 all 428 `.py` files matched their
+source distributions; upstream tags also matched except for urllib3's generated
+version file. The CA bundle matched too. The merged 1.4.1 recipe supersedes this
+wheel-based build with pinned sources.
 
 For 1.4.1, `preparePinnedGalleryDl` now assembles the same package files from
 six release-tag submodules. It copies LICENSE/NOTICE files from source, preserves
@@ -324,9 +192,8 @@ six plus yt-dlp and EJS) at their gitlink commits. Python 3 is already in its
 sudo dependencies. The canonical 1.4.1 recipe has no wheel URLs, downloads or
 local-wheel override. Gradle's `preparePinnedGalleryDl` task runs
 `prepare_gallery_dl_sources.py` and consumes the staged files itself, so no
-separate F-Droid `prebuild` staging step is needed. The recipe retains the
-historical 1.4.0 block at its original commit and adds 1.4.1 at the published
-merge commit.
+separate F-Droid `prebuild` staging step is needed. The recipe contains only
+1.4.1 at the published merge commit.
 
 **Verified locally on 2026-10-09:** all 442 package and license files match the
 six pinned wheels byte for byte, including all 428 `.py` files and the CA bundle.
@@ -334,12 +201,12 @@ An intentionally changed `requests/__init__.py` in a scratch archive fails the
 comparison. CI enforces this through `scripts/check_gallery_dl.py`; the wheel
 references are verification inputs only. The [development guide](development.md)
 documents the explicit tag updater; no scheduled gallery-dl update job was added.
-F-Droid acceptance is still a review decision, and auto-update remains disabled.
+The recipe was merged on 2026-10-14; auto-update remains disabled.
 
 ## 32-bit ARM support
 
 A reviewer on !47809 also raised that release builds support only arm64.
-32-bit ARM is deferred beyond the first F-Droid release: reproducible per-ABI
+32-bit ARM remains deferred: reproducible per-ABI
 APKs need matching per-ABI upstream releases and a new `versionCode` scheme.
 The existing ABI filters, release assets, and version-code scheme remain in
-place for the first release.
+place.

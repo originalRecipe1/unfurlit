@@ -1,7 +1,7 @@
 # Unfurlit 1.4.1 F-Droid validation
 
 **VERIFIED locally on 2026-10-12 against the published release.** The build used
-the exact [canonical recipe](io.github.originalrecipe1.unfurlit.yml), with
+the then-canonical recipe (hash recorded below), with
 `Binaries`, `AllowedAPKSigningKeys`, all three historical/current build blocks
 and the recipe's `sudo` commands retained. No release source or binary was changed.
 
@@ -12,7 +12,7 @@ and the recipe's `sudo` commands retained. No release source or binary was chang
 | Tag / full commit | `v1.4.1` / `c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2` |
 | Release | [Unfurlit 1.4.1](https://github.com/originalRecipe1/unfurlit/releases/tag/v1.4.1) |
 | Android CI artifact | [Run #38123985638](https://github.com/originalRecipe1/unfurlit/actions/runs/38123985638), `unfurlit-unsigned-release-apk` |
-| Canonical recipe SHA-256 | `f1bd7d942db63a55669213ca21ffc05b2cd2f9f31209a2cfc6ab0a002c5a6989` |
+| Recipe SHA-256 tested on 2026-10-12 | `f1bd7d942db63a55669213ca21ffc05b2cd2f9f31209a2cfc6ab0a002c5a6989` |
 | Unsigned F-Droid rebuild / CI APK SHA-256 | `2c14e108e003d6a14c38dfd4099276d9f264b47aeae7625eed17426cce8ba7de` |
 | Published / signature-copied APK SHA-256 | `6b18c80ff099b4af9b21e21bb5ab8bd4e770a82b9033677161fbbe3f538ba8c9` |
 | Signing certificate SHA-256 | `3528e91676bde711bf40c70bce363f7c76a554ae9de91f221635b6e975400a3c` |
@@ -92,15 +92,23 @@ generated urllib3 version file. No separate F-Droid `prebuild`, gallery-dl wheel
 pip installation or Python build backend is used. Python's stdlib remains
 unpacked; the release includes only the audited runtime trims.
 
-## Scope still awaiting verification
+## Official merge and build — 2026-10-16 update
 
-**NOT VERIFIED:** a fresh-cache or network-isolated build for this release,
-F-Droid dependency acceptance, and official F-Droid publication. Normal source
-scanning happens before the EJS npm build dependencies are downloaded; successful
-reproducibility and these scanner exits do not settle the
-[existing EJS dependency-review question](../automation-and-fdroid.md#ejs-dependency-choice-and-131-validation).
+[MR !47809](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/47809) was
+merged by linsui on 2026-10-14 as squash commit `aed2ca8f`. The official
+[build log](https://monitor.f-droid.org/builds/log/io.github.originalrecipe1.unfurlit/14)
+records a successful 1.4.1 build on 2026-10-16 and
+`compared built binary to supplied reference binary successfully`.
+The package page returned HTTP 404 when checked on 2026-10-16; index publication
+is not yet verified.
 
+The [current canonical recipe](io.github.originalrecipe1.unfurlit.yml) matches
+upstream byte for byte and contains only build 1.4.1/14. The recipe hash and
+three-block description above belong to the 2026-10-12 local validation,
+not the subsequently merged metadata.
+
+**NOT VERIFIED locally:** a fresh-cache or network-isolated build for this release.
+Normal source scanning precedes EJS npm dependency downloads; see the
+[historical dependency scan](../automation-and-fdroid.md#ejs-dependency-choice-and-131-validation).
 The [physical-phone record](../releases/1.4.1-phone-test.md) contains the owner's
-Pixel 7 / Android 17 results. The [final MR text](1.4.1-mr-comment.txt) is ready
-to paste. No GitLab activity, merge, tag or release creation was performed as
-part of this post-release validation.
+Pixel 7 / Android 17 PASS results. No new GitLab activity was performed for this audit.

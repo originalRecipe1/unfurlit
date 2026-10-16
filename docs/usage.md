@@ -4,8 +4,7 @@
 
 Unfurlit runs on Android 7.0 or newer on 64-bit ARM devices. Release APKs include only ARM64 native libraries.
 Install the APK attached to an **Unfurlit** release on
-[GitHub Releases](https://github.com/originalRecipe1/unfurlit/releases). If no
-Unfurlit release is listed yet, see the [build instructions](development.md#build).
+[GitHub Releases](https://github.com/originalRecipe1/unfurlit/releases).
 
 Older **Peek** releases use `org.peek.app`. Unfurlit uses
 `io.github.originalrecipe1.unfurlit`, so it installs separately and does not
@@ -70,13 +69,19 @@ region and platform changes. Private, login-gated or restricted posts may not
 open; signing in is not available.
 
 Tap **Supported links and media** on Home for this list in the app.
-The **1.4.0 release candidate** passed **63/64 cases** in the full local API 36
-emulator run on **2026-10-09**, including 5 expected-error checks. The only failure,
-an intermittent YouTube playback HTTP 403, passed a separate retry with the same
-APK. This used the debug-based link-check harness; optimized physical-phone
-testing remains pending. See the [dated results and failure triage](social-link-baseline.md#140--2026-10-09).
+On **2026-10-10**, **1.4.1 passed 64/64 extraction fixtures**, including five
+expected-error checks. This emulator run checks extraction, not full playback
+of every fixture. The **1.4.1 release-build phone test passed on a Pixel 7 /
+Android 17**, including the required links and History thumbnails after restart.
+See the [extraction baseline](social-link-baseline.md#141--2026-10-10)
+and [phone record](releases/1.4.1-phone-test.md) for scope and limitations.
 
-Private, login-gated, age-restricted, or region-restricted posts may not open.
+**Reddit — 2026-10-14:** Reddit currently blocks signed-out apps. Current development
+builds show a Reddit-specific message with **Open link** for blocked posts.
+Direct `i.redd.it` and `v.redd.it` media links still opened in observations on
+2026-10-14; this is not a guarantee of continued availability. See the
+[dated Reddit note](social-link-baseline.md#reddit-signed-out-block--2026-10-14).
+
 Importing login cookies, choosing quality manually, and saving media are not
 currently available. TikTok photo posts support swiping and zooming through pictures while their
 soundtrack plays, with audio controls below the gallery. The soundtrack loops and
@@ -102,7 +107,8 @@ the original page again so stale stream URLs are never reused. Individual events
 be removed with their trash icon, and **Clear all** in the toolbar clears the
 entire history after confirmation. Visits appear in date groups with small
 thumbnails and media-type icons. Viewing a link again moves it to the top
-instead of adding a duplicate, and only the 1,000 most recent visits are kept.
+instead of adding a duplicate. History loads in pages and keeps the 1,000 most
+recent visits; recording a visit removes older entries and their thumbnails.
 
 History is stored in the app's private SQLite database and is excluded from Android
 backup and device transfer. A record contains the original page URL, basic display
@@ -122,8 +128,8 @@ See the [privacy policy](../PRIVACY.md).
 If a link fails, the viewer explains whether media could not be found, is
 unavailable, may need sign-in, or could not be reached. Use **Try again** for a
 connection or extraction failure, **Open link** to check the source in the
-site’s app or your browser, or **Try another link** to return home. Engine version details are no
-longer shown on the error screen. For persistent issues, include a public example
+link's default app or an app chooser that excludes Unfurlit, or **Try another
+link** to return home. For persistent issues, include a public example
 link and the app version from Android’s app settings in a
 [bug report](https://github.com/originalRecipe1/unfurlit/issues). Do not post private
 links, login cookies, or credentials. Report security concerns through the
