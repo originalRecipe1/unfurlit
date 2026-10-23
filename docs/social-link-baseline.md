@@ -33,9 +33,10 @@ after the 1.4.1 extraction baseline. No new extraction failure was observed.
 are recorded without local device identifiers. Direct Reddit media cases that
 passed are listed separately in that evidence; they do not establish that Reddit
 post extraction works. This sweep verifies extraction, not full-fixture playback.
-**Not verified:** the 1.4.2 physical-phone release checks; the
-[phone record](releases/1.4.2-phone-test.md) remains blank until the merged CI APK
-is tested by the owner.
+The [phone record](releases/1.4.2-phone-test.md) now records the owner’s aggregate
+functional PASS, acceptable loading speed and one-extraction storage on the
+merge-commit R8 release APK. Separate app size/cache and a direct same-link speed
+comparison remain not reported; full-fixture playback is not verified by this sweep.
 
 ## Reddit signed-out block — 2026-10-14
 
