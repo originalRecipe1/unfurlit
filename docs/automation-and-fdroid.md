@@ -23,8 +23,9 @@ changing the major or minor version. Git tags use `v1.0.0`, APK assets use
 Local side-by-side builds append `-preview`; this is not part of the release tag.
 
 The extractor updater increments only the patch and build code and creates
-release notes for that build. Its tests run in Android CI. Submit the corresponding F-Droid
-metadata update separately after publishing a new app release.
+release notes for that build. Its tests run in Android CI. F-Droid picks up the
+published release tag by itself; see
+[F-Droid auto-update configuration](#f-droid-auto-update-configuration).
 
 ## F-Droid submission and publication
 
@@ -33,17 +34,28 @@ merged by linsui on 2026-10-14 as squash commit `aed2ca8f`. The official
 [build log](https://monitor.f-droid.org/builds/log/io.github.originalrecipe1.unfurlit/14)
 records a successful 1.4.1 build on 2026-10-16 and
 `compared built binary to supplied reference binary successfully`.
-The package page returned HTTP 404 when checked on 2026-10-16; index publication
-is not yet verified.
+[MR !53855](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/53855),
+"Update Unfurlit to 1.4.2, enable AutoUpdateMode", was merged on 2026-10-23 as
+squash commit `167949b6c16e159ddbdd185b30145b6784eb7464`.
+
+The [package page](https://f-droid.org/packages/io.github.originalrecipe1.unfurlit/)
+is live. **Checked on 2026-10-23:** the
+[F-Droid API](https://f-droid.org/api/v1/packages/io.github.originalrecipe1.unfurlit)
+listed only 1.4.1 / 14, and the build log for version 15 returned HTTP 404, so
+1.4.2 was not yet built or published by F-Droid. F-Droid's 1.4.1 APK is byte for
+byte the GitHub `Unfurlit-1.4.1.apk` (SHA-256
+`6b18c80ff099b4af9b21e21bb5ab8bd4e770a82b9033677161fbbe3f538ba8c9`), signed by
+`3528e91676bde711bf40c70bce363f7c76a554ae9de91f221635b6e975400a3c`.
 
 The [canonical recipe](fdroid/io.github.originalrecipe1.unfurlit.yml) is a
-byte-identical copy of official fdroiddata metadata as checked on 2026-10-16.
-It contains one build: 1.4.1 / 14 at
-`c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2`, and only the
-`Online Media Player` category. `org.peek.app` was the historical submission
-branch name in the fdroiddata fork. The release includes gallery-dl built from
-source (#53) and audited runtime trims (#58). See the
-[local 1.4.1 validation record](fdroid/validation-1.4.1.md).
+byte-identical copy of fdroiddata's metadata at `167949b6`. It contains two
+builds, 1.4.1 / 14 at `c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2` and 1.4.2 / 15
+at `c29faaec30adb4fd5988f0eda42ff86723b4cd95`, sets `AutoUpdateMode: Version`,
+and lists only the `Online Media Player` category. `org.peek.app` was the
+historical submission branch name in the fdroiddata fork. Release 1.4.1 added
+gallery-dl built from source (#53) and audited runtime trims (#58). See the
+[1.4.1](fdroid/validation-1.4.1.md) and [1.4.2](fdroid/validation-1.4.2.md)
+validation records.
 
 Store title, description, icon and screenshots come from the release's
 `fastlane/metadata/android/en-US` directory. See F-Droid's
@@ -125,20 +137,92 @@ byte-for-byte match for a tagged release.
 
 ## F-Droid auto-update configuration
 
-Official metadata lives in fdroiddata; this repository keeps a matching copy in
+Official metadata lives in fdroiddata; this repository keeps a byte-identical copy in
 [`fdroid/io.github.originalrecipe1.unfurlit.yml`](fdroid/io.github.originalrecipe1.unfurlit.yml).
-`AutoUpdateMode: None` means each new version needs a new fdroiddata merge
-request. Switching to `AutoUpdateMode: Version` is a possible future fdroiddata
-change, not a change already made. F-Droid controls its own build and publication
-queue; GitHub Actions cannot publish directly into its index.
+Since !53855 (merged 2026-10-23) it sets `AutoUpdateMode: Version`, so new
+releases no longer need their own fdroiddata merge request. F-Droid controls its
+own build and publication queue; GitHub Actions cannot publish directly into its index.
 
-The recipe retains `Binaries` and `AllowedAPKSigningKeys`. Build 14 uses source
-submodules and Gradle's gallery-dl preparation task, without gallery-dl wheels.
-**Verified locally on 2026-10-12:** the full build, source scanner and standalone
-APK scanners exited 0. The unsigned rebuild matched merge-commit CI byte for byte;
-after signature copying it matched the published v1.4.1 APK. Diffoscope exited 0.
-See the [complete validation record](fdroid/validation-1.4.1.md).
-The official build reproduced the published binary on 2026-10-16, as linked above.
+### How F-Droid finds a new release
+
+This section describes `fdroidserver/checkupdates.py` at fdroidserver commit
+`2d1e622fbbce7eec379453983435e5b14bea22b5`, read on 2026-10-23.
+
+1. **Tags.** `UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+([-.+][0-9A-Za-z.]+)?$`
+   makes checkupdates list the repository's tags, newest tagged commit first, and keep the
+   ones the regex matches from the start of the name. It examines at most the
+   five newest matching tags.
+2. **versionCode and versionName.** For each of those tags it checks out the tag
+   and applies `UpdateCheckData: app/build.gradle.kts|versionCode\s*=\s*(\d+)||v(.*)`.
+   The versionCode is the first `versionCode = <number>` in `app/build.gradle.kts`
+   at that tag. The third field is empty, so the versionName comes from the tag
+   name: `v(.*)` turns `v1.4.3` into `1.4.3`. The tag with the highest versionCode
+   wins.
+3. **Current version.** If that versionCode is higher than `CurrentVersionCode`,
+   `CurrentVersion` and `CurrentVersionCode` are set from the tag. A lower one is
+   an error.
+4. **New build block.** With `AutoUpdateMode: Version`, unless the last build
+   block already has the new versionCode, checkupdates copies the last build
+   block and sets its `versionName`, `versionCode` and `commit` from the tag; the
+   tag is then resolved to its full commit hash when possible. Every other field
+   (`subdir`, `submodules`, `sudo`, `gradle`, `build`) is copied unchanged, apart
+   from a fixed list of obsolete OpenJDK `sudo` lines this recipe doesn't use.
+5. **Merge request.** When run with `--merge-request`, it commits the metadata change
+   on a branch named after the app ID and pushes it, which opens an fdroiddata
+   merge request titled `bot: Update Unfurlit to <versionCode>`. It skips the app
+   while that branch holds commits not made by the bot. When the bot runs and
+   when its merge request is merged is up to F-Droid.
+
+After the merge, F-Droid's build server builds the new block and compares the
+result with the APK that `Binaries` points to, as for 1.4.1.
+
+### Releasing
+
+A release therefore needs only the `v<versionName>` tag from the existing
+**Publish release tag** workflow (`release-tag.yml`). That workflow creates the
+tag and the GitHub release with `Unfurlit-<versionName>.apk`, the file
+`Binaries` points to. `versionCode` at the tag must be higher than the last
+F-Droid build. Every tag the regex matches counts, including suffixed ones such
+as `v1.5.0-rc.1`, so don't push matching tags for builds that shouldn't reach
+F-Droid.
+
+### When a manual fdroiddata merge request is still needed
+
+Because the new block is a copy of the previous one, checkupdates can't carry
+changes to:
+
+- build steps (`build`, `gradle`, `subdir` or other build fields);
+- `sudo` packages;
+- submodules or how they are checked out;
+- signing: `AllowedAPKSigningKeys`, or `Binaries` if the APK name or URL changes.
+
+A release with such a change needs a manual merge request against
+[fdroiddata](https://gitlab.com/fdroid/fdroiddata):
+
+1. Fork fdroiddata on GitLab and branch from its current default branch.
+2. In `metadata/io.github.originalrecipe1.unfurlit.yml`, add a build block for
+   the new version with the changed fields and the release tag's full commit
+   hash, and set `CurrentVersion` and `CurrentVersionCode` to that version.
+   checkupdates then finds the last block already current and adds nothing; if
+   the last block's versionCode were higher than `CurrentVersionCode`, it would
+   fail. Later releases copy this new block.
+3. Validate it in an fdroidserver buildserver with the same commands as the
+   [1.4.2 validation record](fdroid/validation-1.4.2.md#build-setup-and-reproduction):
+   the source scanner, a full `fdroid build --test --on-server --no-tarball --scan-binary`
+   against the published APK, and the APK scanners.
+4. Open the merge request and link the validation record. If the bot's merge
+   request for the same version is already open, mention it so only one is merged.
+5. After the merge, copy the merged file into this repository and check it with
+   `cmp` against fdroiddata's raw file at the merge commit.
+
+The recipe retains `Binaries` and `AllowedAPKSigningKeys`. Builds 14 and 15 use
+source submodules and Gradle's gallery-dl preparation task, without gallery-dl
+wheels. **Verified locally** (1.4.1 on 2026-10-12, 1.4.2 on 2026-10-17): both
+builds passed the full build, source and APK scanners, and the signed comparison
+with the published APK; see the
+[1.4.1](fdroid/validation-1.4.1.md) and [1.4.2](fdroid/validation-1.4.2.md)
+records. The official build reproduced the published 1.4.1 binary on 2026-10-16,
+as linked above.
 
 ### Historical validations
 
@@ -189,11 +273,11 @@ No pip, Python build backend or wheel download is part of an APK build.
 
 The recipe's existing `submodules: true` checks out all eight submodules (these
 six plus yt-dlp and EJS) at their gitlink commits. Python 3 is already in its
-sudo dependencies. The canonical 1.4.1 recipe has no wheel URLs, downloads or
+sudo dependencies. The canonical recipe has no wheel URLs, downloads or
 local-wheel override. Gradle's `preparePinnedGalleryDl` task runs
 `prepare_gallery_dl_sources.py` and consumes the staged files itself, so no
-separate F-Droid `prebuild` staging step is needed. The recipe contains only
-1.4.1 at the published merge commit.
+separate F-Droid `prebuild` staging step is needed. The 1.4.2 block keeps these
+settings.
 
 **Verified locally on 2026-10-09:** all 442 package and license files match the
 six pinned wheels byte for byte, including all 428 `.py` files and the CA bundle.
@@ -201,7 +285,7 @@ An intentionally changed `requests/__init__.py` in a scratch archive fails the
 comparison. CI enforces this through `scripts/check_gallery_dl.py`; the wheel
 references are verification inputs only. The [development guide](development.md)
 documents the explicit tag updater; no scheduled gallery-dl update job was added.
-The recipe was merged on 2026-10-14; auto-update remains disabled.
+The 1.4.1 recipe was merged on 2026-10-14; !53855 enabled auto-update on 2026-10-23.
 
 ## 32-bit ARM support
 
