@@ -99,11 +99,14 @@ merged by linsui on 2026-10-14 as squash commit `aed2ca8f`. The official
 [build log](https://monitor.f-droid.org/builds/log/io.github.originalrecipe1.unfurlit/14)
 records a successful 1.4.1 build on 2026-10-16 and
 `compared built binary to supplied reference binary successfully`.
-The package page returned HTTP 404 when checked on 2026-10-16; index publication
-is not yet verified.
+The package page returned HTTP 404 when checked on 2026-10-16. **Checked on
+2026-10-23:** the [package page](https://f-droid.org/packages/io.github.originalrecipe1.unfurlit/)
+is live, the F-Droid API lists 1.4.1 / 14, and F-Droid's APK is byte for byte the
+published `Unfurlit-1.4.1.apk`.
 
-The [current canonical recipe](io.github.originalrecipe1.unfurlit.yml) matches
-upstream byte for byte and contains only build 1.4.1/14. The recipe hash and
+The 1.4.1 block of the [current canonical recipe](io.github.originalrecipe1.unfurlit.yml)
+is unchanged. Since fdroiddata MR !53855 (merged 2026-10-23) the recipe also
+contains 1.4.2 / 15 and sets `AutoUpdateMode: Version`. The recipe hash and
 three-block description above belong to the 2026-10-12 local validation,
 not the subsequently merged metadata.
 

@@ -3,8 +3,20 @@
 ## Installation
 
 Unfurlit runs on Android 7.0 or newer on 64-bit ARM devices. Release APKs include only ARM64 native libraries.
-Install the APK attached to an **Unfurlit** release on
-[GitHub Releases](https://github.com/originalRecipe1/unfurlit/releases).
+Install it from either source:
+
+- the APK attached to an **Unfurlit** release on
+  [GitHub Releases](https://github.com/originalRecipe1/unfurlit/releases);
+- [F-Droid](https://f-droid.org/packages/io.github.originalrecipe1.unfurlit/).
+
+F-Droid rebuilds each release from source, checks that it matches the GitHub
+APK, and then distributes the GitHub APK with its original signature. Both
+sources therefore use the same signing key, so you can switch between them and
+keep updating without uninstalling or losing History. Android only installs a
+version at least as new as the one you have, so F-Droid offers an update only
+once it has caught up with your GitHub version. F-Droid lists a release only
+after its own build, so it can lag behind GitHub. When checked on 2026-10-23,
+F-Droid listed 1.4.1; 1.4.2 was not yet available there.
 
 Older **Peek** releases use `org.peek.app`. Unfurlit uses
 `io.github.originalrecipe1.unfurlit`, so it installs separately and does not

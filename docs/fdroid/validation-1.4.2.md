@@ -4,13 +4,15 @@
 1.4.2 / 15 block uses the full merge commit, with `Binaries` and
 `AllowedAPKSigningKeys` retained. No release source or binary was changed.
 
-The [canonical local recipe](io.github.originalrecipe1.unfurlit.yml) is deliberately
-unchanged. The owner reports an open fdroiddata MR adding 1.4.2 and setting
-`AutoUpdateMode: Version`; recipe synchronization waits for that MR to merge.
-The temporary validation recipe below retains `AutoUpdateMode: None`. It tests
-the signed build, not the proposed auto-update change. The two draft files have
-been retired; there is only one recipe YAML in this directory. No GitLab activity
-was performed for this documentation PR.
+[fdroiddata MR !53855](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/53855),
+which adds this 1.4.2 / 15 block and sets `AutoUpdateMode: Version`, was merged
+on 2026-10-23 as `167949b6c16e159ddbdd185b30145b6784eb7464`. The
+[canonical recipe](io.github.originalrecipe1.unfurlit.yml) is now a byte-identical
+copy of that merged file. The temporary validation recipe below is historical: it
+tested `AutoUpdateMode: None` and only the 1.4.2 block, so it covers the signed
+build, not the auto-update setting. The two draft files have been retired; there
+is only one recipe YAML in this directory. No GitLab activity was performed for
+this documentation.
 
 | Item | Value |
 | --- | --- |
@@ -136,9 +138,10 @@ The build still assembles gallery-dl and its five dependencies from pinned sourc
 submodules, with no gallery-dl wheels or pip. Gradle stages and consumes the
 sources itself; no separate F-Droid prebuild staging step is needed.
 
-**NOT VERIFIED:** a fresh-cache or network-isolated build, the open fdroiddata
-MR's merge status, and official F-Droid build/publication of 1.4.2. Successful
-local validation does not establish those outcomes. The
+**NOT VERIFIED:** a fresh-cache or network-isolated build, and official F-Droid
+build/publication of 1.4.2. !53855 was merged on 2026-10-23; when checked that day,
+the F-Droid API still listed only 1.4.1 / 14 and the version 15 build log returned
+HTTP 404. Successful local validation does not establish those outcomes. The
 [phone record](../releases/1.4.2-phone-test.md) contains the owner's results and
 identifies unreported details.
 

@@ -1,13 +1,13 @@
 # Documentation
 
-- [Using Unfurlit](usage.md) — installation, opening media, history, and troubleshooting.
+- [Using Unfurlit](usage.md) — installation from GitHub or F-Droid, opening media, history, and troubleshooting.
 - [Development](development.md) — building, testing, architecture, and network safety.
 - [Python runtime storage](python-runtime-storage.md) — retained dependencies, runtime trimming, and before/after measurements.
 - [Social-link baseline](social-link-baseline.md) — dated compatibility and playback checks.
-- [Release automation and F-Droid](automation-and-fdroid.md) — versions, signing, the merged F-Droid recipe, and publication status.
+- [Release automation and F-Droid](automation-and-fdroid.md) — versions, signing, F-Droid auto-updates from release tags, and publication status.
 - [1.4.2 phone test](releases/1.4.2-phone-test.md) — owner-reported functional PASS, storage and publication verification.
 - [1.4.2 emulator upgrade test](releases/1.4.2-emulator-test.md) — release update and History/thumbnail retention on API 30/36.
-- [1.4.2 F-Droid validation](fdroid/validation-1.4.2.md) — published-release comparison and scanner results.
+- [1.4.2 F-Droid validation](fdroid/validation-1.4.2.md) — published-release comparison, scanner results, and the merged !53855 recipe.
 - [1.4.1 phone test](releases/1.4.1-phone-test.md) — owner results recorded, PASS, and merge-commit APK handoff.
 - [1.4.1 emulator upgrade test](releases/1.4.1-emulator-test.md) — release upgrade, History and runtime replacement on API 30/36.
 - [F-Droid 1.4.1 validation](fdroid/validation-1.4.1.md) — reproducibility and scanner results.

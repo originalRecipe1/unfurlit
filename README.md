@@ -3,7 +3,7 @@
 Watch videos, view photos, and play audio from social links in a native Android viewer.
 Paste a link or share it to Unfurlit to open its media without using the official app or the limited online website.
 
-**Android 7.0+** · [Installation](docs/usage.md#installation) · [Privacy](PRIVACY.md) · [Documentation](docs/README.md)
+**Android 7.0+** · Install from [GitHub Releases](https://github.com/originalRecipe1/unfurlit/releases) or [F-Droid](https://f-droid.org/packages/io.github.originalrecipe1.unfurlit/) ([details](docs/usage.md#installation)) · [Privacy](PRIVACY.md) · [Documentation](docs/README.md)
 
 | Open a link | Watch | Revisit | Dark mode |
 | :---: | :---: | :---: | :---: |
