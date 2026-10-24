@@ -3,7 +3,10 @@
 Watch videos, view photos, and play audio from social links in a native Android viewer.
 Paste a link or share it to Unfurlit to open its media without using the official app or the limited online website.
 
-**Android 7.0+** · Install from [GitHub Releases](https://github.com/originalRecipe1/unfurlit/releases) or [F-Droid](https://f-droid.org/packages/io.github.originalrecipe1.unfurlit/) ([details](docs/usage.md#installation)) · [Privacy](PRIVACY.md) · [Documentation](docs/README.md)
+<a href="https://f-droid.org/packages/io.github.originalrecipe1.unfurlit/"><img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
+
+Or download the APK from [GitHub Releases](https://github.com/originalRecipe1/unfurlit/releases) ([install details](docs/usage.md#installation)).
+**Android 7.0+, 64-bit ARM only** · [Privacy](PRIVACY.md) · [Documentation](docs/README.md)
 
 | Open a link | Watch | Revisit | Dark mode |
 | :---: | :---: | :---: | :---: |
@@ -11,52 +14,44 @@ Paste a link or share it to Unfurlit to open its media without using the officia
 
 ## Features
 
-- Open public links from **YouTube, Vimeo, Instagram, TikTok, Reddit, X/Twitter, PeerTube, Bandcamp**, and more.
+- Open public links from popular video, photo and audio sites; see [compatibility](#compatibility).
 - Watch fullscreen videos and audio, zoom into photos, with gallery/carousel support.
 - Revisit media in **local history**.
 
 Media extraction runs **on your device**, with no account, backend or ads.
-Site availability varies; [supported content and limitations](docs/usage.md#sites-and-access) explain what to expect.
 
-## Supported links and media
+## Compatibility
 
-- YouTube: videos and Shorts.
-- Vimeo: videos, including page links and unlisted links with an access hash.
-- Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
-- TikTok: videos and photo posts, including available photo soundtracks.
-- Reddit: videos, photos and galleries, including gallery posts opened from share,
-  comments and `redd.it` short links.
-- X/Twitter: videos, photos and galleries.
-- PeerTube: videos.
-- Bandcamp: audio tracks.
-- Tumblr: native videos, photos and mixed photo/video posts.
-- Pixiv: public illustrations and multi-page artwork (no Ugoira animations).
-- Imgur, Bluesky, Flickr and many other sites: photos and galleries.
+| Site | Video | Photos / galleries | Audio | Status |
+| --- | --- | --- | --- | --- |
+| YouTube | ✅ watch, `youtu.be`, Shorts | — | — | ✅ Works |
+| Vimeo | ✅ page, player, unlisted | — | — | ✅ Works |
+| Instagram | ✅ posts, Reels, carousels | ✅ single, multi-photo, carousels | no photo-post soundtrack | ✅ Works |
+| TikTok | ✅ | ✅ photo posts | ✅ photo-post soundtrack | ✅ Works |
+| Reddit | — | direct image links only | — | ⚠️ Posts blocked for signed-out apps¹ |
+| X/Twitter | ✅ including GIFs | ✅ including mixed posts | — | ✅ Works |
+| PeerTube | ✅ | — | — | ✅ Works |
+| Bandcamp | — | — | ✅ tracks | ✅ Works |
+| Tumblr | ✅ | ✅ including mixed posts | — | ✅ Works |
+| Pixiv | — | ✅ illustrations, no Ugoira | — | ✅ Works |
+| Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Dailymotion, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
 
-TikTok, Instagram, Tumblr and Pixiv photo posts use Unfurlit's own extractors (TikTok including
-the post's soundtrack). Photos and galleries on other sites use the bundled
-[gallery-dl](https://codeberg.org/mikf/gallery-dl) engine. Instagram photos currently
-rely on Unfurlit's own extractor: anonymous tests of the gallery-dl fallback hit
-Instagram's login page. Direct image links also open. See the
-[dated test results](docs/social-link-baseline.md) for the links and media checked.
+¹ Since 2026-10-14 Reddit blocks signed-out apps, so Unfurlit shows a Reddit message with
+**Open link** for posts. Direct `i.redd.it`, `preview.redd.it` and `reddit.com/media` image
+links still opened in the 2026-10-16 run. See the
+[dated note](docs/social-link-baseline.md#reddit-signed-out-block--2026-10-14).
 
-Other sites may work too; audio and galleries depend on the source. Availability varies by post,
-region and platform changes. Private, login-gated or restricted posts may not
-open; signing in is not available.
+— means no test fixture covers it, not that it fails. Public posts only; availability
+varies by post, region and platform changes. [Sites and access](docs/usage.md#sites-and-access)
+explains extraction engines and limitations.
 
-## Site compatibility
+Last checked: 1.4.2, 2026-10-16, 54 pass / 10 Reddit blocked of 64 fixtures. Extraction, not full playback.
+[Baseline](docs/social-link-baseline.md#142--2026-10-16) · [1.4.2 phone record](docs/releases/1.4.2-phone-test.md)
 
-On **2026-10-10**, **1.4.1 passed 64/64 extraction fixtures**, including five
-expected-error checks. This emulator run checks extraction, not full playback
-of every fixture. The **1.4.1 release-build phone test passed on a Pixel 7 /
-Android 17**, including the required links and History thumbnails after restart.
-See the [extraction baseline](docs/social-link-baseline.md#141--2026-10-10)
-and [phone record](docs/releases/1.4.1-phone-test.md) for scope and limitations.
+## Contributing
 
-**Reddit — 2026-10-14:** Reddit currently blocks signed-out apps.
-1.4.2 and later show a Reddit-specific message with **Open link** for blocked posts.
-Direct `i.redd.it` and `v.redd.it` media links still opened in observations on
-2026-10-14; this is not a guarantee of continued availability. See the
-[dated Reddit note](docs/social-link-baseline.md#reddit-signed-out-block--2026-10-14).
+Issues and pull requests are welcome: [Issues](https://github.com/originalRecipe1/unfurlit/issues) · [Pull requests](https://github.com/originalRecipe1/unfurlit/pulls).
+Bug reports should include a public example link and the app version; never post private links, cookies or credentials.
+Report security issues as described in [SECURITY.md](SECURITY.md).
 
-[Report a bug](https://github.com/originalRecipe1/unfurlit/issues) · [Build from source](docs/development.md#build) · [GPL-3.0-only](LICENSE)
+[Build from source](docs/development.md#build) · [GPL-3.0-only](LICENSE)

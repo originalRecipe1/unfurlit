@@ -49,18 +49,8 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 
 ## Sites and access
 
-- YouTube: videos and Shorts.
-- Vimeo: videos, including page links and unlisted links with an access hash.
-- Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
-- TikTok: videos and photo posts, including available photo soundtracks.
-- Reddit: videos, photos and galleries, including gallery posts opened from share,
-  comments and `redd.it` short links.
-- X/Twitter: videos, photos and galleries.
-- PeerTube: videos.
-- Bandcamp: audio tracks.
-- Tumblr: native videos, photos and mixed photo/video posts.
-- Pixiv: public illustrations and multi-page artwork (no Ugoira animations).
-- Imgur, Bluesky, Flickr and many other sites: photos and galleries.
+The [compatibility table](../README.md#compatibility) lists which sites and media
+types the latest baseline covers.
 
 TikTok, Instagram, Tumblr and Pixiv photo posts use Unfurlit's own extractors (TikTok including
 the post's soundtrack). Photos and galleries on other sites use the bundled
@@ -80,13 +70,9 @@ Other sites may work too; audio and galleries depend on the source. Availability
 region and platform changes. Private, login-gated or restricted posts may not
 open; signing in is not available.
 
-Tap **Supported links and media** on Home for this list in the app.
-On **2026-10-10**, **1.4.1 passed 64/64 extraction fixtures**, including five
-expected-error checks. This emulator run checks extraction, not full playback
-of every fixture. The **1.4.1 release-build phone test passed on a Pixel 7 /
-Android 17**, including the required links and History thumbnails after restart.
-See the [extraction baseline](social-link-baseline.md#141--2026-10-10)
-and [phone record](releases/1.4.1-phone-test.md) for scope and limitations.
+Tap **Supported links and media** on Home for a summary in the app.
+The current extraction results are in the
+[1.4.2 baseline](social-link-baseline.md#142--2026-10-16).
 
 **Reddit — 2026-10-14:** Reddit currently blocks signed-out apps.
 1.4.2 and later show a Reddit-specific message with **Open link** for blocked posts.
