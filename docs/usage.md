@@ -59,7 +59,9 @@ automatically:
 
 1. On Home, tap **Open links in Unfurlit**, then **Open settings**.
 2. Choose to open supported links in the app, then turn on the sites you want.
-   The wording varies by device.
+   The wording varies by device. Reddit posts are currently blocked for
+   signed-out apps, so leave `reddit.com`, `www.reddit.com`, `old.reddit.com`
+   and `redd.it` off for now.
 3. Return to Unfurlit. The dialog shows how many web addresses are turned on.
 
 If a site's own app is installed, it may keep opening that site's links, and
