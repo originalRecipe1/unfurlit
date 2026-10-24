@@ -47,6 +47,35 @@ Opening the app alone does not start loading media.
 The first link can take longer while the bundled media extractor initializes.
 Unfurlit streams media rather than saving a permanent copy of the video or audio.
 
+### Open links directly in Unfurlit
+
+Unfurlit can open post and video links tapped in other apps, such as YouTube
+and Vimeo videos, X, Instagram, TikTok, Tumblr and Bluesky posts, Pixiv artwork
+and Bandcamp tracks. Profiles, search and home pages keep opening in your
+browser.
+
+On Android 12 and later, Android doesn't let Unfurlit claim links
+automatically:
+
+1. On Home, tap **Open links in Unfurlit**, then **Open settings**.
+2. Choose to open supported links in the app, then turn on the sites you want.
+   The wording varies by device.
+3. Return to Unfurlit. The dialog shows how many web addresses are turned on.
+
+If a site's own app is installed, it may keep opening that site's links, and
+Settings may not let Unfurlit take them. Turn that site's links off under
+**Open by default** in the site app's settings, then turn them on for Unfurlit.
+
+On Android 11 and earlier, Android asks which app to use. Choose Unfurlit; tap
+**Always** to stop the question for that site.
+
+Some apps open links in their own built-in browser, so Android never offers
+Unfurlit. Use the app's option to open the link in another browser, or share
+the link to Unfurlit instead.
+
+**Open link** in the viewer still opens your browser for a site turned on for
+Unfurlit.
+
 ## Sites and access
 
 The [compatibility table](../README.md#compatibility) lists which sites and media

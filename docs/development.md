@@ -325,6 +325,9 @@ reusable checklist into a release-specific test record under
   must open the Reddit app or browser rather than show a toast.
 - On a non-Reddit extraction failure, confirm **Open link** opens the default
   app or an app chooser.
+- On Android 12 or later, turn on a site under **Open links in Unfurlit**, tap a
+  post link for it in another app and confirm Unfurlit opens it. On an extraction
+  failure, **Open link** must open the browser rather than Unfurlit or a toast.
 - Open `x-mixed-media` and confirm that both the video and the photo appear.
 - Open `x-video` and confirm that it does not feel slower compared with the
   previous release.
@@ -409,9 +412,9 @@ Instagram and Pixiv photo posts, and Tumblr photos and native videos. The cases 
 
 - **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Tumblr, Reddit (native video
   and external Imgur/Streamable link posts), X (including
-  an animated GIF), Instagram posts, Reels and video carousels, TikTok, Bluesky, an Imgur
+  an animated GIF), Instagram posts, Reels (including profile and share links) and video carousels, TikTok, Bluesky, an Imgur
   GIFV, PeerTube, Dailymotion, a Twitch clip and a direct WebM file.
-- **Photos and galleries:** Instagram and TikTok photo posts (with and without a
+- **Photos and galleries:** Instagram (including share links) and TikTok photo posts (with and without a
   soundtrack), Reddit image posts, galleries (explicit, comments, mobile share and
   `redd.it` links), direct `i.redd.it`, `preview.redd.it`,
   `reddit.com/media` and mirror links, X photos, Bluesky, Imgur images and albums, Flickr,

@@ -32,6 +32,30 @@ class UrlTextParserTest {
     }
 
     @Test
+    fun `keeps directly opened post links unchanged`() {
+        // The shapes MainActivity's VIEW filters claim; LinkFiltersTest checks the filters.
+        listOf(
+            "https://www.instagram.com/reels/Chunk8-jurw/",
+            "https://www.instagram.com/instagram/reel/Chunk8-jurw/",
+            "https://www.instagram.com/share/p/BACiUUUYQV",
+            "https://www.instagram.com/share/reel/BARSSL4rTu",
+            "https://vimeo.com/392479337/a52724358e",
+            "https://player.vimeo.com/video/108650530",
+            "https://www.tumblr.com/mikf123/172687798174",
+            "https://mikf123.tumblr.com/post/172687798174/photo-post",
+            "https://www.pixiv.net/en/artworks/966412",
+            "https://bsky.app/profile/bsky.app/post/3l3vgf77uco2g",
+            "https://benprunty.bandcamp.com/track/lanius-battle",
+        ).forEach { url -> assertEquals(url, UrlTextParser.firstSupportedUrl(url)) }
+    }
+
+    @Test
+    fun `rejects a non-web link handed to the app`() {
+        assertNull(UrlTextParser.firstSupportedUrl("intent://www.instagram.com/reels/Chunk8-jurw/"))
+        assertNull(UrlTextParser.firstSupportedUrl("https://localhost/share/p/BACiUUUYQV"))
+    }
+
+    @Test
     fun `rejects unsupported and private URLs`() {
         assertNull(UrlTextParser.firstSupportedUrl("Open file:///sdcard/video.mp4"))
         assertNull(UrlTextParser.firstSupportedUrl("See http://127.0.0.1/private"))
