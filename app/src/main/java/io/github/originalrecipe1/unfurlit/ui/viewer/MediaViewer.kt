@@ -203,6 +203,7 @@ private fun SingleMediaViewer(
             modifier = modifier
                 .fillMaxWidth()
                 .height(GALLERY_HEIGHT),
+            fallbackUrl = media.fallbackUrl,
         )
 
         is ExtractedMedia.Audio -> AudioPlayer(
@@ -261,6 +262,7 @@ private fun MediaPage(
             onRetry = onRetry,
             onViewed = onViewed,
             modifier = modifier,
+            fallbackUrl = media.fallbackUrl,
         )
 
         is ExtractedMedia.Audio -> AudioPlayer(

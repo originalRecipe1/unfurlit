@@ -46,6 +46,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import io.github.originalrecipe1.unfurlit.domain.model.PlaybackSource
 import io.github.originalrecipe1.unfurlit.R
+import kotlin.coroutines.cancellation.CancellationException
 
 @Composable
 fun ZoomableImage(
@@ -55,14 +56,16 @@ fun ZoomableImage(
     onRetry: () -> Unit,
     onViewed: () -> Unit,
     modifier: Modifier = Modifier,
+    fallbackUrl: String? = null,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val request = remember(context, source) {
+    var usingFallback by remember(source, fallbackUrl) { mutableStateOf(false) }
+    val request = remember(context, source, fallbackUrl, usingFallback) {
         val headers = NetworkHeaders.Builder().apply {
             source.headers.forEach { (name, value) -> set(name, value) }
         }.build()
         ImageRequest.Builder(context)
-            .data(source.url)
+            .data(if (usingFallback) fallbackUrl else source.url)
             .httpHeaders(headers)
             .crossfade(true)
             .build()
@@ -136,7 +139,13 @@ fun ZoomableImage(
                 loaded = true
                 loadFailed = false
             },
-            onError = { loadFailed = true },
+            onError = {
+                if (shouldTryFallback(fallbackUrl, usingFallback, it.result.throwable)) {
+                    usingFallback = true
+                } else {
+                    loadFailed = true
+                }
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
@@ -175,6 +184,10 @@ fun ZoomableImage(
         }
     }
 }
+
+/** The original gets one retry: its fallback copy, with the same headers, unless it was only cancelled. */
+internal fun shouldTryFallback(fallbackUrl: String?, usingFallback: Boolean, error: Throwable): Boolean =
+    fallbackUrl != null && !usingFallback && error !is CancellationException
 
 private const val MIN_SCALE = 1f
 private const val MAX_SCALE = 5f

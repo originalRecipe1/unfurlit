@@ -623,10 +623,21 @@ mobile API route, which always requires a refresh token. Artwork, `/en/artworks/
 `/i/`, and legacy `member_illust.php?illust_id=…` links retain the original URL in
 History. Profiles and other Pixiv paths keep the existing engine route.
 
+Pixiv's CDN can fail an original while its resized copy loads: page 4 of artwork
+56360615 returns HTTP 500 for `img-original` and 200 for `img-master`. Each page
+therefore keeps the `urls.regular` (`img-master` … `_master1200`) URL from the same
+API response as a fallback; it is never built from the original's path. When the
+original fails for any reason other than cancellation (an HTTP error, undecodable
+data, a dropped connection), the viewer loads the fallback once with the same
+Referer. If that also fails, the usual image error appears. Other extractors set no
+fallback. History thumbnails still use the first page's original.
+
 Requests use the same public-only DNS, safe redirects, cancellable 20-second
 network timeout and 4 MiB decompressed-response limit as the other native adapters.
 The adapter checks the returned artwork ID and rejects missing pages, galleries
-over 50 images, restricted artwork and non-original image URLs. Ugoira's timed
+over 50 images, restricted artwork and non-original image URLs. A `regular` URL
+that fails the same host, scheme, port, artwork and page checks is dropped, so that page
+has no fallback; the original still loads. Ugoira's timed
 frame archives remain unsupported; their still preview is never reported as the
 artwork. No cookies or credentials are sent. The `pixiv-artwork` fixture retains
 its one-image expectation; a return to the refresh-token error now fails the live
