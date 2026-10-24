@@ -15,6 +15,7 @@ Or download the APK from [GitHub Releases](https://github.com/originalRecipe1/un
 ## Features
 
 - Open public links from popular video, photo and audio sites; see [compatibility](#compatibility).
+- Open supported links tapped in other apps directly in Unfurlit; see [how to turn it on](docs/usage.md#open-links-directly-in-unfurlit).
 - Watch fullscreen videos and audio, zoom into photos, with gallery/carousel support.
 - Revisit media in **local history**.
 

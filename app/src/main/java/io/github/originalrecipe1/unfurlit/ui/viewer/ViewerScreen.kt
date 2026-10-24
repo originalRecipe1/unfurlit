@@ -250,10 +250,14 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 // open them: the site's own app or a browser.
 private fun Context.openOriginal(url: String) {
     val viewIntent = Intent(Intent.ACTION_VIEW, url.toUri()).addCategory(Intent.CATEGORY_BROWSABLE)
+    // No site, so a site turned on for Unfurlit can't hide the browsers from this query.
+    val browserIntent = Intent(Intent.ACTION_VIEW, "https://".toUri()).addCategory(Intent.CATEGORY_BROWSABLE)
     val target = OpenLinkTargets.select(
         ownPackage = packageName,
         defaultHandler = packageManager.defaultLinkHandler(viewIntent)?.activityInfo?.toLinkHandler(),
         handlers = packageManager.linkHandlers(viewIntent).map { it.activityInfo.toLinkHandler() },
+        defaultBrowser = packageManager.defaultLinkHandler(browserIntent)?.activityInfo?.toLinkHandler(),
+        browsers = packageManager.linkHandlers(browserIntent).map { it.activityInfo.toLinkHandler() },
     )
     val launchIntent = when (target) {
         is OpenLinkTarget.Handler -> Intent(viewIntent).setClassName(
@@ -264,6 +268,13 @@ private fun Context.openOriginal(url: String) {
             Intent.EXTRA_EXCLUDE_COMPONENTS,
             target.excluded.map { ComponentName(it.packageName, it.className) }.toTypedArray(),
         )
+        is OpenLinkTarget.Browsers -> {
+            // Explicit intents, because a chooser for the link itself would list only Unfurlit.
+            val (first, rest) = target.browsers.map { browser ->
+                Intent(viewIntent).setClassName(browser.packageName, browser.className)
+            }.let { it.first() to it.drop(1) }
+            Intent.createChooser(first, null).putExtra(Intent.EXTRA_INITIAL_INTENTS, rest.toTypedArray())
+        }
         OpenLinkTarget.None -> null
     }
     val opened = launchIntent != null && try {

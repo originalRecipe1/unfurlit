@@ -1,6 +1,9 @@
 package io.github.originalrecipe1.unfurlit.ui.home
 
 import android.content.ClipboardManager
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -42,7 +46,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.originalrecipe1.unfurlit.R
+import io.github.originalrecipe1.unfurlit.intents.OpenLinkSettings
+import io.github.originalrecipe1.unfurlit.intents.SelectedDomains
 import io.github.originalrecipe1.unfurlit.ui.components.UnfurlitTopAppBar
 import io.github.originalrecipe1.unfurlit.util.UrlTextParser
 
@@ -56,6 +63,7 @@ fun HomeScreen(
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     val scrollState = rememberScrollState()
     var showSupportedMedia by rememberSaveable { mutableStateOf(false) }
+    var showOpenLinks by rememberSaveable { mutableStateOf(false) }
 
     fun submit() {
         val url = UrlTextParser.firstSupportedUrl(input)
@@ -83,6 +91,10 @@ fun HomeScreen(
                 }
             },
         )
+    }
+
+    if (showOpenLinks && OpenLinkSettings.isNeeded) {
+        OpenLinksDialog(onDismissRequest = { showOpenLinks = false })
     }
 
     Scaffold(
@@ -188,9 +200,60 @@ fun HomeScreen(
                 TextButton(onClick = { showSupportedMedia = true }) {
                     Text(stringResource(R.string.supported_media_title))
                 }
+                if (OpenLinkSettings.isNeeded) {
+                    TextButton(onClick = { showOpenLinks = true }) {
+                        Text(stringResource(R.string.open_links_title))
+                    }
+                }
             }
         }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.S)
+@Composable
+private fun OpenLinksDialog(onDismissRequest: () -> Unit) {
+    val context = LocalContext.current
+    var selectedDomains by remember { mutableStateOf<SelectedDomains?>(null) }
+    // Re-read after the user returns from Settings.
+    LifecycleResumeEffect(Unit) {
+        selectedDomains = OpenLinkSettings.selectedDomains(context)
+        onPauseOrDispose {}
+    }
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(R.string.open_links_title)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(stringResource(R.string.open_links_description))
+                selectedDomains?.let { domains ->
+                    Text(
+                        text = stringResource(R.string.open_links_status, domains.enabled, domains.total),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (!OpenLinkSettings.open(context)) {
+                        Toast.makeText(context, R.string.open_settings_failed, Toast.LENGTH_SHORT).show()
+                    }
+                },
+            ) {
+                Text(stringResource(R.string.action_open_settings))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.close))
+            }
+        },
+    )
 }
 
 private const val MAX_INPUT_LENGTH = 8 * 1024

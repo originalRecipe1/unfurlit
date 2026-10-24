@@ -7,6 +7,7 @@ class OpenLinkTargetsTest {
     private val unfurlit = LinkHandler(OWN_PACKAGE, "$OWN_PACKAGE.MainActivity")
     private val browser = LinkHandler("org.mozilla.fennec_fdroid", "org.mozilla.fenix.IntentReceiverActivity")
     private val instagram = LinkHandler("com.instagram.android", "com.instagram.url.UrlHandlerActivity")
+    private val chrome = LinkHandler("com.android.chrome", "com.google.android.apps.chrome.IntentDispatcher")
     private val systemPicker = LinkHandler("android", "com.android.internal.app.ResolverActivity")
 
     @Test
@@ -53,6 +54,43 @@ class OpenLinkTargetsTest {
     fun `reports none when only Unfurlit can open the link`() {
         assertEquals(OpenLinkTarget.None, OpenLinkTargets.select(OWN_PACKAGE, unfurlit, listOf(unfurlit)))
         assertEquals(OpenLinkTarget.None, OpenLinkTargets.select(OWN_PACKAGE, null, emptyList()))
+    }
+
+    @Test
+    fun `falls back to the default browser when only Unfurlit is listed for the site`() {
+        // A site turned on for Unfurlit: the link's own query lists nothing else.
+        assertEquals(
+            OpenLinkTarget.Handler(chrome),
+            OpenLinkTargets.select(OWN_PACKAGE, unfurlit, listOf(unfurlit), chrome, listOf(browser, chrome)),
+        )
+        assertEquals(
+            OpenLinkTarget.Handler(browser),
+            OpenLinkTargets.select(OWN_PACKAGE, unfurlit, listOf(unfurlit), systemPicker, listOf(browser)),
+        )
+    }
+
+    @Test
+    fun `offers the browsers when none is the default`() {
+        assertEquals(
+            OpenLinkTarget.Browsers(listOf(browser, chrome)),
+            OpenLinkTargets.select(OWN_PACKAGE, unfurlit, listOf(unfurlit), systemPicker, listOf(browser, chrome)),
+        )
+    }
+
+    @Test
+    fun `ignores the browsers while another app is listed for the link`() {
+        assertEquals(
+            OpenLinkTarget.Handler(instagram),
+            OpenLinkTargets.select(OWN_PACKAGE, unfurlit, listOf(unfurlit, instagram), chrome, listOf(chrome)),
+        )
+    }
+
+    @Test
+    fun `never falls back to Unfurlit as a browser`() {
+        assertEquals(
+            OpenLinkTarget.None,
+            OpenLinkTargets.select(OWN_PACKAGE, unfurlit, listOf(unfurlit), unfurlit, listOf(unfurlit)),
+        )
     }
 
     private companion object {
