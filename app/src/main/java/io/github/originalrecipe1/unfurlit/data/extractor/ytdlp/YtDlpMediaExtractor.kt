@@ -204,7 +204,13 @@ class YtDlpMediaExtractor(
         }
     }
 
+    @Volatile
+    private var lastLoggedFailure: Throwable? = null
+
     private fun logFailure(error: Throwable) {
+        val previous = lastLoggedFailure
+        lastLoggedFailure = error
+        if (repeatsLoggedFailure(error, previous)) return
         val detail = generateSequence(error) { it.cause }
             .mapNotNull(Throwable::message)
             .joinToString(" | ")
@@ -250,3 +256,10 @@ class YtDlpMediaExtractor(
         var initialized = false
     }
 }
+
+/**
+ * True when [error] is, or wraps, the failure logged just before it. A Tumblr embed's
+ * failure is logged by its own run and rethrown unchanged or wrapped by the post's run.
+ */
+internal fun repeatsLoggedFailure(error: Throwable, previous: Throwable?): Boolean =
+    previous != null && generateSequence(error) { it.cause }.any { it === previous }

@@ -142,6 +142,8 @@ internal object TumblrPostParser {
                     YOUTUBE_PATH.matchEntire(path)?.groupValues?.get(1)
                 }
                 "youtu.be" -> YOUTUBE_SHORT_PATH.matchEntire(path)?.groupValues?.get(1)
+                "youtube-nocookie.com", "www.youtube-nocookie.com" ->
+                    YOUTUBE_EMBED_PATH.matchEntire(path)?.groupValues?.get(1)
                 else -> null
             }?.takeIf { YOUTUBE_ID.matches(it) }?.let { "https://www.youtube.com/watch?v=$it" }
             "vimeo" -> when (host) {
@@ -205,8 +207,11 @@ internal object TumblrPostParser {
     private val YOUTUBE_ID = Regex("[A-Za-z0-9_-]{11}")
     private val YOUTUBE_PATH = Regex("/(?:embed|shorts|live)/([^/]+)/?")
     private val YOUTUBE_SHORT_PATH = Regex("/([^/]+)/?")
-    private val VIMEO_HASH = Regex("[A-Za-z0-9]{1,64}")
-    private val VIMEO_PATH = Regex("/([0-9]{1,20})(?:/([A-Za-z0-9]+))?/?")
+    private val YOUTUBE_EMBED_PATH = Regex("/embed/([^/]+)/?")
+    // yt-dlp's VimeoIE takes an unlisted hash only in this shape; other segments, such as
+    // /likes, are not a private link and leave the post to the existing engines.
+    private val VIMEO_HASH = Regex("[0-9a-f]{10}")
+    private val VIMEO_PATH = Regex("/([0-9]{1,20})(?:/([^/]+))?/?")
     private val VIMEO_PLAYER_PATH = Regex("/video/([0-9]{1,20})/?")
     private const val BLOG = "[A-Za-z0-9][A-Za-z0-9-]{0,62}"
     private val BLOG_HOST = Regex("($BLOG)\\.tumblr\\.com")

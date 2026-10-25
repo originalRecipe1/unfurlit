@@ -186,9 +186,13 @@ class TumblrPostParserTest {
             Triple("youtube", "http://www.youtube.com/watch?v=eomhW5MLGWA", youTube),
             Triple("youtube", "https://youtube.com/embed/eomhW5MLGWA?feature=oembed", youTube),
             Triple("youtube", "https://www.youtube.com/shorts/eomhW5MLGWA", youTube),
+            Triple("youtube", "https://www.youtube-nocookie.com/embed/eomhW5MLGWA?rel=0", youTube),
+            Triple("youtube", "https://youtube-nocookie.com/embed/eomhW5MLGWA", youTube),
             Triple("vimeo", "https://vimeo.com/76979871", "https://vimeo.com/76979871"),
-            Triple("vimeo", "https://www.vimeo.com/76979871/a1b2c3", "https://vimeo.com/76979871/a1b2c3"),
-            Triple("vimeo", "https://player.vimeo.com/video/76979871?h=a1b2c3&app_id=1", "https://vimeo.com/76979871/a1b2c3"),
+            Triple("vimeo", "https://www.vimeo.com/392479337/a52724358e", "https://vimeo.com/392479337/a52724358e"),
+            Triple("vimeo", "https://vimeo.com/392479337/a52724358e/", "https://vimeo.com/392479337/a52724358e"),
+            Triple("vimeo", "https://player.vimeo.com/video/392479337?h=a52724358e&app_id=1",
+                "https://vimeo.com/392479337/a52724358e"),
         )) {
             val post = embedPost().put("content", JSONArray().put(embed(provider, url)))
             assertEquals(url, listOf(TumblrEmbed(0, expected)), parsePost(post, EMBED_PAGE)!!.embeds)
@@ -214,6 +218,23 @@ class TumblrPostParserTest {
             "youtube" to "https://www.youtube.com/playlist?list=PL0123456789",
             "vimeo" to "https://vimeo.com/76979871/a1b2c3%2F..",
             "vimeo" to "https://player.vimeo.com/video/76979871?h=../x",
+            // yt-dlp's unlisted hash is exactly ten lowercase hex digits; nothing else is a private link.
+            "vimeo" to "https://vimeo.com/76979871/likes",
+            "vimeo" to "https://vimeo.com/76979871/videos",
+            "vimeo" to "https://vimeo.com/76979871/collections",
+            "vimeo" to "https://vimeo.com/76979871/abcdefghij",
+            "vimeo" to "https://vimeo.com/392479337/A52724358E",
+            "vimeo" to "https://vimeo.com/392479337/a52724358",
+            "vimeo" to "https://vimeo.com/392479337/a52724358e0",
+            "vimeo" to "https://vimeo.com/392479337/a52724358e/extra",
+            "vimeo" to "https://player.vimeo.com/video/392479337?h=A52724358E",
+            "vimeo" to "https://player.vimeo.com/video/392479337?h=likes",
+            // youtube-nocookie.com only serves the embedded player.
+            "youtube" to "https://www.youtube-nocookie.com/watch?v=eomhW5MLGWA",
+            "youtube" to "https://www.youtube-nocookie.com/shorts/eomhW5MLGWA",
+            "youtube" to "https://www.youtube-nocookie.com/embed/short",
+            "youtube" to "https://music.youtube-nocookie.com/embed/eomhW5MLGWA",
+            "vimeo" to "https://www.youtube-nocookie.com/embed/eomhW5MLGWA",
         )) {
             val post = embedPost().put("content", JSONArray().put(embed(provider, url)))
             assertNull(url, parsePost(post, EMBED_PAGE))
