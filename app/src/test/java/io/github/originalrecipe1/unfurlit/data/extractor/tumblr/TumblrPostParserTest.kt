@@ -36,7 +36,7 @@ class TumblrPostParserTest {
 
     @Test fun keepsAllFourPhotosInDisplayOrderAndTheOriginalHistoryUrl() {
         val original = "https://sample-blog.tumblr.com/post/172687798174/photo-post"
-        val result = TumblrPostParser.parse(original, PAGE, fixture)!!
+        val result = TumblrPostParser.parse(original, PAGE, fixture)!!.result
         assertEquals(original, result.sourceUrl)
         assertEquals("Tumblr", result.platform)
         assertEquals("sample-blog", result.author)
@@ -119,7 +119,7 @@ class TumblrPostParserTest {
             JSONObject().put("objects", JSONArray().put(post().put("content", JSONArray().put(video())).removeLayout())))))
         for (url in listOf("https://sample-blog.tumblr.com/post/172687798174/video?source=share",
             PAGE, "https://www.tumblr.com/blog/view/sample-blog/172687798174")) {
-            val result = TumblrPostParser.parse(url, TumblrPostParser.canonicalPage(url)!!, html)!!
+            val result = TumblrPostParser.parse(url, TumblrPostParser.canonicalPage(url)!!, html)!!.result
             assertEquals(url, result.sourceUrl)
             assertTrue(result.media.single() is ExtractedMedia.Video)
         }
@@ -137,7 +137,7 @@ class TumblrPostParserTest {
         assertNull(parse(post)!!.thumbnailUrl)
     }
 
-    @Test fun externalOrIncompleteVideoLeavesTheEntireMixedPostToExistingExtractors() {
+    @Test fun unsupportedExternalOrIncompleteVideoLeavesTheEntireMixedPostToExistingExtractors() {
         val unsupported = listOf(video().put("provider", "youtube"), video().apply { remove("provider") },
             video().apply { remove("media") }, video().apply { getJSONObject("media").remove("url") },
             video().apply { getJSONObject("media").put("type", "application/x-mpegURL") })
@@ -148,6 +148,99 @@ class TumblrPostParserTest {
             val reblog = post().put("trail", JSONArray().put(JSONObject().put("content", JSONArray().put(block))))
             assertNull(parse(reblog))
         }
+    }
+
+    @Test fun youTubeEmbedFromSavedPostDataUsesTheNpfUrlAndKeepsTumblrMetadata() {
+        val original = "https://prozdvoices.tumblr.com/post/673201091169681408/what-recording-voice-acting-sounds-like"
+        val post = TumblrPostParser.parse(original, TumblrPostParser.canonicalPage(original)!!, embedFixture)!!
+        assertEquals(listOf(TumblrEmbed(0, "https://www.youtube.com/watch?v=eomhW5MLGWA")), post.embeds)
+        assertTrue(post.result.media.isEmpty())
+        assertEquals(original, post.result.sourceUrl)
+        assertEquals("Tumblr", post.result.platform)
+        assertEquals("prozdvoices", post.result.author)
+        assertEquals("what recording voice acting sounds like", post.result.title)
+        assertEquals("https://i.ytimg.com/vi/eomhW5MLGWA/hqdefault.jpg", post.result.thumbnailUrl)
+    }
+
+    @Test fun vimeoEmbedFromSavedPostDataUsesItsPageLink() {
+        val page = "https://www.tumblr.com/sirfrogsworth/737932631752245248"
+        val post = TumblrPostParser.parse(page, page, resource("vimeo-embed-post.html"))!!
+        assertEquals(listOf(TumblrEmbed(0, "https://vimeo.com/896231378")), post.embeds)
+        assertTrue(post.result.media.isEmpty())
+        assertTrue(post.result.thumbnailUrl!!.startsWith("https://64.media.tumblr.com/"))
+    }
+
+    @Test fun nativeVideoThenYouTubeEmbedFromSavedPostDataKeepsPostOrder() {
+        val page = "https://www.tumblr.com/anyaboz/765332564457209856"
+        val post = TumblrPostParser.parse(page, page, resource("native-video-and-youtube-embed-post.html"))!!
+        assertEquals(listOf("https://va.media.tumblr.com/tumblr_slxadtrfBU1uwa4z0_720.mp4"), urls(post.result.media))
+        assertEquals(listOf(TumblrEmbed(1, "https://www.youtube.com/watch?v=tGnyeqjOAnw")), post.embeds)
+        assertEquals("https://64.media.tumblr.com/tumblr_slxadtrfBU1uwa4z0_frame1.jpg", post.result.thumbnailUrl)
+    }
+
+    @Test fun embedLinksAreRebuiltAsPlainYouTubeOrVimeoVideoLinks() {
+        val youTube = "https://www.youtube.com/watch?v=eomhW5MLGWA"
+        for ((provider, url, expected) in listOf(
+            Triple("youtube", "https://youtu.be/eomhW5MLGWA?t=3", youTube),
+            Triple("youtube", "https://m.youtube.com/watch?feature=share&v=eomhW5MLGWA&list=PL0123456789", youTube),
+            Triple("youtube", "http://www.youtube.com/watch?v=eomhW5MLGWA", youTube),
+            Triple("youtube", "https://youtube.com/embed/eomhW5MLGWA?feature=oembed", youTube),
+            Triple("youtube", "https://www.youtube.com/shorts/eomhW5MLGWA", youTube),
+            Triple("vimeo", "https://vimeo.com/76979871", "https://vimeo.com/76979871"),
+            Triple("vimeo", "https://www.vimeo.com/76979871/a1b2c3", "https://vimeo.com/76979871/a1b2c3"),
+            Triple("vimeo", "https://player.vimeo.com/video/76979871?h=a1b2c3&app_id=1", "https://vimeo.com/76979871/a1b2c3"),
+        )) {
+            val post = embedPost().put("content", JSONArray().put(embed(provider, url)))
+            assertEquals(url, listOf(TumblrEmbed(0, expected)), parsePost(post, EMBED_PAGE)!!.embeds)
+        }
+    }
+
+    @Test fun unsupportedOrUnsafeEmbedsKeepTodaysFallbackToExistingEngines() {
+        for ((provider, url) in listOf(
+            // A Tumblr link inside an embed must never re-enter this adapter.
+            "youtube" to "https://www.tumblr.com/prozdvoices/673201091169681408",
+            "tumblr" to "https://www.youtube.com/watch?v=eomhW5MLGWA",
+            "vimeo" to "https://www.youtube.com/watch?v=eomhW5MLGWA",
+            "youtube" to "https://vimeo.com/76979871",
+            "instagram" to "https://www.instagram.com/p/CODE/",
+            "spotify" to "https://open.spotify.com/track/0123456789",
+            "youtube" to "https://www.youtube.com.evil.example/watch?v=eomhW5MLGWA",
+            "youtube" to "https://name:secret@www.youtube.com/watch?v=eomhW5MLGWA",
+            "youtube" to "https://www.youtube.com:8443/watch?v=eomhW5MLGWA",
+            "youtube" to "https://127.0.0.1/watch?v=eomhW5MLGWA",
+            "youtube" to "javascript:alert(1)",
+            "youtube" to "https://www.youtube.com/watch?v=short",
+            "youtube" to "https://www.youtube.com/watch?v=eomhW5MLGWA%26x",
+            "youtube" to "https://www.youtube.com/playlist?list=PL0123456789",
+            "vimeo" to "https://vimeo.com/76979871/a1b2c3%2F..",
+            "vimeo" to "https://player.vimeo.com/video/76979871?h=../x",
+        )) {
+            val post = embedPost().put("content", JSONArray().put(embed(provider, url)))
+            assertNull(url, parsePost(post, EMBED_PAGE))
+            val reblog = embedPost().put("trail", JSONArray().put(JSONObject().put("content", JSONArray().put(embed(provider, url)))))
+            assertNull(url, parsePost(reblog, EMBED_PAGE))
+        }
+        assertNull(parsePost(embedPost().put("content", JSONArray().put(embed("youtube", null))), EMBED_PAGE))
+    }
+
+    @Test fun mixedNativeMediaAndEmbedsKeepRowsAndReblogOrder() {
+        val post = post().put("content", JSONArray().put(image("after")).put(embed("youtube", "https://youtu.be/eomhW5MLGWA")))
+            .put("layout", JSONArray("""[{"type":"rows","display":[{"blocks":[1,0]}]}]"""))
+            .put("trail", JSONArray().put(JSONObject().put("content", JSONArray().put(image("before")))))
+        val parsed = parsePost(post)!!
+        assertEquals(listOf("https://cdn.example/before.png", "https://cdn.example/after.png"), urls(parsed.result.media))
+        assertEquals(listOf(TumblrEmbed(1, "https://www.youtube.com/watch?v=eomhW5MLGWA")), parsed.embeds)
+        assertEquals("https://cdn.example/before.png", parsed.result.thumbnailUrl)
+    }
+
+    @Test fun boundsEmbedsAndCountsThemTowardTheGalleryLimit() {
+        val five = embedPost().put("content", JSONArray((0..4).map { embed("youtube", "https://youtu.be/eomhW5MLGWA") }))
+        assertEquals(5, parsePost(five, EMBED_PAGE)!!.embeds.size)
+        val six = embedPost().put("content", JSONArray((0..5).map { embed("youtube", "https://youtu.be/eomhW5MLGWA") }))
+        assertThrows(ExtractionException::class.java) { parsePost(six, EMBED_PAGE) }
+        val mixed = post().put("content", JSONArray((0..49).map { image("photo-$it") })
+            .put(embed("youtube", "https://youtu.be/eomhW5MLGWA"))).removeLayout()
+        assertThrows(ExtractionException::class.java) { parse(mixed) }
     }
 
     @Test fun rejectsUnsafeNativeVideoWithoutUsingTheEmbedUrlOrFallingBack() {
@@ -216,7 +309,8 @@ class TumblrPostParserTest {
         assertEquals(4, result.media.size)
     }
 
-    private fun parse(post: JSONObject) = TumblrPostParser.parse(PAGE, PAGE,
+    private fun parse(post: JSONObject) = parsePost(post)?.result
+    private fun parsePost(post: JSONObject, page: String = PAGE) = TumblrPostParser.parse(page, page,
         envelope(JSONObject().put("PeeprRoute", JSONObject().put("initialTimeline",
             JSONObject().put("objects", JSONArray().put(post))))))
     private fun post() = JSONObject(fixture.substringAfter('>').substringBefore("</script>"))
@@ -228,6 +322,12 @@ class TumblrPostParserTest {
         "url":"https://va.media.tumblr.com/unused.mp4","embedUrl":"https://sample-blog.tumblr.com/post/172687798174/embed",
         "media":{"url":"https://va.media.tumblr.com/native.mp4","type":"video/mp4","width":1920,"height":1080},
         "poster":[{"url":"https://64.media.tumblr.com/poster.jpg","type":"image/jpeg"}],"duration":7500}""")
+    private fun embed(provider: String, url: String?) = JSONObject(embedFixture.substringAfter('>')
+        .substringAfter('>').substringBefore("</script>")).getJSONObject("PeeprRoute").getJSONObject("initialTimeline")
+        .getJSONArray("objects").getJSONObject(0).getJSONArray("content").getJSONObject(0)
+        .put("provider", provider).put("url", url ?: JSONObject.NULL)
+    private fun embedPost() = JSONObject(embedFixture.substringAfter('>').substringAfter('>').substringBefore("</script>"))
+        .getJSONObject("PeeprRoute").getJSONObject("initialTimeline").getJSONArray("objects").getJSONObject(0)
     private fun urls(media: List<ExtractedMedia>) = media.map {
         when (it) {
             is ExtractedMedia.Image -> it.source.url
@@ -237,8 +337,11 @@ class TumblrPostParserTest {
     }
     private fun envelope(state: JSONObject) = "<script id='___INITIAL_STATE___' type='application/json'>$state</script>"
     private val fixture = javaClass.getResource("/tumblr/photo-post.html")!!.readText()
+    private val embedFixture = resource("youtube-embed-post.html")
+    private fun resource(name: String) = javaClass.getResource("/tumblr/$name")!!.readText()
 
     private companion object {
         const val PAGE = "https://www.tumblr.com/sample-blog/172687798174"
+        const val EMBED_PAGE = "https://www.tumblr.com/prozdvoices/673201091169681408"
     }
 }

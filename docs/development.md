@@ -344,6 +344,9 @@ reusable checklist into a release-specific test record under
 - Return to History and confirm that the GIF's thumbnail is still.
 - Open `tumblr-native-video` and confirm that its video plays with sound. Open
   `tumblr-mixed-media` and confirm that the video plays and the following photo loads.
+- Open `tumblr-youtube-embed` and `tumblr-vimeo-embed` and confirm that each video plays
+  with sound and History shows the Tumblr link. Open `tumblr-mixed-youtube-embed` and
+  confirm that the Tumblr video comes first and the YouTube video second.
 
 ## Architecture
 
@@ -407,10 +410,11 @@ The **Live social links** workflow runs weekly and on manual dispatch, using the
 same source-built extractor as release APKs. It exercises
 `YtDlpMediaExtractor` on Android, including URL preflight, the bundled yt-dlp and
 gallery-dl engines and JSON normalization, with native page-data adapters for TikTok,
-Instagram and Pixiv photo posts, and Tumblr photos and native videos. The cases in
+Instagram and Pixiv photo posts, and Tumblr photos, native videos and YouTube/Vimeo embeds. The cases in
 `app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
-- **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Tumblr, Reddit (native video
+- **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Tumblr (native video, YouTube
+  and Vimeo embeds, and a native video followed by a YouTube embed), Reddit (native video
   and external Imgur/Streamable link posts), X (including
   an animated GIF), Instagram posts, Reels (including profile and share links) and video carousels, TikTok, Bluesky, an Imgur
   GIFV, PeerTube, Dailymotion, a Twitch clip and a direct WebM file.

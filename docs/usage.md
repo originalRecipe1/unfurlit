@@ -84,7 +84,10 @@ The [compatibility table](../README.md#compatibility) lists which sites and medi
 types the latest baseline covers.
 
 TikTok, Instagram, Tumblr and Pixiv photo posts use Unfurlit's own extractors (TikTok including
-the post's soundtrack). Photos and galleries on other sites use the bundled
+the post's soundtrack). A Tumblr post with an embedded YouTube or Vimeo video opens
+that video the same way as its YouTube or Vimeo link, in post order alongside any
+Tumblr photos or videos; History keeps the Tumblr link. Embeds from other sites, such
+as Instagram or Spotify, are left to the general engines as before. Photos and galleries on other sites use the bundled
 gallery-dl engine. Instagram photos currently rely on Unfurlit's own extractor:
 anonymous tests of the gallery-dl fallback hit Instagram's login page. Direct
 image links also open. See the [dated test results](social-link-baseline.md) for the

@@ -44,7 +44,7 @@ class YtDlpMediaExtractor(
     private val galleryDlRunner = GalleryDlRunner(appContext)
 
     override suspend fun extract(url: String): ExtractionResult {
-        val result = VimeoPlayerRoute.extract(url, ::extractMedia)
+        val result = VimeoPlayerRoute.extract(url) { sourceUrl, requestUrl -> extractMedia(sourceUrl, requestUrl) }
         // Reddit post URLs carry the title; use it when no engine reported one.
         return if (result.title == null) {
             result.copy(title = RedditLinks.titleFromPostUrl(url))
@@ -53,7 +53,12 @@ class YtDlpMediaExtractor(
         }
     }
 
-    private suspend fun extractMedia(url: String, requestUrl: String): ExtractionResult {
+    /** [tumblrEmbed] runs a link from a Tumblr post, which must never reach the Tumblr adapter again. */
+    private suspend fun extractMedia(
+        url: String,
+        requestUrl: String,
+        tumblrEmbed: Boolean = false,
+    ): ExtractionResult {
         // Normalize supported wrappers/post links before the usual URL safety preflight.
         val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
             ?.let(RedditLinks::normalize)
@@ -66,9 +71,9 @@ class YtDlpMediaExtractor(
         return try {
             // The optional Tumblr GET performs the same public DNS/redirect checks as
             // preflight. Try it first so failure can fall back to the original URL.
-            val tumblrPage = TumblrPostParser.canonicalPage(secureInputUrl)
+            val tumblrPage = TumblrPostParser.canonicalPage(secureInputUrl)?.takeUnless { tumblrEmbed }
             tumblrPage?.let { pageUrl ->
-                TumblrPostExtractor().extract(url, pageUrl)?.let { return it }
+                tumblrExtractor(url).extract(url, pageUrl)?.let { return it }
             }
             val resolvedUrl = urlPreflight.resolve(secureInputUrl)
             val extractionUrl = RedditLinks.keepPostOverGate(secureInputUrl, resolvedUrl)
@@ -82,9 +87,9 @@ class YtDlpMediaExtractor(
                 return PixivArtworkExtractor().extract(url, pageUrl)
             }
             // A non-Tumblr input can redirect to a post; never repeat a page attempt.
-            if (tumblrPage == null) {
+            if (tumblrPage == null && !tumblrEmbed) {
                 TumblrPostParser.canonicalPage(extractionUrl)?.let { pageUrl ->
-                    TumblrPostExtractor().extract(url, pageUrl)?.let { return it }
+                    tumblrExtractor(url).extract(url, pageUrl)?.let { return it }
                 }
             }
             TikTokPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
@@ -111,6 +116,11 @@ class YtDlpMediaExtractor(
             throw ExtractionException(error.toDomainError(), error)
         }
     }
+
+    // An embed takes the same URL checks, preflight and engines as a link the user shared.
+    private fun tumblrExtractor(url: String) = TumblrPostExtractor(extractEmbed = { embedUrl ->
+        VimeoPlayerRoute.extract(embedUrl) { _, requestUrl -> extractMedia(url, requestUrl, tumblrEmbed = true) }
+    })
 
     private suspend fun extractWithYtDlp(url: String, extractionUrl: String): ExtractionResult {
         val processId = "unfurlit-${UUID.randomUUID()}"

@@ -87,6 +87,43 @@ of about 0.02–5%.
 builds, live 403s during playback rather than before the first frame, and any rate
 beyond these samples.
 
+## Tumblr external embeds — 2026-10-24
+
+**Verified:** Tumblr posts whose video is a YouTube or Vimeo embed now open
+through the app's YouTube and Vimeo routes, and a native Tumblr video followed by
+a YouTube embed returns both videos. The reported case
+([prozdvoices](https://prozdvoices.tumblr.com/post/673201091169681408/what-recording-voice-acting-sounds-like))
+failed on main because the native adapter skipped external providers and yt-dlp's
+request for the legacy blog page failed. The run used an API 36 x86_64 emulator
+(`swangle_indirect`), debug APKs, anonymous access, yt-dlp 2026.08.19 and
+gallery-dl 1.32.13. Main is `0c832b4`; both builds used the same fixture file.
+
+Tumblr's permalink data marks an embed as an NPF `video` block with a non-Tumblr
+`provider` and the site's page link in `url`, for example
+`{"type":"video","provider":"youtube","url":"https://www.youtube.com/watch?v=…"}`.
+The adapter uses `provider` and `url` only. It ignores `embedHtml` and `embedIframe`,
+which wraps the player in Tumblr's own embed page.
+
+| Case | Main | Branch |
+| --- | --- | --- |
+| `tumblr-youtube-embed` | FAIL: NetworkFailure (7.0 s) | PASS: 1 video, separate audio, from Tumblr (13.7 s) |
+| `tumblr-vimeo-embed` | FAIL: NetworkFailure (2.7 s) | PASS: 1 video (HLS), separate audio, from Tumblr (8.8 s) |
+| `tumblr-mixed-youtube-embed` | FAIL: NetworkFailure (4.7 s) | PASS: 2 videos, from Tumblr (12.3 s) |
+| `tumblr-native-video` | Not run | PASS (1.8 s) |
+| `tumblr-photo-post` | Not run | PASS (0.4 s) |
+| `tumblr-web-photo-post` | Not run | PASS (0.2 s) |
+| `tumblr-mixed-media` | Not run | PASS (0.4 s) |
+| `youtube-video` | Not run | PASS (14.9 s) |
+| `vimeo-video` | Not run | PASS (4.8 s) |
+
+Main's failures all report yt-dlp's `[Tumblr] …: Unable to download webpage: Remote
+end closed connection without response`. The first Vimeo candidate,
+[dominustempori](https://www.tumblr.com/dominustempori/673572712813297664), was
+replaced: Vimeo returned HTTP 401 for its player even with a Tumblr referer, then
+required login for its page, while `vimeo-video` played from the same network.
+The two-video observation does not show order; unit tests cover the order using
+saved data from the same post. **Not verified:** playback and seeking in the viewer.
+
 ## 1.4.2 — 2026-10-16
 
 **Verified: all 64 fixtures completed — 54 PASS, 10 BLOCKED, 0 unexpected
