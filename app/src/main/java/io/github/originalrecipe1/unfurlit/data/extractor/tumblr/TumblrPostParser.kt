@@ -13,7 +13,13 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
 
-/** Photos and native videos in Tumblr's anonymous permalink page, without API credentials. */
+/** A permalink post: its metadata and native media, plus external videos for their own routes. */
+internal data class TumblrPost(val result: ExtractionResult, val embeds: List<TumblrEmbed>)
+
+/** An external video link at [position] among all of the post's media, in post order. */
+internal data class TumblrEmbed(val position: Int, val url: String)
+
+/** Photos, native videos and YouTube/Vimeo embeds in Tumblr's anonymous permalink page, without API credentials. */
 internal object TumblrPostParser {
     fun canonicalPage(url: String): String? {
         if (!UrlValidator.isAllowedHttps(url)) return null
@@ -32,8 +38,8 @@ internal object TumblrPostParser {
         return "https://www.tumblr.com/${blog.lowercase()}/$id"
     }
 
-    /** Null leaves external videos, audio and unknown page layouts to the existing engines. */
-    fun parse(sourceUrl: String, pageUrl: String, html: String): ExtractionResult? {
+    /** Null leaves other external videos, audio and unknown page layouts to the existing engines. */
+    fun parse(sourceUrl: String, pageUrl: String, html: String): TumblrPost? {
         val canonical = canonicalPage(pageUrl) ?: return null
         if (html.length > PublicPageLoader.MAX_PAGE_BYTES) fail()
         val (_, blog, id) = URI(canonical).path.split('/')
@@ -54,29 +60,37 @@ internal object TumblrPostParser {
         val mediaBlocks = blocks.filter { it.optString("type") != "text" }
         if (mediaBlocks.isEmpty()) return null
         if (mediaBlocks.size > 50) fail()
-        val media = mediaBlocks.map { block ->
+        val media = mutableListOf<ExtractedMedia>()
+        val embeds = mutableListOf<TumblrEmbed>()
+        mediaBlocks.forEachIndexed { position, block ->
             when (block.optString("type")) {
-                "image" -> image(block)
+                "image" -> media += image(block)
                 // Never turn a mixed post into a partial photo-only success.
-                else -> video(block) ?: return null
+                else -> video(block)?.let { media += it }
+                    ?: embedUrl(block)?.let { embeds += TumblrEmbed(position, it) }
+                    ?: return null
             }
         }
+        // Each embed is a full engine run; leave unusually many to the existing engines.
+        if (embeds.size > MAX_EMBEDS) fail()
         val description = blocks.filter { it.optString("type") == "text" }
             .mapNotNull { it.text("text") }.joinToString("\n\n").take(16_384).ifEmpty { null }
-        return ExtractionResult(
+        val result = ExtractionResult(
             sourceUrl = sourceUrl,
             platform = "Tumblr",
             title = (post.text("summary") ?: description)?.take(512),
             author = post.text("blogName")?.take(512),
             description = description,
-            thumbnailUrl = when (val first = media.first()) {
-                is ExtractedMedia.Image -> first.source.url
-                else -> mediaBlocks.first().optJSONArray("poster")?.objects(100)
+            thumbnailUrl = if (mediaBlocks.first().optString("type") == "image") {
+                (media.first() as ExtractedMedia.Image).source.url
+            } else {
+                mediaBlocks.first().optJSONArray("poster")?.objects(100)
                     ?.firstOrNull { it.optString("type").startsWith("image/") && safeUrl(it.optString("url")) }
                     ?.getString("url")
             },
             media = media,
         )
+        return TumblrPost(result, embeds)
     }
 
     private fun image(block: JSONObject): ExtractedMedia.Image {
@@ -105,6 +119,49 @@ internal object TumblrPostParser {
             durationSeconds = block.optLong("duration", -1).takeIf { it >= 0 }?.div(1000),
         )
     }
+
+    /**
+     * NPF external videos are `video` blocks whose `provider` names the site and whose `url`
+     * is its public page link. The rebuilt link only ever names a YouTube or Vimeo video, so a
+     * Tumblr link in an embed can never re-enter this adapter. `embedHtml` and `embedIframe`
+     * (Tumblr's own player wrapper) are ignored.
+     */
+    private fun embedUrl(block: JSONObject): String? {
+        val uri = block.text("url")?.let { runCatching { URI(it) }.getOrNull() } ?: return null
+        if (uri.scheme?.lowercase() !in setOf("http", "https") || uri.rawUserInfo != null) return null
+        if (uri.port != -1 && uri.port != if (uri.scheme.equals("https", ignoreCase = true)) 443 else 80) {
+            return null
+        }
+        val host = uri.host?.lowercase()?.trimEnd('.') ?: return null
+        val path = uri.rawPath.orEmpty()
+        return when (block.optString("provider")) {
+            "youtube" -> when (host) {
+                "youtube.com", "www.youtube.com", "m.youtube.com" -> if (path == "/watch") {
+                    uri.query("v")
+                } else {
+                    YOUTUBE_PATH.matchEntire(path)?.groupValues?.get(1)
+                }
+                "youtu.be" -> YOUTUBE_SHORT_PATH.matchEntire(path)?.groupValues?.get(1)
+                "youtube-nocookie.com", "www.youtube-nocookie.com" ->
+                    YOUTUBE_EMBED_PATH.matchEntire(path)?.groupValues?.get(1)
+                else -> null
+            }?.takeIf { YOUTUBE_ID.matches(it) }?.let { "https://www.youtube.com/watch?v=$it" }
+            "vimeo" -> when (host) {
+                "vimeo.com", "www.vimeo.com" -> VIMEO_PATH.matchEntire(path)?.let { match ->
+                    match.groupValues[1] to match.groupValues[2]
+                }
+                "player.vimeo.com" -> VIMEO_PLAYER_PATH.matchEntire(path)?.let { match ->
+                    match.groupValues[1] to uri.query("h").orEmpty()
+                }
+                else -> null
+            }?.takeIf { (_, hash) -> hash.isEmpty() || VIMEO_HASH.matches(hash) }
+                ?.let { (id, hash) -> "https://vimeo.com/$id" + if (hash.isEmpty()) "" else "/$hash" }
+            else -> null
+        }
+    }
+
+    private fun URI.query(name: String) = rawQuery.orEmpty().split('&')
+        .firstOrNull { it.startsWith("$name=") }?.substringAfter('=')
 
     private fun source(url: String, mimeType: String) = PlaybackSource(
         url = url,
@@ -146,6 +203,16 @@ internal object TumblrPostParser {
     private fun JSONObject.text(key: String) = optString(key).trim()
         .takeIf { it.isNotEmpty() && it != "null" }
     private fun fail(): Nothing = throw ExtractionException(ExtractionError.ExtractionFailed)
+    private const val MAX_EMBEDS = 5
+    private val YOUTUBE_ID = Regex("[A-Za-z0-9_-]{11}")
+    private val YOUTUBE_PATH = Regex("/(?:embed|shorts|live)/([^/]+)/?")
+    private val YOUTUBE_SHORT_PATH = Regex("/([^/]+)/?")
+    private val YOUTUBE_EMBED_PATH = Regex("/embed/([^/]+)/?")
+    // yt-dlp's VimeoIE takes an unlisted hash only in this shape; other segments, such as
+    // /likes, are not a private link and leave the post to the existing engines.
+    private val VIMEO_HASH = Regex("[0-9a-f]{10}")
+    private val VIMEO_PATH = Regex("/([0-9]{1,20})(?:/([^/]+))?/?")
+    private val VIMEO_PLAYER_PATH = Regex("/video/([0-9]{1,20})/?")
     private const val BLOG = "[A-Za-z0-9][A-Za-z0-9-]{0,62}"
     private val BLOG_HOST = Regex("($BLOG)\\.tumblr\\.com")
     private val BLOG_POST = Regex("/(?:post|image)/([0-9]{1,20})(?:/[^/]+)?/?")
