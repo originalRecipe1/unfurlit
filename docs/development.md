@@ -542,6 +542,29 @@ lowercase hyphenated ID, `expected`, and where known the media kinds and count.
 See the [live baseline](social-link-baseline.md) for observed passes and
 compatibility failures, including the media-type results from CI.
 
+### Sampling live playback
+
+`LivePlaybackTest` opens fixtures in the real viewer, plays each for three seconds
+and records every media request by format, client, range, status, bytes read and
+time since extraction, without hosts, addresses or signatures. It is opt-in and
+not part of CI. Gradle's connected tasks uninstall the app afterwards, which
+deletes the results, so install the APKs and run it with `am instrument`:
+
+```bash
+./gradlew :app:installDebug :app:installDebugAndroidTest -Punfurlit.ci.x86_64=true
+adb shell am instrument -w -r -e livePlayback true -e waitForRecovery true -e rounds 10 \
+  -e class io.github.originalrecipe1.unfurlit.ui.viewer.LivePlaybackTest \
+  io.github.originalrecipe1.unfurlit.test/androidx.test.runner.AndroidJUnitRunner
+adb shell run-as io.github.originalrecipe1.unfurlit cat files/live-playback/attempts.jsonl
+```
+
+Without `linkId` it cycles through the YouTube fixtures for `rounds` rounds. By
+default the first HTTP 403 ends an attempt as `FAIL_403`. With `waitForRecovery`
+it waits for the app's own URL refresh and reports `RECOVERED_403` if playback
+then starts. Only `PASS` passes the test. `fake403` set to `audio` or `video`
+refuses the first URL of that type locally, which checks both modes without
+waiting for a real 403. Delete `files/live-playback` between samples.
+
 ### Checking links by hand
 
 The `linkCheck` build type is a debug build installed as a separate app, **Unfurlit

@@ -1,5 +1,92 @@
 # Social-link baseline
 
+## YouTube playback HTTP 403 — 2026-10-25
+
+**Verified: 110 live playbacks, one HTTP 403, recovered by the app; 0 unrecovered
+failures.** Two samples of 55 attempts (11 rounds of the five YouTube fixtures) ran on
+2026-10-24 and 2026-10-25 with `LivePlaybackTest` in wait-for-recovery mode (see
+[Sampling live playback](development.md#sampling-live-playback)). They used API 36
+x86_64 with `swangle_indirect`, a debug APK of `0c832b4`, pinned yt-dlp 2026.08.19
+and production extraction settings. An attempt passes after three seconds of
+playback following the first rendered frame.
+
+| Sample | Attempts | PASS | RECOVERED_403 | Unrecovered |
+| --- | --- | --- | --- | --- |
+| 2026-10-24 | 55 | 54 | 1 | 0 |
+| 2026-10-25 | 55 | 55 | 0 | 0 |
+
+`youtube-video`, `youtube-short-link`, `youtube-shorts` and
+`youtube-shorts-sign-in-fallback` each passed 22 of 22. `youtube-big-buck-bunny`
+passed 21 and recovered once.
+
+**The 403 (verified, recorded per request):**
+
+- **Streams:** `youtube-big-buck-bunny` selected separate streams. The video
+  (itag 399, `VISIONOS`) returned 200. The audio (itag 258, `WEB_EMBEDDED_PLAYER`)
+  was refused.
+- **First refusal:** the audio URL was refused on its first request, 1.0 s after
+  extraction, with no `Range` header and 0 bytes read. About six hours remained
+  before its `expire` time.
+- **Media3 retries:** Media3 retried the same URL three times over 3.9 s and got
+  403 each time.
+- **URL parameters:** neither URL carried a PO token. The refused URL had an `n`
+  parameter, as every `WEB_EMBEDDED_PLAYER` URL in both samples did. The same
+  audio format played in all 19 other attempts that selected it.
+- **Recovery:** the app re-extracted once with the same clients and formats. The new
+  audio URL returned 200 and playback started. The attempt took 45.7 s, against a
+  21.2 s median for passes.
+
+**Recovery path (verified from the code and a faked test):**
+
+- **Trigger:** a player error whose cause chain holds an HTTP 403 response, on the
+  visible item.
+- **Refresh:** one fresh extraction of the original link with the same yt-dlp
+  options, `player_client=default,web_embedded` and format selector. Nothing is
+  cached.
+- **Resume:** the new player resumes at the same position and play state.
+- **Limits:** there is one refresh per opened link. A second 403 shows
+  **Extract again**, and a failed refresh shows the extraction error.
+- **Media3:** before reporting the error, Media3 retries the load itself (three
+  times by default).
+
+**Cause: hypothesis, not verified.** YouTube refused one extracted media URL
+outright. The recorded fields rule out two causes for this event (verified):
+
+- **Expiry:** about six hours remained.
+- **Range or chunk size:** it was the first request, with no range and no bytes
+  read.
+
+A connection or address change is unlikely, but this is inferred, not measured.
+The same extraction's video URL loaded at the same moment, and the refresh played.
+The records do not include the device's address or network, so they cannot
+exclude a change.
+
+It is not tied to one client. The 2026-10-05 event refused both `VISIONOS` streams
+of `youtube-video` (itags 400 and 251) before any frame. These records omit URL
+tokens by design. So they cannot tell an intermittent server-side check, such as
+PO-token enforcement, apart from an invalid URL produced by yt-dlp.
+
+**Fix: none to production code.** The existing refresh recovered the only 403 in
+110 attempts. The evidence does not implicate a setting Unfurlit controls: client
+choice, range behavior or retry policy. Switching clients on the strength of one
+event per client would be a guess. With no change, there is no after-fix run; both
+samples are before-fix results. The observed rate is 1/110, with a 95% interval
+of about 0.02–5%.
+
+**Added tests (verified on API 36):**
+
+- `PlaybackRecoveryTest` fakes this event's shape. The separate audio URL is
+  refused on every request, Media3's retries included. The test checks for exactly
+  one re-extraction, playback from the new URL and no **Extract again**. A variant
+  that keeps returning the refused URL fails, as intended.
+- `LivePlaybackTest` with `fake403` refuses one live audio or video URL locally.
+  On `youtube-video`, strict mode reported `FAIL_403` and wait mode reported
+  `RECOVERED_403` after one re-extraction, for both stream types.
+
+**Not verified:** physical phones, other networks or regions, optimized release
+builds, live 403s during playback rather than before the first frame, and any rate
+beyond these samples.
+
 ## 1.4.2 — 2026-10-16
 
 **Verified: all 64 fixtures completed — 54 PASS, 10 BLOCKED, 0 unexpected
@@ -129,6 +216,8 @@ in the earlier 50-attempt sample (1/50). The bundled engines and player HTTP-403
 recovery code have not changed since 1.3.1. This evidence supports an intermittent
 media-endpoint refusal, but its root cause, dependence on a particular connection,
 and the outcome of automatic recovery in this failed sample are **not verified**.
+The [2026-10-25 follow-up](#youtube-playback-http-403--2026-10-25) waited for
+recovery across 110 playbacks. Its one 403 was recovered.
 
 The following six targeted controls used 1.3.1 `c76c789` with the same current
 fixtures and debug-based viewer checks. These are separate checks, not a new full

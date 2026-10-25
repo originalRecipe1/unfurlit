@@ -37,12 +37,14 @@ import io.github.originalrecipe1.unfurlit.ui.theme.UnfurlitTheme
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
+import okhttp3.Request
 import okhttp3.Response
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -58,6 +60,7 @@ class PlaybackRecoveryTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val sourceUrl = "https://www.youtube.com/watch?v=recovery-test"
     private lateinit var playbackClient: OkHttpClient
+    private lateinit var wav: ByteArray
     private lateinit var result: ExtractionResult
     private lateinit var viewModel: ViewerViewModel
     private val requests = mutableListOf<String>()
@@ -67,15 +70,12 @@ class PlaybackRecoveryTest {
     @Before fun setUp() {
         // Generated PCM exercises the real player and seeking without codecs or a network fixture.
         val size = 8_000 * 2 * 15
-        val wav = ByteBuffer.allocate(44 + size).order(ByteOrder.LITTLE_ENDIAN).apply {
+        wav = ByteBuffer.allocate(44 + size).order(ByteOrder.LITTLE_ENDIAN).apply {
             put("RIFF".toByteArray()); putInt(36 + size); put("WAVEfmt ".toByteArray())
             putInt(16); putShort(1); putShort(1); putInt(8_000); putInt(16_000)
             putShort(2); putShort(16); put("data".toByteArray()); putInt(size)
         }.array()
-        playbackClient = OkHttpClient.Builder().addInterceptor { chain ->
-            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1)
-                .code(200).message("OK").body(wav.toResponseBody("audio/wav".toMediaType())).build()
-        }.build()
+        playbackClient = OkHttpClient.Builder().addInterceptor { chain -> respond(chain.request(), 200) }.build()
         result = ExtractionResult(
             sourceUrl, "YouTube", "Recovery test", null, null, null,
             listOf(ExtractedMedia.Video(
@@ -146,6 +146,40 @@ class PlaybackRecoveryTest {
         compose.runOnIdle {
             assertEquals(PlaybackResume(0, 1_500, true), ready().playbackResume)
             assertEquals(2, requests.size)
+        }
+    }
+
+    // Live samples showed this shape: one stream of a separate video+audio pair refused
+    // from its first request on, Media3's own retries refused too, before any frame.
+    @Test fun separateStreamRefusedBeforeFirstFrameIsReextractedOnceAndPlays() {
+        val refusedAudio = "https://media.example/audio-refused"
+        val freshAudio = "https://media.example/audio-fresh"
+        val mediaRequests = ConcurrentLinkedQueue<String>()
+        playbackClient = OkHttpClient.Builder().addInterceptor { chain ->
+            val url = chain.request().url.toString()
+            mediaRequests += url
+            respond(chain.request(), if (url == refusedAudio) 403 else 200)
+        }.build()
+        val video = result.media.single() as ExtractedMedia.Video
+        fun withAudio(url: String) = result.copy(
+            media = listOf(video.copy(audioSource = video.videoSource.copy(url = url, formatId = "audio"))),
+        )
+        compose.runOnIdle {
+            requests.clear()
+            extract = { if (requests.size == 1) withAudio(refusedAudio) else withAudio(freshAudio) }
+            viewModel.open(sourceUrl)
+        }
+        showViewer()
+        val replacement = awaitPlayer()
+        compose.waitUntil(10_000) {
+            compose.runOnIdle { replacement.isPlaying && replacement.currentPosition > 500 }
+        }
+        compose.onNodeWithText(context.getString(R.string.action_extract_again)).assertDoesNotExist()
+        compose.runOnIdle {
+            assertEquals(listOf(sourceUrl, sourceUrl), requests)
+            assertEquals(PlaybackResume(0, 0, true), ready().playbackResume)
+            assertTrue(mediaRequests.count { it == refusedAudio } > 1)
+            assertTrue(freshAudio in mediaRequests)
         }
     }
 
@@ -250,6 +284,11 @@ class PlaybackRecoveryTest {
         }
         return requireNotNull(ready)
     }
+
+    private fun respond(request: Request, status: Int): Response = Response.Builder()
+        .request(request).protocol(Protocol.HTTP_1_1).code(status).message(if (status == 200) "OK" else "Error")
+        .body(if (status == 200) wav.toResponseBody("audio/wav".toMediaType()) else byteArrayOf().toResponseBody())
+        .build()
 
     private fun httpError(status: Int) = HttpDataSource.InvalidResponseCodeException(
         status, null, null, emptyMap(), DataSpec("https://media.example/expired.mp4".toUri()), byteArrayOf(),
