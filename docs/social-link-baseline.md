@@ -50,13 +50,16 @@ passed 21 and recovered once.
   times by default).
 
 **Cause: hypothesis, not verified.** YouTube refused one extracted media URL
-outright. The recorded fields rule out three causes for this event (verified):
+outright. The recorded fields rule out two causes for this event (verified):
 
 - **Expiry:** about six hours remained.
 - **Range or chunk size:** it was the first request, with no range and no bytes
   read.
-- **A connection or address change:** the same extraction's video URL loaded, and
-  the refresh worked over the same connection.
+
+A connection or address change is unlikely, but this is inferred, not measured.
+The same extraction's video URL loaded at the same moment, and the refresh played.
+The records do not include the device's address or network, so they cannot
+exclude a change.
 
 It is not tied to one client. The 2026-10-05 event refused both `VISIONOS` streams
 of `youtube-video` (itags 400 and 251) before any frame. These records omit URL
