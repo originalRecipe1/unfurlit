@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-25",
+  "api": 36,
+  "abi": "x86_64",
+  "variant": "release; R8 and resource shrinking enabled; ABI-only local Gradle override",
+  "baselineRevision": "c29faaec30adb4fd5988f0eda42ff86723b4cd95",
+  "candidateRevision": "27e0a9af6f011a55930e7e7d6d396544dbf4119b",
+  "historyRowsBefore": 2,
+  "historyRowsAfter": 3,
+  "retainedRowsAndThumbnailsIdentical": true,
+  "oldHistoryVisibleAfterUpdate": true,
+  "newExtraction": "tumblr-photo-post",
+  "newMediaCount": 4,
+  "newThumbnailBytes": 1924,
+  "historySurvivesRestart": true,
+  "runtimeBefore": {
+    "archiveBytes": 11676362,
+    "archiveSha256": "077b680033c6dc397b8b8382a9b3c5c45621734ffafda611f2d03ba46e03f872",
+    "installedArchiveSizeMarker": "11676362",
+    "matchingPackagedRegularFiles": 787,
+    "mismatchedPackagedFiles": [],
+    "additionalTrimTargets": 0,
+    "additionalTrimTargetsPresent": [],
+    "stdlibUnpacked": true
+  },
+  "runtimeAfter": {
+    "archiveBytes": 11676362,
+    "archiveSha256": "077b680033c6dc397b8b8382a9b3c5c45621734ffafda611f2d03ba46e03f872",
+    "installedArchiveSizeMarker": "11676362",
+    "matchingPackagedRegularFiles": 787,
+    "mismatchedPackagedFiles": [],
+    "additionalTrimTargets": 0,
+    "additionalTrimTargetsPresent": [],
+    "stdlibUnpacked": true
+  },
+  "apkRecords": [
+    {
+      "version": "1.4.2",
+      "abi": "x86_64",
+      "releaseR8": true,
+      "unsignedSha256": "13924a19bc27eaef5ea58018c4cb23fafec9f95d3f57a7aa005c7e3f3650c91b",
+      "signedSha256": "c70e99cbeb34e7c0fe163e43d7ea1087b3c07be84a7628290bff850db40c0b46",
+      "certificateSha256": "1b3b99883735520ef5e8df2c767dac02b59fa9a6f71f6e4c6d599d0e05231360"
+    },
+    {
+      "version": "1.4.3",
+      "abi": "x86_64",
+      "releaseR8": true,
+      "unsignedSha256": "395757ad646b5ef863bea24794cf2aa92792a590ec8b444683325174a95cb08a",
+      "signedSha256": "f316c2174a9bd5fbc0134717c02958c7cb272f10a4328d612bc141cd92507fe3",
+      "certificateSha256": "1b3b99883735520ef5e8df2c767dac02b59fa9a6f71f6e4c6d599d0e05231360"
+    }
+  ],
+  "verified": true
+}
