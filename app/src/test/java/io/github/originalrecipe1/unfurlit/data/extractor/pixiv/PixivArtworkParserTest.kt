@@ -52,6 +52,45 @@ class PixivArtworkParserTest {
         assertEquals(pages, urls(result.media))
     }
 
+    @Test fun keepsPixivsOwnResizedCopyOfEveryPageAsItsFallback() {
+        val single = PixivArtworkParser.parse(PAGE, artwork(body().apply {
+            getJSONObject("urls").put("regular", masterUrl(0))
+        }))
+        assertEquals(listOf(masterUrl(0)), fallbacks(single.media))
+        assertEquals(imageUrl(0), single.thumbnailUrl)
+        // Taken from the metadata as is, even where its date path or hash differs from the original's.
+        val regular = listOf(masterUrl(0), masterUrl(1).replace("2008/06/13/00/29/13", "2016/04/15/11/53/44"),
+            masterUrl(2).replace("966412_p2", "966412-abcdef_p2").replace(".jpg", ".png"))
+        val gallery = PixivArtworkParser.parse(PAGE, artwork(body().put("pageCount", 3)),
+            pages((0..2).map(::imageUrl), regular))
+        assertEquals((0..2).map(::imageUrl), urls(gallery.media))
+        assertEquals(regular, fallbacks(gallery.media))
+        assertEquals(imageUrl(0), gallery.thumbnailUrl)
+    }
+
+    @Test fun dropsAMissingOrUnsafeResizedCopyButKeepsTheOriginal() {
+        for (regular in listOf(
+            null, "", "null", "https://127.0.0.1/img-master/966412_p1_master1200.jpg",
+            "http://i.pximg.net/img-master/966412_p1_master1200.jpg", "file:///966412_p1_master1200.jpg",
+            "https://name:secret@i.pximg.net/img-master/966412_p1_master1200.jpg",
+            "https://i.pximg.net:8443/img-master/966412_p1_master1200.jpg",
+            "https://i.pximg.net.evil.example/img-master/966412_p1_master1200.jpg",
+            "https://s.pximg.net/common/images/limit_unknown_360.png",
+            "https://i.pximg.net/c/250x250_80_a2/img-master/img/966412_p1_square1200.jpg",
+            imageUrl(1), masterUrl(1).replace("img-master", "img-original"),
+            masterUrl(1).replace("_master1200", ""), masterUrl(1).replace("966412", "123"), masterUrl(0),
+        )) {
+            val result = PixivArtworkParser.parse(PAGE, artwork(body().put("pageCount", 2)),
+                pages(listOf(imageUrl(0), imageUrl(1)), listOf(masterUrl(0), regular)))
+            assertEquals(regular, listOf(imageUrl(0), imageUrl(1)), urls(result.media))
+            assertEquals(regular, listOf(masterUrl(0), null), fallbacks(result.media))
+        }
+        val single = PixivArtworkParser.parse(PAGE, artwork(body().apply {
+            getJSONObject("urls").put("regular", masterUrl(0).replace("https:", "http:"))
+        }))
+        assertEquals(listOf(null), fallbacks(single.media))
+    }
+
     @Test fun rejectsAnotherArtworkInsteadOfShowingRecommendations() {
         assertError(ExtractionError.ExtractionFailed) { artwork(body().put("id", "123")) }
     }
@@ -127,15 +166,21 @@ class PixivArtworkParserTest {
 
     private fun artwork(body: JSONObject = body()) = PixivArtworkParser.artwork("966412", response(body))
     private fun urls(media: List<ExtractedMedia>) = media.map { (it as ExtractedMedia.Image).source.url }
+    private fun fallbacks(media: List<ExtractedMedia>) = media.map { (it as ExtractedMedia.Image).fallbackUrl }
     private fun assertError(expected: ExtractionError, action: () -> Unit) =
         assertEquals(expected, assertThrows(ExtractionException::class.java, action).error)
 
     internal companion object {
         const val PAGE = "https://www.pixiv.net/artworks/966412"
         fun imageUrl(index: Int) = "https://i.pximg.net/img-original/img/2008/06/13/00/29/13/966412_p$index.png"
+        fun masterUrl(index: Int) =
+            "https://i.pximg.net/img-master/img/2008/06/13/00/29/13/966412_p${index}_master1200.jpg"
         fun body() = JSONObject("""{"id":"966412","title":"Sample artwork","userName":"Sample artist",
           "illustType":0,"restrict":0,"xRestrict":0,"pageCount":1,"urls":{"original":"${imageUrl(0)}"}}""")
         fun response(body: Any) = JSONObject().put("error", false).put("body", body).toString()
-        fun pages(urls: List<String>) = response(JSONArray(urls.map { JSONObject().put("urls", JSONObject().put("original", it)) }))
+        fun pages(urls: List<String>, regular: List<String?> = urls.map { null }) = response(JSONArray(
+            urls.zip(regular) { original, resized ->
+                JSONObject().put("urls", JSONObject().put("original", original).putOpt("regular", resized))
+            }))
     }
 }

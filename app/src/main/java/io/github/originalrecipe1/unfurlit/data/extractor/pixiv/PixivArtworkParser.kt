@@ -30,7 +30,14 @@ internal object PixivArtworkParser {
 
     fun canonicalPage(url: String): String? = artworkId(url)?.let { "https://www.pixiv.net/artworks/$it" }
 
-    data class Artwork(val id: String, val title: String?, val author: String?, val count: Int, val original: String)
+    data class Artwork(
+        val id: String,
+        val title: String?,
+        val author: String?,
+        val count: Int,
+        val original: String,
+        val regular: String? = null,
+    )
 
     fun artwork(id: String, json: String): Artwork {
         val body = response(json).optJSONObject("body") ?: fail()
@@ -48,35 +55,34 @@ internal object PixivArtworkParser {
         }
         val count = body.optInt("pageCount", -1)
         if (count !in 1..50) fail()
+        val urls = body.optJSONObject("urls")
         return Artwork(id, body.text("title")?.take(512), body.text("userName")?.take(512), count,
-            body.optJSONObject("urls")?.text("original") ?: fail())
+            urls?.text("original") ?: fail(), urls?.text("regular"))
     }
 
     fun parse(sourceUrl: String, artwork: Artwork, pagesJson: String? = null): ExtractionResult {
-        val urls = if (artwork.count == 1) {
-            listOf(artwork.original)
+        val pages = if (artwork.count == 1) {
+            listOf(artwork.original to artwork.regular)
         } else {
             val pages = response(pagesJson ?: fail()).optJSONArray("body") ?: fail()
             if (pages.length() != artwork.count) fail()
             // Read every original URL in API order: extensions and hashes can differ per page.
             (0 until pages.length()).map {
-                pages.optJSONObject(it)?.optJSONObject("urls")?.text("original") ?: fail()
+                val urls = pages.optJSONObject(it)?.optJSONObject("urls")
+                (urls?.text("original") ?: fail()) to urls?.text("regular")
             }
         }
-        val media = urls.mapIndexed { index, url ->
-            val uri = runCatching { URI(url) }.getOrNull() ?: fail()
-            if (!UrlValidator.isAllowedHttps(url) || uri.rawUserInfo != null ||
-                uri.port !in listOf(-1, 443) || uri.host?.lowercase() != "i.pximg.net" ||
-                !uri.path.orEmpty().startsWith("/img-original/") ||
-                !Regex("${artwork.id}(?:-[a-zA-Z0-9]+)?_p$index\\.(?:jpg|jpeg|png|gif|webp|avif)")
-                    .matches(uri.path.substringAfterLast('/'))) fail()
+        val media = pages.mapIndexed { index, (original, regular) ->
+            if (!isImage(original, artwork.id, index, "img-original", "")) fail()
+            // Pixiv's own resized copy covers originals its CDN cannot serve; an unusable one is dropped, not fatal.
+            val fallback = regular?.takeIf { isImage(it, artwork.id, index, "img-master", "_master1200") }
             ExtractedMedia.Image(PlaybackSource(
-                url = url,
+                url = original,
                 headers = mapOf("Referer" to "https://www.pixiv.net/"),
                 format = StreamFormat.Progressive,
                 mediaMimeType = null,
                 formatId = null,
-            ))
+            ), fallback)
         }
         return ExtractionResult(
             sourceUrl = sourceUrl,
@@ -87,6 +93,15 @@ internal object PixivArtworkParser {
             thumbnailUrl = media.first().source.url,
             media = media,
         )
+    }
+
+    private fun isImage(url: String, id: String, page: Int, folder: String, suffix: String): Boolean {
+        val uri = runCatching { URI(url) }.getOrNull() ?: return false
+        return UrlValidator.isAllowedHttps(url) && uri.rawUserInfo == null &&
+            uri.port in listOf(-1, 443) && uri.host?.lowercase() == "i.pximg.net" &&
+            uri.path.orEmpty().startsWith("/$folder/") &&
+            Regex("$id(?:-[a-zA-Z0-9]+)?_p$page$suffix\\.(?:jpg|jpeg|png|gif|webp|avif)")
+                .matches(uri.path.substringAfterLast('/'))
     }
 
     private fun response(json: String): JSONObject {

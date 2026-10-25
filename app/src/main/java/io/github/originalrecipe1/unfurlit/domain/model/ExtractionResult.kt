@@ -21,6 +21,8 @@ sealed interface ExtractedMedia {
 
     data class Image(
         val source: PlaybackSource,
+        /** Smaller copy from the same metadata, loaded once with [source]'s headers if the original fails. */
+        val fallbackUrl: String? = null,
     ) : ExtractedMedia
 
     data class Audio(

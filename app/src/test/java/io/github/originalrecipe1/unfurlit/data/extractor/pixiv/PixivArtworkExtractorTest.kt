@@ -3,8 +3,10 @@ package io.github.originalrecipe1.unfurlit.data.extractor.pixiv
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParserTest.Companion.PAGE
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParserTest.Companion.body
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParserTest.Companion.imageUrl
+import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParserTest.Companion.masterUrl
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParserTest.Companion.pages
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParserTest.Companion.response
+import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import kotlinx.coroutines.CompletableDeferred
@@ -37,9 +39,11 @@ class PixivArtworkExtractorTest {
         val paths = mutableListOf<String>()
         val extractor = PixivArtworkExtractor { request ->
             paths += request.url.encodedPath
-            if (paths.size == 1) response(body().put("pageCount", 2)) else pages(listOf(imageUrl(0), imageUrl(1)))
+            if (paths.size == 1) response(body().put("pageCount", 2))
+            else pages(listOf(imageUrl(0), imageUrl(1)), listOf(masterUrl(0), masterUrl(1)))
         }
-        assertEquals(2, extractor.extract(PAGE, PAGE).media.size)
+        val media = extractor.extract(PAGE, PAGE).media.map { it as ExtractedMedia.Image }
+        assertEquals(listOf(masterUrl(0), masterUrl(1)), media.map { it.fallbackUrl })
         assertEquals(listOf("/ajax/illust/966412", "/ajax/illust/966412/pages"), paths)
     }
 
