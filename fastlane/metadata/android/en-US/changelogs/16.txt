@@ -1,0 +1,4 @@
+Supported links can open directly in Unfurlit (Android 12 and later).
+More Instagram, Vimeo, Tumblr, Pixiv, Bluesky and Bandcamp links open in Unfurlit.
+Pixiv pages whose original image fails now show a smaller copy.
+Tumblr posts with YouTube or Vimeo videos open.
