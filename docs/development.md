@@ -127,7 +127,7 @@ For Android Studio, select the shared **Unfurlit** run configuration, choose one
 more connected devices from the target-device selector, and press **Run**. The
 configuration launches the default activity and does not clear app data.
 
-The normal build downloads the official yt-dlp `2026.08.19` zipimport executable
+The normal build downloads the official yt-dlp `2026.10.21` zipimport executable
 and verifies its pinned SHA-256 before packaging it as an app resource. The app
 then uses that bundled copy through youtubedl-android; it does not fetch or update
 executable code at runtime.
@@ -358,7 +358,7 @@ ui -> domain repository -> MediaExtractor -> yt-dlp adapter
  +-> media viewer -> Media3 + OkHttp / Coil
 ```
 
-`PlaybackSource` carries a URL, request headers, stream type, MIME type, format ID, and temporary scoped playback cookies. `ExtractedMedia.Video` can hold independent video and audio sources, while posts always expose a list of video, image, or audio entries. A separate history repository persists only a safe metadata projection after media is successfully displayed or starts playing. Runtime yt-dlp updating is not called; youtubedl-android `0.18.1` provides the Android/Python integration and yt-dlp `2026.08.19` is pinned separately as the extraction engine.
+`PlaybackSource` carries a URL, request headers, stream type, MIME type, format ID, and temporary scoped playback cookies. `ExtractedMedia.Video` can hold independent video and audio sources, while posts always expose a list of video, image, or audio entries. A separate history repository persists only a safe metadata projection after media is successfully displayed or starts playing. Runtime yt-dlp updating is not called; youtubedl-android `0.18.1` provides the Android/Python integration and yt-dlp `2026.10.21` is pinned separately as the extraction engine.
 
 The app exports yt-dlp's scoped cookies separately from its HTTP headers and
 uses an in-memory cookie jar per video/audio source. Cookie domain, path, secure

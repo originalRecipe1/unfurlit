@@ -147,7 +147,7 @@ abstract class PreparePinnedGalleryDl @Inject constructor(private val exec: Exec
 }
 
 val ytDlpEngineVersion = libs.versions.ytDlpEngine.get()
-val ytDlpReleaseSha256 = "1fa6733c37ea6fb51c99ad8fe785e7b7e5f3246c9b980230329d4fb72ed8d4d6"
+val ytDlpReleaseSha256 = "b7af77f686e95f7845ce8d09d21957718febb8b48b30555adb9dd2292ad7bf14"
 // Retain old property aliases for existing local/F-Droid build setups.
 val localYtDlpPath = providers.gradleProperty("unfurlit.ytdlp.file")
     .orElse(providers.gradleProperty("peek.ytdlp.file")).orNull
@@ -210,8 +210,8 @@ android {
         applicationId = "io.github.originalrecipe1.unfurlit"
         minSdk = 24
         targetSdk = 36
-        versionCode = 15
-        versionName = "1.4.2"
+        versionCode = 16
+        versionName = "1.4.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField(

@@ -1,0 +1,1 @@
+Update the media extractor to yt-dlp 2026.10.21.
