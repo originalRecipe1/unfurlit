@@ -13,7 +13,7 @@
     <string name="open_links_title">Open links in Unfurlit</string>
     <string name="open_links_description">Choose which sites open here when you tap a link in another app. In Settings, choose to open links in the app, then add the sites.</string>
     <string name="open_links_app_hint">If a site’s own app is installed, its links may still open there.</string>
-    <string name="open_links_on">On</string>
+    <string name="open_links_on">Turned on</string>
     <string name="open_links_off">Not turned on yet</string>
     <string name="action_open_settings">Open settings</string>
     <string name="open_settings_failed">Couldn’t open Settings.</string>

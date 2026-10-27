@@ -61,7 +61,7 @@ class OpenLinksAutoCloseTest {
         returnFromSettings()
 
         composeRule.onNodeWithText(TITLE).assertExists()
-        composeRule.onNodeWithText("On").assertExists()
+        composeRule.onNodeWithText("Turned on").assertExists()
     }
 
     private fun showDialog() {
