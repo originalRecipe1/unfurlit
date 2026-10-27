@@ -14,7 +14,8 @@ Supported links and media:
 - Vimeo: videos, including unlisted links with an access hash.
 - Instagram: videos, Reels, photos and carousels (no photo-post soundtracks).
 - TikTok: videos and photo posts, including available photo soundtracks.
-- Reddit and X/Twitter: videos, photos and galleries.
+- Reddit: posts are currently blocked for signed-out apps; direct i.redd.it image links still open.
+- X/Twitter: videos, photos and galleries.
 - PeerTube: videos.
 - Bandcamp: audio tracks.
 - Tumblr: native videos, photos and mixed photo/video posts.
