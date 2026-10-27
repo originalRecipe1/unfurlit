@@ -9,10 +9,12 @@
     <string name="home_invalid_url">Enter a valid public HTTP or HTTPS URL.</string>
     <string name="home_clipboard_no_url">The clipboard does not contain a supported URL.</string>
     <string name="supported_media_title">Supported links and media</string>
-    <string name="supported_media_description">YouTube — videos\nVimeo — videos\nInstagram — videos &amp; photos\nTikTok — videos &amp; photo posts\nReddit — direct image links only; posts are blocked for signed-out apps\nX/Twitter — videos, GIFs &amp; photos\nPeerTube — videos\nBandcamp — tracks\nTumblr — videos &amp; photos\nPixiv — illustrations\nImgur, Bluesky, Flickr and many other sites — photos, videos &amp; audio\n\nPublic links only. Availability varies.</string>
+    <string name="supported_media_description">YouTube — videos\nVimeo — videos\nInstagram — videos &amp; photos\nTikTok — videos &amp; photo posts\nReddit — not working right now (image links still open)\nX/Twitter — videos, GIFs &amp; photos\nPeerTube — videos\nBandcamp — tracks\nTumblr — videos &amp; photos\nPixiv — illustrations\nImgur, Bluesky, Flickr and many other sites — photos, videos &amp; audio\n\nPublic links only. Availability varies.</string>
     <string name="open_links_title">Open links in Unfurlit</string>
-    <string name="open_links_description">Android doesn’t let Unfurlit claim links automatically. In Settings, turn on the sites you want. Reddit posts are currently blocked for signed-out apps, so leave all reddit.com and redd.it addresses off for now. If a site’s own app still opens them, turn its links off under “Open by default” in that app’s settings.</string>
-    <string name="open_links_status">Web addresses turned on: %1$d of %2$d</string>
+    <string name="open_links_description">Choose which sites open here when you tap a link in another app. In Settings, choose to open links in the app, then add the sites.</string>
+    <string name="open_links_app_hint">If a site’s own app is installed, its links may still open there.</string>
+    <string name="open_links_on">On</string>
+    <string name="open_links_off">Not turned on yet</string>
     <string name="action_open_settings">Open settings</string>
     <string name="open_settings_failed">Couldn’t open Settings.</string>
 

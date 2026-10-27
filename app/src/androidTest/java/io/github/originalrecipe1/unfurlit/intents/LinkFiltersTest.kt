@@ -40,7 +40,7 @@ class LinkFiltersTest {
     }
 
     @Test
-    fun leavesProfileSearchAndLoginPagesToOtherApps() {
+    fun leavesProfileSearchLoginAndRedditPagesToOtherApps() {
         val claimed = listOf(
             "https://www.instagram.com/",
             "https://www.instagram.com/instagram/",
@@ -73,6 +73,12 @@ class LinkFiltersTest {
             "https://benprunty.bandcamp.com/album/fez-ost",
             "https://bandcamp.com/track/lanius-battle",
             "https://bandcamp.com/login",
+            // Reddit stays out of Open by default while it blocks signed-out access.
+            "https://www.reddit.com/r/RobloxArt/comments/15ko0qu/",
+            "https://reddit.com/comments/15ko0qu",
+            "https://old.reddit.com/r/RobloxArt/comments/15ko0qu/",
+            "https://www.reddit.com/gallery/hrrh23",
+            "https://redd.it/hrrh23",
         ).filter(::opensInMainActivity)
         assertTrue("Claimed: $claimed", claimed.isEmpty())
     }

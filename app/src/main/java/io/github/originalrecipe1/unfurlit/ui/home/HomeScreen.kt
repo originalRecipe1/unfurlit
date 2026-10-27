@@ -1,6 +1,7 @@
 package io.github.originalrecipe1.unfurlit.ui.home
 
 import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -212,12 +213,21 @@ fun HomeScreen(
 
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
-private fun OpenLinksDialog(onDismissRequest: () -> Unit) {
+internal fun OpenLinksDialog(
+    onDismissRequest: () -> Unit,
+    readSelectedDomains: (Context) -> SelectedDomains? = OpenLinkSettings::selectedDomains,
+    openSettings: (Context) -> Boolean = { OpenLinkSettings.open(it) },
+) {
     val context = LocalContext.current
     var selectedDomains by remember { mutableStateOf<SelectedDomains?>(null) }
-    // Re-read after the user returns from Settings.
+    var openedSettings by rememberSaveable { mutableStateOf(false) }
+    // Re-read after the user returns from Settings, and close once a site is on.
     LifecycleResumeEffect(Unit) {
-        selectedDomains = OpenLinkSettings.selectedDomains(context)
+        val domains = readSelectedDomains(context)
+        selectedDomains = domains
+        if (closesAfterSettings(openedSettings, domains)) {
+            onDismissRequest()
+        }
         onPauseOrDispose {}
     }
     AlertDialog(
@@ -231,16 +241,25 @@ private fun OpenLinksDialog(onDismissRequest: () -> Unit) {
                 Text(stringResource(R.string.open_links_description))
                 selectedDomains?.let { domains ->
                     Text(
-                        text = stringResource(R.string.open_links_status, domains.enabled, domains.total),
+                        text = stringResource(
+                            if (domains.enabled > 0) R.string.open_links_on else R.string.open_links_off,
+                        ),
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }
+                Text(
+                    text = stringResource(R.string.open_links_app_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (!OpenLinkSettings.open(context)) {
+                    if (openSettings(context)) {
+                        openedSettings = true
+                    } else {
                         Toast.makeText(context, R.string.open_settings_failed, Toast.LENGTH_SHORT).show()
                     }
                 },
@@ -255,5 +274,9 @@ private fun OpenLinksDialog(onDismissRequest: () -> Unit) {
         },
     )
 }
+
+/** The dialog stays open until the user has been to Settings and turned on at least one site. */
+internal fun closesAfterSettings(openedSettings: Boolean, domains: SelectedDomains?): Boolean =
+    openedSettings && domains != null && domains.enabled > 0
 
 private const val MAX_INPUT_LENGTH = 8 * 1024
