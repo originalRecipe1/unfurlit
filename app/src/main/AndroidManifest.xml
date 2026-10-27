@@ -73,28 +73,12 @@
                 <data android:host="youtu.be" />
             </intent-filter>
 
-            <!-- Reddit posts, comments, galleries, and short links. -->
-            <intent-filter android:autoVerify="false">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:host="reddit.com" />
-                <data android:host="www.reddit.com" />
-                <data android:host="old.reddit.com" />
-                <data android:pathPattern="/r/.*/comments/.*" />
-                <data android:pathPrefix="/comments/" />
-                <data android:pathPrefix="/gallery/" />
-            </intent-filter>
-            <intent-filter android:autoVerify="false">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:host="redd.it" />
-            </intent-filter>
+            <!--
+                Reddit blocks signed-out access to posts, so its VIEW filters are left out and
+                Open by default doesn't list Reddit. Bring them back when that block ends:
+                reddit.com, www.reddit.com and old.reddit.com with /r/*/comments/*, /comments/
+                and /gallery/, plus redd.it. Shared Reddit links still arrive through SEND.
+            -->
 
             <!-- X and Twitter status links. -->
             <intent-filter android:autoVerify="false">
