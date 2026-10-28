@@ -100,7 +100,8 @@ passed 21 and recovered once.
 **Recovery path (verified from the code and a faked test):**
 
 - **Trigger:** a player error whose cause chain holds an HTTP 403 response, on the
-  visible item.
+  visible item. Since googlevideo streams are read in bounded ranges, a 403 on a
+  later range counts too.
 - **Refresh:** one fresh extraction of the original link with the same yt-dlp
   options, `player_client=default,web_embedded` and format selector. Nothing is
   cached.

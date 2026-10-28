@@ -363,6 +363,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.json)
+    testImplementation(libs.okhttp.mockwebserver)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

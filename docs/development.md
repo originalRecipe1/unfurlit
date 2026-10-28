@@ -367,6 +367,18 @@ stores display metadata and small thumbnail copies, never playback credentials.
 Preserving these scoped cookies and decoding Python-quoted values fixed TikTok
 media URLs returning HTTP 403 without requiring browser impersonation.
 
+googlevideo sends an open-ended request (`Range: bytes=N-`, which Media3 uses for
+progressive streams) at about twice the stream's bitrate, and on some videos stops
+for many seconds after the first megabyte, so playback stalled. A bounded range
+arrives at full speed. `GoogleVideoRangeCalls` therefore turns each open-ended GET
+to `*.googlevideo.com` into consecutive 10 MiB ranges, as yt-dlp's
+`http_chunk_size` does, and hands Media3 one response whose length comes from
+`Content-Range`, so seeking starts a range at the requested byte. Every range is
+a call of the same playback client, so `PublicOnlyDns` and the scoped cookies
+apply. If the server answers 200, the whole file streams as before. A 403 on a
+later range fails the read with `RangeResponseException`, which counts as a 403
+for the refresh below. Other hosts and bounded requests are unchanged.
+
 The image loader includes Coil's GIF decoders: `AnimatedImageDecoder` on API 28+
 and `GifDecoder` on API 24–27. The viewer stops animation on inactive gallery
 pages and when its lifecycle stops. History explicitly decodes a still first
@@ -598,10 +610,8 @@ python3 scripts/playback_timing_report.py attempts.jsonl
 device: three rounds of the default choice and each codec at 1080p and 720p, with the
 logcat of every run. It takes about an hour.
 
-googlevideo sends an open-ended request at about twice the stream's bitrate, and the
-player makes one such request per stream. `-e unpaced true` serves those from
-consecutive 10 MiB range requests instead, as yt-dlp downloads, to tell this pacing
-apart from the player's own buffering.
+The `requests` in each record show the range of every request, so they also show
+how a stream was split into bounded ranges (see `GoogleVideoRangeCalls`).
 
 Emulators decode every codec in software on the host CPU, so their decode times and
 dropped frames say nothing about phones. Use them only for network and buffering
