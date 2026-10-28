@@ -5,7 +5,8 @@
 - [Python runtime storage](python-runtime-storage.md) — retained dependencies, runtime trimming, and before/after measurements.
 - [Social-link baseline](social-link-baseline.md) — dated compatibility and playback checks.
 - [Release automation and F-Droid](automation-and-fdroid.md) — versions, signing, F-Droid auto-updates from release tags, and publication status.
-- [1.4.3 phone test](releases/1.4.3-phone-test.md) — release checklist and 1.4.3 device-only checks, awaiting owner results.
+- [1.4.4 phone test](releases/1.4.4-phone-test.md) — release checklist, #80 YouTube range checks, yt-dlp smoke test and tablet codec timing, awaiting owner results.
+- [1.4.3 phone test](releases/1.4.3-phone-test.md) — owner-reported PASS on a tablet after the #78 gallery fix; update check not run on the device.
 - [1.4.3 emulator upgrade test](releases/1.4.3-emulator-test.md) — 1.4.2 → 1.4.3 release update and History/thumbnail retention on API 30/36.
 - [1.4.2 phone test](releases/1.4.2-phone-test.md) — owner-reported functional PASS, storage and publication verification.
 - [1.4.2 emulator upgrade test](releases/1.4.2-emulator-test.md) — release update and History/thumbnail retention on API 30/36.
