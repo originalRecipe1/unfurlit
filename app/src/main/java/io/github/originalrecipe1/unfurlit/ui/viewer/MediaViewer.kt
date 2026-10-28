@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -110,6 +111,7 @@ private fun MediaContent(
                     .height(GALLERY_HEIGHT)
             },
         )
+            .clipToBounds()
             .background(Color.Black),
     ) {
         HorizontalPager(
@@ -239,6 +241,8 @@ private fun MediaPage(
             modifier = modifier,
             contentAlignment = Alignment.Center,
         ) {
+            // No fillMaxWidth: the aspect ratio must fit the page's width and height, so
+            // tall videos (or wide ones on wide screens) are pillarboxed instead of overflowing.
             VideoPlayer(
                 extraction = extraction,
                 video = media,
@@ -246,7 +250,6 @@ private fun MediaPage(
                 autoShowControls = false,
                 onRetry = onRetry,
                 onViewed = onViewed,
-                modifier = Modifier.fillMaxWidth(),
                 fullscreen = fullscreen,
                 onFullscreenChange = onFullscreenChange,
                 resume = playbackResume,
