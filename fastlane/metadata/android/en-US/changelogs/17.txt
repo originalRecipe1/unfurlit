@@ -1,1 +1,2 @@
+YouTube videos start faster and no longer stall at the start.
 Update the media extractor to yt-dlp 2026.10.21.
