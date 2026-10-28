@@ -569,6 +569,44 @@ then starts. Only `PASS` passes the test. `fake403` set to `audio` or `video`
 refuses the first URL of that type locally, which checks both modes without
 waiting for a real 403. Delete `files/live-playback` between samples.
 
+### Timing video start
+
+Debug and link-check builds log each video player's start under the `PlaybackTiming`
+tag (`adb logcat -s PlaybackTiming`), in milliseconds since the extraction finished:
+prepare, each stream's opens and first byte (named by MIME type and itag, never by
+URL), the video decoder and whether it is hardware-accelerated (Android 10 and later),
+STATE_READY, the first rendered frame, rebuffers and load errors. Thirty seconds after
+the first frame, a `report` line adds the rendered and dropped frame counts. Release
+builds compile a no-op instead (`app/src/noPlaybackDiagnostics`).
+
+To compare codecs, run `LivePlaybackTest` with `playSeconds` of at least 30, so each
+record includes the report, and `codec` set to `av1`, `vp9` or `h264`. This replaces
+the app's format choice with the best HTTPS video of that codec up to `maxHeight`
+(default 1080), plus the usual audio. Without `codec`, the app's own choice is timed.
+Then summarize the records:
+
+```bash
+adb shell am instrument -w -e livePlayback true -e playSeconds 31 -e codec vp9 -e maxHeight 720 \
+  -e linkId youtube-big-buck-bunny,youtube-video \
+  -e class io.github.originalrecipe1.unfurlit.ui.viewer.LivePlaybackTest \
+  io.github.originalrecipe1.unfurlit.test/androidx.test.runner.AndroidJUnitRunner
+adb shell run-as io.github.originalrecipe1.unfurlit cat files/live-playback/attempts.jsonl > attempts.jsonl
+python3 scripts/playback_timing_report.py attempts.jsonl
+```
+
+`scripts/time_playback_start.sh <serial> <output dir>` runs the whole comparison on one
+device: three rounds of the default choice and each codec at 1080p and 720p, with the
+logcat of every run. It takes about an hour.
+
+googlevideo sends an open-ended request at about twice the stream's bitrate, and the
+player makes one such request per stream. `-e unpaced true` serves those from
+consecutive 10 MiB range requests instead, as yt-dlp downloads, to tell this pacing
+apart from the player's own buffering.
+
+Emulators decode every codec in software on the host CPU, so their decode times and
+dropped frames say nothing about phones. Use them only for network and buffering
+times, and measure decoding on real devices.
+
 ### Checking links by hand
 
 The `linkCheck` build type is a debug build installed as a separate app, **Unfurlit

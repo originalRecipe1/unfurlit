@@ -17,6 +17,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.repository.HistoryRepository
 import io.github.originalrecipe1.unfurlit.domain.repository.MediaRepository
+import io.github.originalrecipe1.unfurlit.playback.PlaybackDiagnostics
 import io.github.originalrecipe1.unfurlit.ui.player.PlaybackResume
 
 class ViewerViewModel internal constructor(
@@ -59,6 +60,7 @@ class ViewerViewModel internal constructor(
                 if (result.media.isEmpty()) {
                     throw ExtractionException(ExtractionError.MediaUnavailable)
                 }
+                PlaybackDiagnostics.extractionFinished()
                 ViewerState.Ready(result)
             } catch (error: ExtractionException) {
                 ViewerState.Failed(url, error.error)
