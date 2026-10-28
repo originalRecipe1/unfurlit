@@ -35,7 +35,7 @@ Media extraction runs **on your device**, with no account, backend or ads.
 | Bandcamp | — | — | ✅ tracks | ✅ Works |
 | Tumblr | ✅ including YouTube/Vimeo embeds | ✅ including mixed posts | — | ✅ Works |
 | Pixiv | — | ✅ illustrations, no Ugoira | — | ✅ Works |
-| Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Dailymotion, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
+| Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
 
 ¹ Since 2026-10-14 Reddit blocks signed-out apps, so Unfurlit shows a Reddit message with
 **Open link** for posts. Direct `i.redd.it`, `preview.redd.it` and `reddit.com/media` image
