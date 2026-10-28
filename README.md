@@ -35,7 +35,7 @@ Media extraction runs **on your device**, with no account, backend or ads.
 | Bandcamp | — | — | ✅ tracks | ✅ Works |
 | Tumblr | ✅ including YouTube/Vimeo embeds | ✅ including mixed posts | — | ✅ Works |
 | Pixiv | — | ✅ illustrations, no Ugoira | — | ✅ Works |
-| Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Dailymotion, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
+| Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
 
 ¹ Since 2026-10-14 Reddit blocks signed-out apps, so Unfurlit shows a Reddit message with
 **Open link** for posts. Direct `i.redd.it`, `preview.redd.it` and `reddit.com/media` image
@@ -46,8 +46,8 @@ links still opened in the 2026-10-16 run. See the
 varies by post, region and platform changes. [Sites and access](docs/usage.md#sites-and-access)
 explains extraction engines and limitations.
 
-Last checked: 1.4.3, 2026-10-25, 63 pass / 10 Reddit blocked of 73 fixtures. Extraction, not full playback.
-[Baseline](docs/social-link-baseline.md#143--2026-10-25) · [1.4.3 phone record](docs/releases/1.4.3-phone-test.md)
+Last checked: 1.4.4 candidate, 2026-10-28, 62 pass / 10 Reddit blocked / 1 fail of 73 fixtures; Dailymotion now needs browser impersonation, which the app does not bundle. Extraction, not full playback.
+[2026-10-28 run](docs/releases/1.4.4-phone-test.md#prep-time-checks--2026-10-28) · [Baseline](docs/social-link-baseline.md#143--2026-10-25) · [1.4.3 phone record](docs/releases/1.4.3-phone-test.md)
 
 ## Contributing
 
