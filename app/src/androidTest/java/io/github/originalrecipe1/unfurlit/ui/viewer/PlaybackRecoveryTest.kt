@@ -184,7 +184,10 @@ class PlaybackRecoveryTest {
     }
 
     // googlevideo streams are read in bounded ranges (GoogleVideoRangeCalls). Here the server
-    // sends 64 KiB per range and refuses the first extraction's later ranges. Both test
+    // refuses the first extraction's later ranges. Its first range holds half a second of audio,
+    // less than the player buffers before it starts, so the refusal comes while it is still
+    // buffering, where the player reports a load error; an AudioTrack that keeps the tail of
+    // what it was given can otherwise leave it ready, and silent, without one. Both test
     // streams are WAV audio and the player reads only the one it selects, so both are refused.
     @Test fun googlevideoStreamRefusedOnALaterRangeIsReextractedOnceAndPlays() {
         val media = "https://rr1---sn-test.googlevideo.com/videoplayback?id="
@@ -196,7 +199,11 @@ class PlaybackRecoveryTest {
             val url = request.url.toString()
             val range = request.header("Range")
             val first = range?.let { Regex("""bytes=(\d+)-\d*""").matchEntire(it) }?.groupValues?.get(1)?.toInt() ?: 0
-            val response = if (url in expired && first > 0) respond(request, 403) else respondRange(request, first)
+            val response = when {
+                url !in expired -> respondRange(request, first)
+                first > 0 -> respond(request, 403)
+                else -> respondRange(request, first, maxBytes = 8_000)
+            }
             mediaRanges += Triple(url, range, response.code)
             response
         }.build()
@@ -339,9 +346,9 @@ class PlaybackRecoveryTest {
         .body(if (status == 200) wav.toResponseBody("audio/wav".toMediaType()) else byteArrayOf().toResponseBody())
         .build()
 
-    /** Like googlevideo, but a range holds at most 64 KiB, so a stream takes several. */
-    private fun respondRange(request: Request, first: Int): Response {
-        val last = minOf(first + 65_535, wav.size - 1)
+    /** Like googlevideo, but a range holds at most [maxBytes], so a stream takes several. */
+    private fun respondRange(request: Request, first: Int, maxBytes: Int = 65_536): Response {
+        val last = minOf(first + maxBytes - 1, wav.size - 1)
         return Response.Builder()
             .request(request).protocol(Protocol.HTTP_1_1).code(206).message("Partial Content")
             .header("Content-Range", "bytes $first-$last/${wav.size}")
