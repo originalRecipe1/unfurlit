@@ -62,14 +62,6 @@ class PlaybackTimingReportTest(unittest.TestCase):
         self.assertEqual(2_100, median["readyMs"])
         self.assertIn("> 30 s", output)
 
-    def test_unpaced_attempts_are_summarized_apart(self):
-        unpaced = [dict(attempt(1_000, 0), unpaced=True) for _ in range(2)]
-        output, rows = self.run_report([attempt(9_000, 0), *unpaced])
-        self.assertEqual(
-            {("av1 ≤1080", 1), ("av1 ≤1080 unpaced", 2)},
-            {(median["setting"], median["runs"]) for median in report.medians(rows)},
-        )
-
     def test_attempt_without_timing_is_listed_not_summarized(self):
         record = attempt(0, 0, outcome="FAIL_EXTRACTION")
         del record["timing"]

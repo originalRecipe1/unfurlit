@@ -34,7 +34,7 @@ def load(paths: list[Path], device: str | None) -> list[dict]:
                 "id": record["id"],
                 "setting": record.get("codec", "default") + (
                     f" ≤{record['maxHeight']}" if record.get("maxHeight") else ""
-                ) + (" unpaced" if record.get("unpaced") else ""),
+                ),
                 "outcome": record["outcome"],
                 "codec": timing.get("codecs"),
                 "resolution": (

@@ -183,6 +183,55 @@ class PlaybackRecoveryTest {
         }
     }
 
+    // googlevideo streams are read in bounded ranges (GoogleVideoRangeCalls). Here the server
+    // sends 64 KiB per range and refuses the first extraction's later ranges. Both test
+    // streams are WAV audio and the player reads only the one it selects, so both are refused.
+    @Test fun googlevideoStreamRefusedOnALaterRangeIsReextractedOnceAndPlays() {
+        val media = "https://rr1---sn-test.googlevideo.com/videoplayback?id="
+        val expired = listOf(media + "video-1", media + "audio-1")
+        val fresh = listOf(media + "video-2", media + "audio-2")
+        val mediaRanges = ConcurrentLinkedQueue<Triple<String, String?, Int>>()
+        playbackClient = OkHttpClient.Builder().addInterceptor { chain ->
+            val request = chain.request()
+            val url = request.url.toString()
+            val range = request.header("Range")
+            val first = range?.let { Regex("""bytes=(\d+)-\d*""").matchEntire(it) }?.groupValues?.get(1)?.toInt() ?: 0
+            val response = if (url in expired && first > 0) respond(request, 403) else respondRange(request, first)
+            mediaRanges += Triple(url, range, response.code)
+            response
+        }.build()
+        val video = result.media.single() as ExtractedMedia.Video
+        fun withUrls(urls: List<String>) = result.copy(
+            media = listOf(video.copy(
+                videoSource = video.videoSource.copy(url = urls[0]),
+                audioSource = video.videoSource.copy(url = urls[1], formatId = "audio"),
+            )),
+        )
+        compose.runOnIdle {
+            requests.clear()
+            extract = { if (requests.size == 1) withUrls(expired) else withUrls(fresh) }
+            viewModel.open(sourceUrl)
+        }
+        showViewer()
+        compose.waitUntil(20_000) { compose.runOnIdle { requests.size == 2 } }
+        val replacement = awaitPlayer()
+        val resumedAt = compose.runOnIdle { ready().playbackResume!!.positionMs }
+        compose.waitUntil(10_000) {
+            compose.runOnIdle { replacement.isPlaying && replacement.currentPosition > resumedAt + 500 }
+        }
+        compose.onNodeWithText(context.getString(R.string.action_extract_again)).assertDoesNotExist()
+        compose.runOnIdle {
+            assertEquals(listOf(sourceUrl, sourceUrl), requests)
+            assertEquals(0, ready().playbackResume!!.mediaIndex)
+            // The refusal came after a first range had been served.
+            assertTrue(mediaRanges.any { (url, _, code) -> url in expired && code == 206 })
+            assertTrue(mediaRanges.any { (url, range, code) -> url in expired && code == 403 && range != "bytes=0-10485759" })
+            assertTrue(mediaRanges.any { (url, _, code) -> url in fresh && code == 206 })
+            // Every request was a bounded range; none was left open-ended.
+            assertTrue(mediaRanges.all { (_, range, _) -> range != null && Regex("""bytes=\d+-\d+""").matches(range) })
+        }
+    }
+
     @Test fun otherPlayerHttpErrorsDoNotReextract() {
         showViewer()
         val player = awaitPlayer()
@@ -289,6 +338,16 @@ class PlaybackRecoveryTest {
         .request(request).protocol(Protocol.HTTP_1_1).code(status).message(if (status == 200) "OK" else "Error")
         .body(if (status == 200) wav.toResponseBody("audio/wav".toMediaType()) else byteArrayOf().toResponseBody())
         .build()
+
+    /** Like googlevideo, but a range holds at most 64 KiB, so a stream takes several. */
+    private fun respondRange(request: Request, first: Int): Response {
+        val last = minOf(first + 65_535, wav.size - 1)
+        return Response.Builder()
+            .request(request).protocol(Protocol.HTTP_1_1).code(206).message("Partial Content")
+            .header("Content-Range", "bytes $first-$last/${wav.size}")
+            .body(wav.copyOfRange(first, last + 1).toResponseBody("audio/wav".toMediaType()))
+            .build()
+    }
 
     private fun httpError(status: Int) = HttpDataSource.InvalidResponseCodeException(
         status, null, null, emptyMap(), DataSpec("https://media.example/expired.mp4".toUri()), byteArrayOf(),

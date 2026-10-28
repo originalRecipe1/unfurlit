@@ -47,7 +47,7 @@ class Media3PlaybackMapper(
         val scopedClient = if (cookies.isEmpty()) client else client.newBuilder()
             .cookieJar(PlaybackCookieJar(cookies))
             .build()
-        val dataSourceFactory = OkHttpDataSource.Factory(scopedClient)
+        val dataSourceFactory = OkHttpDataSource.Factory(GoogleVideoRangeCalls(scopedClient))
             .setDefaultRequestProperties(headers)
             .setTransferListener(transferListener)
         val sourceFactory = DefaultMediaSourceFactory(context)

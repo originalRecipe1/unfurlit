@@ -12,5 +12,6 @@ data class PlaybackResume(
 @androidx.annotation.OptIn(UnstableApi::class)
 internal fun Throwable.isHttpForbidden(): Boolean =
     generateSequence(this) { it.cause }.any {
-        it is HttpDataSource.InvalidResponseCodeException && it.responseCode == 403
+        it is HttpDataSource.InvalidResponseCodeException && it.responseCode == 403 ||
+            it is RangeResponseException && it.responseCode == 403
     }
