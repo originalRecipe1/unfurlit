@@ -367,6 +367,18 @@ stores display metadata and small thumbnail copies, never playback credentials.
 Preserving these scoped cookies and decoding Python-quoted values fixed TikTok
 media URLs returning HTTP 403 without requiring browser impersonation.
 
+googlevideo sends an open-ended request (`Range: bytes=N-`, which Media3 uses for
+progressive streams) at about twice the stream's bitrate, and on some videos stops
+for many seconds after the first megabyte, so playback stalled. A bounded range
+arrives at full speed. `GoogleVideoRangeCalls` therefore turns each open-ended GET
+to `*.googlevideo.com` into consecutive 10 MiB ranges, as yt-dlp's
+`http_chunk_size` does, and hands Media3 one response whose length comes from
+`Content-Range`, so seeking starts a range at the requested byte. Every range is
+a call of the same playback client, so `PublicOnlyDns` and the scoped cookies
+apply. If the server answers 200, the whole file streams as before. A 403 on a
+later range fails the read with `RangeResponseException`, which counts as a 403
+for the refresh below. Other hosts and bounded requests are unchanged.
+
 The image loader includes Coil's GIF decoders: `AnimatedImageDecoder` on API 28+
 and `GifDecoder` on API 24–27. The viewer stops animation on inactive gallery
 pages and when its lifecycle stops. History explicitly decodes a still first
@@ -568,6 +580,42 @@ it waits for the app's own URL refresh and reports `RECOVERED_403` if playback
 then starts. Only `PASS` passes the test. `fake403` set to `audio` or `video`
 refuses the first URL of that type locally, which checks both modes without
 waiting for a real 403. Delete `files/live-playback` between samples.
+
+### Timing video start
+
+Debug and link-check builds log each video player's start under the `PlaybackTiming`
+tag (`adb logcat -s PlaybackTiming`), in milliseconds since the extraction finished:
+prepare, each stream's opens and first byte (named by MIME type and itag, never by
+URL), the video decoder and whether it is hardware-accelerated (Android 10 and later),
+STATE_READY, the first rendered frame, rebuffers and load errors. Thirty seconds after
+the first frame, a `report` line adds the rendered and dropped frame counts. Release
+builds compile a no-op instead (`app/src/noPlaybackDiagnostics`).
+
+To compare codecs, run `LivePlaybackTest` with `playSeconds` of at least 30, so each
+record includes the report, and `codec` set to `av1`, `vp9` or `h264`. This replaces
+the app's format choice with the best HTTPS video of that codec up to `maxHeight`
+(default 1080), plus the usual audio. Without `codec`, the app's own choice is timed.
+Then summarize the records:
+
+```bash
+adb shell am instrument -w -e livePlayback true -e playSeconds 31 -e codec vp9 -e maxHeight 720 \
+  -e linkId youtube-big-buck-bunny,youtube-video \
+  -e class io.github.originalrecipe1.unfurlit.ui.viewer.LivePlaybackTest \
+  io.github.originalrecipe1.unfurlit.test/androidx.test.runner.AndroidJUnitRunner
+adb shell run-as io.github.originalrecipe1.unfurlit cat files/live-playback/attempts.jsonl > attempts.jsonl
+python3 scripts/playback_timing_report.py attempts.jsonl
+```
+
+`scripts/time_playback_start.sh <serial> <output dir>` runs the whole comparison on one
+device: three rounds of the default choice and each codec at 1080p and 720p, with the
+logcat of every run. It takes about an hour.
+
+The `requests` in each record show the range of every request, so they also show
+how a stream was split into bounded ranges (see `GoogleVideoRangeCalls`).
+
+Emulators decode every codec in software on the host CPU, so their decode times and
+dropped frames say nothing about phones. Use them only for network and buffering
+times, and measure decoding on real devices.
 
 ### Checking links by hand
 

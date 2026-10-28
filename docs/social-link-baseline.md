@@ -1,5 +1,66 @@
 # Social-link baseline
 
+## 1.4.3 — 2026-10-25
+
+**Verified: all 73 fixtures completed — 63 PASS, 10 BLOCKED, 0 unexpected
+FAIL, 0 skips and 0 retries.** Blocked posts are not extraction passes.
+The run used API 36 / Android 16 x86_64 with `swangle_indirect`, a debug APK,
+source-built yt-dlp/EJS and gallery-dl, and production extraction settings.
+Candidate revision: `27e0a9af6f011a55930e7e7d6d396544dbf4119b` (1.4.3 / 16).
+The engine pins are unchanged from 1.4.2. The 1.4.2 run used API 30 / Android 11;
+this one follows the 1.4.1 run on API 36.
+
+The strict JUnit/Gradle run exited 1 for the ten Reddit posts; the existing
+classification script exited 0 with no incomplete or unexpected results.
+
+**Changes from [1.4.2](#142--2026-10-16):** the fixture gained nine cases:
+three Tumblr embeds from [#73](https://github.com/originalRecipe1/unfurlit/pull/73)
+and six link forms from [#71](https://github.com/originalRecipe1/unfurlit/pull/71).
+All nine passed. Of the 64 fixtures in both runs, 63 have the same outcome and
+observation; one passed with a different stream format.
+
+| Fixture | 1.4.2 | 1.4.3 |
+| --- | --- | --- |
+| `tumblr-youtube-embed` | Not in fixture | PASS: 1 video (Progressive, separate audio), from Tumblr (14.5 s) |
+| `tumblr-vimeo-embed` | Not in fixture | PASS: 1 video (HLS, separate audio), from Tumblr (8.3 s) |
+| `tumblr-mixed-youtube-embed` | Not in fixture | PASS: 2 videos (HLS/Progressive, separate audio), from Tumblr (16.1 s) |
+| `instagram-reels-link` | Not in fixture | PASS: 1 video (Progressive), from Instagram (5.7 s) |
+| `instagram-profile-reel` | Not in fixture | PASS: 1 video (Progressive), from Instagram (6.1 s) |
+| `instagram-share-reel` | Not in fixture | PASS: 1 video (Progressive), from Instagram (5.3 s) |
+| `instagram-share-post` | Not in fixture | PASS: 1 image, from Instagram (2.2 s) |
+| `tumblr-web-photo-post` | Not in fixture | PASS: 4 images, from Tumblr (0.2 s) |
+| `pixiv-artwork-english` | Not in fixture | PASS: 1 image, from Pixiv (1.0 s) |
+| `youtube-shorts-sign-in-fallback` | PASS: 1 video (Progressive, separate audio) | PASS: 1 video (Progressive) |
+
+The `youtube-shorts-sign-in-fallback` change is in the format yt-dlp selected: a
+muxed stream instead of separate audio. It still passed. The YouTube route,
+yt-dlp options, format selector and engine pins did not change between the runs,
+so this is likely site-side or API-level variation; the cause was not investigated.
+
+**Reddit: still blocked.** The same ten Reddit posts are BLOCKED with the same
+reason as in 1.4.2, the [documented signed-out block](#reddit-signed-out-block--2026-10-14).
+The direct `reddit-direct-image`, `reddit-preview-image` and
+`reddit-image-link-wrapper` cases passed, as in 1.4.2; they do not establish that
+Reddit post extraction works.
+
+| Fixture | Classification | Evidence from this run |
+| --- | --- | --- |
+| `reddit-video` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-native-video` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-image-post` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery-comments` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery-share` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-gallery-short` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-external-imgur` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-external-streamable` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+| `reddit-mirror-post` | Pre-existing | `NetworkBlocked(platform=Reddit) \| gallery-dl AbortExtraction 0: "You've been blocked by network security."` |
+
+[All 73 outcomes and diagnostic reasons](measurements/1.4.3-social-links-2026-10-25.json)
+are recorded without local device identifiers. This sweep verifies extraction,
+not full-fixture playback. Viewer playback of the Tumblr embeds and the Pixiv
+page fallback are owner checks in the [phone record](releases/1.4.3-phone-test.md).
+
 ## YouTube playback HTTP 403 — 2026-10-25
 
 **Verified: 110 live playbacks, one HTTP 403, recovered by the app; 0 unrecovered
@@ -39,7 +100,8 @@ passed 21 and recovered once.
 **Recovery path (verified from the code and a faked test):**
 
 - **Trigger:** a player error whose cause chain holds an HTTP 403 response, on the
-  visible item.
+  visible item. Since googlevideo streams are read in bounded ranges, a 403 on a
+  later range counts too.
 - **Refresh:** one fresh extraction of the original link with the same yt-dlp
   options, `player_client=default,web_embedded` and format selector. Nothing is
   cached.

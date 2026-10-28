@@ -296,6 +296,13 @@ android {
     sourceSets.named("main") {
         res.srcDir(generatedYtDlpResources)
     }
+    // Playback timing logs (and the codec override LivePlaybackTest uses) for debuggable builds only.
+    sourceSets.matching { it.name == "debug" || it.name == "linkCheck" }.configureEach {
+        java.srcDir("src/playbackDiagnostics/java")
+    }
+    sourceSets.matching { it.name == "release" || it.name == "localRelease" }.configureEach {
+        java.srcDir("src/noPlaybackDiagnostics/java")
+    }
     // The live test links and their parser, used by SocialLinksTest and the linkCheck build.
     sourceSets.matching { it.name == "androidTest" || it.name == "linkCheck" }.configureEach {
         java.srcDir("src/socialLinks/java")
@@ -356,6 +363,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.json)
+    testImplementation(libs.okhttp.mockwebserver)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

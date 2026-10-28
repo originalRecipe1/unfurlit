@@ -25,6 +25,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import io.github.originalrecipe1.unfurlit.data.network.UrlPreflight
+import io.github.originalrecipe1.unfurlit.playback.PlaybackDiagnostics
 import io.github.originalrecipe1.unfurlit.domain.extractor.MediaExtractor
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
@@ -130,7 +131,7 @@ class YtDlpMediaExtractor(
             addOption("--skip-download")
             addOption("--playlist-end", MAX_MEDIA_ENTRIES.toString())
             addOption("--no-warnings")
-            addOption("--format", FORMAT_SELECTOR)
+            addOption("--format", PlaybackDiagnostics.formatSelector(FORMAT_SELECTOR))
             // Some public videos ask the default clients to sign in but still play
             // through YouTube's embedded player. Retain defaults for non-embeddable videos.
             // Accept an extra player request per YouTube extraction to avoid a full retry.

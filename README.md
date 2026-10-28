@@ -33,7 +33,7 @@ Media extraction runs **on your device**, with no account, backend or ads.
 | X/Twitter | ✅ including GIFs | ✅ including mixed posts | — | ✅ Works |
 | PeerTube | ✅ | — | — | ✅ Works |
 | Bandcamp | — | — | ✅ tracks | ✅ Works |
-| Tumblr | ✅ | ✅ including mixed posts | — | ✅ Works |
+| Tumblr | ✅ including YouTube/Vimeo embeds | ✅ including mixed posts | — | ✅ Works |
 | Pixiv | — | ✅ illustrations, no Ugoira | — | ✅ Works |
 | Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Dailymotion, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
 
@@ -46,8 +46,8 @@ links still opened in the 2026-10-16 run. See the
 varies by post, region and platform changes. [Sites and access](docs/usage.md#sites-and-access)
 explains extraction engines and limitations.
 
-Last checked: 1.4.2, 2026-10-16, 54 pass / 10 Reddit blocked of 64 fixtures. Extraction, not full playback.
-[Baseline](docs/social-link-baseline.md#142--2026-10-16) · [1.4.2 phone record](docs/releases/1.4.2-phone-test.md)
+Last checked: 1.4.3, 2026-10-25, 63 pass / 10 Reddit blocked of 73 fixtures. Extraction, not full playback.
+[Baseline](docs/social-link-baseline.md#143--2026-10-25) · [1.4.3 phone record](docs/releases/1.4.3-phone-test.md)
 
 ## Contributing
 

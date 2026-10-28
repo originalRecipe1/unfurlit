@@ -1,6 +1,7 @@
 package io.github.originalrecipe1.unfurlit.ui.viewer
 
 import android.app.Application
+import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import androidx.compose.runtime.CompositionLocalProvider
@@ -22,6 +23,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.HistoryEntry
 import io.github.originalrecipe1.unfurlit.domain.repository.HistoryRepository
 import io.github.originalrecipe1.unfurlit.linkcheck.SocialLinkCase
 import io.github.originalrecipe1.unfurlit.playback.ActivePlayback
+import io.github.originalrecipe1.unfurlit.playback.PlaybackDiagnostics
 import io.github.originalrecipe1.unfurlit.ui.player.LocalPlaybackHttpClient
 import io.github.originalrecipe1.unfurlit.ui.player.isHttpForbidden
 import io.github.originalrecipe1.unfurlit.ui.theme.UnfurlitTheme
@@ -67,6 +69,11 @@ import org.junit.runners.Parameterized
  * - `fake403`: `audio` or `video` refuses every request to the first media URL of that type
  *   with a local 403, to check both modes and the recovery without waiting for a real one.
  *   Those requests are recorded with `"faked": true`.
+ * - `codec`: `av1`, `vp9` or `h264` replaces yt-dlp's format choice with the best video of
+ *   that codec, up to `maxHeight` (default 1080), over HTTPS, plus the usual audio. Without it
+ *   the app's own choice is used.
+ * - `playSeconds`: how long the video must play (default 3). With 30 or more, the record's
+ *   `timing` holds the debug build's PlaybackTiming report, dropped frames included.
  *
  * Outcomes: PASS (no 403), RECOVERED_403 (a 403, then playback), FAIL_403, FAIL_PLAYBACK,
  * FAIL_EXTRACTION and TIMEOUT. Only PASS passes the test, so a recovery never counts as a
@@ -88,6 +95,7 @@ class LivePlaybackTest(
     private var viewModel: ViewerViewModel? = null
 
     @After fun tearDown() {
+        PlaybackDiagnostics.formatOverride = null
         scope.cancel()
         viewModel?.let { model -> compose.runOnIdle { model.cancel() } }
     }
@@ -98,6 +106,10 @@ class LivePlaybackTest(
         assumeTrue(arguments.getString("livePlayback") == "true")
         val waitForRecovery = arguments.getString("waitForRecovery") == "true"
         val playMs = ((arguments.getString("playSeconds")?.toDouble() ?: 3.0) * 1_000).toLong()
+        val codec = arguments.getString("codec")
+        val maxHeight = arguments.getString("maxHeight")?.toInt() ?: 1080
+        PlaybackDiagnostics.formatOverride = codec?.let { formatSelector(it, maxHeight) }
+        val reportsBefore = PlaybackDiagnostics.reports.size
 
         val recorder = MediaRequestRecorder(arguments.getString("fake403"))
         val client = SafeHttpClient.streaming.newBuilder()
@@ -169,10 +181,20 @@ class LivePlaybackTest(
         }
 
         val playerErrors = compose.runOnIdle { players.values.mapNotNull { it.error } }
+        // The report follows 30 s after the first frame, also for a video that ended sooner;
+        // a shorter attempt ends before it.
+        val timingDeadline = SystemClock.elapsedRealtime() + if (playMs >= 30_000) 35_000 else 0
+        while (PlaybackDiagnostics.reports.size == reportsBefore &&
+            SystemClock.elapsedRealtime() < timingDeadline
+        ) SystemClock.sleep(100)
+        val timing = PlaybackDiagnostics.reports.drop(reportsBefore).lastOrNull()
         val record = JSONObject()
             .put("id", case.id)
             .put("round", round)
+            .put("device", "${Build.MANUFACTURER} ${Build.MODEL}, API ${Build.VERSION.SDK_INT}")
             .put("mode", if (waitForRecovery) "waitForRecovery" else "strict")
+            .put("codec", codec ?: "default")
+            .put("maxHeight", codec?.let { maxHeight })
             .put("outcome", outcome)
             .put("detail", detail)
             .put("seconds", (SystemClock.elapsedRealtime() - started) / 1_000.0)
@@ -180,6 +202,7 @@ class LivePlaybackTest(
             .put("refreshStarted", refreshStarted)
             .put("playerErrors", JSONArray(playerErrors))
             .put("requests", recorder.describe(extractions))
+            .put("timing", timing)
         File(context.filesDir, "live-playback").apply { mkdirs() }
             .resolve("attempts.jsonl").appendText(record.toString() + "\n")
         Log.i(TAG, "${case.id} round $round: $outcome ${record.getDouble("seconds")} s; " +
@@ -204,8 +227,11 @@ class LivePlaybackTest(
             })
         }
 
-        fun played(playMs: Long) = player.isPlaying && firstFrame &&
-            player.currentPosition - startPosition >= playMs
+        // A video shorter than playMs counts once it has played to the end.
+        fun played(playMs: Long) = firstFrame && (
+            player.isPlaying && player.currentPosition - startPosition >= playMs ||
+                player.playbackState == Player.STATE_ENDED
+            )
     }
 
     /** Records media requests by format and range; never the host, address or signature. */
@@ -309,6 +335,18 @@ class LivePlaybackTest(
 
     companion object {
         private const val TAG = "LivePlaybackTest"
+
+        private const val AUDIO_SELECTOR = "bestaudio[acodec!=?alac][acodec!=?aiff][acodec!=?flac][acodec!=?wav]"
+
+        private fun formatSelector(codec: String, maxHeight: Int): String {
+            val filter = when (codec) {
+                "av1" -> "[vcodec^=av01]"
+                "vp9" -> "[vcodec~='^(vp9|vp09)']"
+                "h264" -> "[vcodec^=avc1]"
+                else -> error("codec must be av1, vp9 or h264, not $codec")
+            }
+            return "bestvideo$filter[height<=$maxHeight][protocol=https]+$AUDIO_SELECTOR"
+        }
 
         private fun ExtractionResult.mediaUrls() = media.flatMap { media ->
             when (media) {

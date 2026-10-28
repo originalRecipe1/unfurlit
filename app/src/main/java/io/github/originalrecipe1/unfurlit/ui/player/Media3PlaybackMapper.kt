@@ -5,6 +5,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.TransferListener
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
@@ -22,6 +23,7 @@ internal val LocalPlaybackHttpClient = staticCompositionLocalOf { SafeHttpClient
 class Media3PlaybackMapper(
     private val context: Context,
     private val client: OkHttpClient = SafeHttpClient.streaming,
+    private val transferListener: TransferListener? = null,
 ) {
     fun map(
         extraction: ExtractionResult,
@@ -45,8 +47,9 @@ class Media3PlaybackMapper(
         val scopedClient = if (cookies.isEmpty()) client else client.newBuilder()
             .cookieJar(PlaybackCookieJar(cookies))
             .build()
-        val dataSourceFactory = OkHttpDataSource.Factory(scopedClient)
+        val dataSourceFactory = OkHttpDataSource.Factory(GoogleVideoRangeCalls(scopedClient))
             .setDefaultRequestProperties(headers)
+            .setTransferListener(transferListener)
         val sourceFactory = DefaultMediaSourceFactory(context)
             .setDataSourceFactory(dataSourceFactory)
         val mediaItem = MediaItem.Builder()

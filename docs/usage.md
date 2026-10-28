@@ -15,7 +15,7 @@ sources therefore use the same signing key, so you can switch between them and
 keep updating without uninstalling or losing History. Android only installs a
 version at least as new as the one you have, so F-Droid offers an update only
 once it has caught up with your GitHub version. F-Droid lists a release only
-after its own build, so it can lag behind GitHub. When checked on 2026-10-23,
+after its own build, so it can lag behind GitHub. When checked on 2026-10-25,
 F-Droid listed 1.4.1; 1.4.2 was not yet available there.
 
 Older **Peek** releases use `org.peek.app`. Unfurlit uses
@@ -58,11 +58,13 @@ On Android 12 and later, Android doesn't let Unfurlit claim links
 automatically:
 
 1. On Home, tap **Open links in Unfurlit**, then **Open settings**.
-2. Choose to open supported links in the app, then turn on the sites you want.
-   The wording varies by device. Reddit posts are currently blocked for
-   signed-out apps, so leave `reddit.com`, `www.reddit.com`, `old.reddit.com`
-   and `redd.it` off for now.
-3. Return to Unfurlit. The dialog shows how many web addresses are turned on.
+2. Choose to open links **In the app** (some devices say **Open supported
+   links**), then tap **Add link** and pick the sites you want.
+3. Return to Unfurlit. The dialog closes once at least one site is on. If
+   none is on, it stays open and shows **Not turned on yet**.
+
+Reddit isn't in the list for now, because Reddit posts aren't working (see
+the Reddit note below).
 
 If a site's own app is installed, it may keep opening that site's links, and
 Settings may not let Unfurlit take them. Turn that site's links off under
