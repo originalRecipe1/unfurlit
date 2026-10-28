@@ -50,6 +50,7 @@ import androidx.media3.common.C
 import androidx.media3.ui.PlayerView
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.playback.ActivePlayback
+import io.github.originalrecipe1.unfurlit.playback.PlaybackDiagnostics
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionResult
 import io.github.originalrecipe1.unfurlit.R
 
@@ -74,8 +75,9 @@ fun VideoPlayer(
     val playbackClient = LocalPlaybackHttpClient.current
     val player = remember(video, extraction.title, extraction.author, resume, playbackClient) {
         buildMediaPlayer(context, C.AUDIO_CONTENT_TYPE_MOVIE).apply {
+            val timing = PlaybackDiagnostics.watch(this)
             setMediaSource(
-                Media3PlaybackMapper(context, playbackClient).map(extraction, video),
+                Media3PlaybackMapper(context, playbackClient, timing).map(extraction, video),
                 resume?.positionMs ?: 0L,
             )
             playWhenReady = active && (resume?.playWhenReady ?: true)
