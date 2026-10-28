@@ -14,7 +14,7 @@ by `releaseRuntimeClasspath` and the components bundled by youtubedl-android
 | Apache Commons IO | 2.5 (transitive) | Apache-2.0 |
 | JetBrains annotations and JSpecify | transitive | Apache-2.0 |
 | youtubedl-android | 0.18.1 | GPL-3.0 |
-| yt-dlp | 2026.08.19 | Unlicense |
+| yt-dlp | 2026.10.21 | Unlicense |
 | yt-dlp-ejs, bundled YouTube JavaScript challenge solver | 0.8.0 | Unlicense |
 | astring, bundled in the EJS solver | 1.9.0 | MIT |
 | meriyah, bundled in the EJS solver | 6.1.4 | ISC |
