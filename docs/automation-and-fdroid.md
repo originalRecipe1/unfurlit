@@ -47,10 +47,16 @@ byte the GitHub `Unfurlit-1.4.1.apk` (SHA-256
 `6b18c80ff099b4af9b21e21bb5ab8bd4e770a82b9033677161fbbe3f538ba8c9`), signed by
 `3528e91676bde711bf40c70bce363f7c76a554ae9de91f221635b6e975400a3c`.
 
+**Checked on 2026-10-29:** the API listed 1.4.2 / 15 and 1.4.1 / 14. The
+first automatic update worked: F-Droid's checkupdates bot found the `v1.4.3`
+tag and committed `17896ac0` ("bot: Update Unfurlit to 16") to fdroiddata on
+2026-10-29, adding 1.4.3 / 16. F-Droid had not yet built or published it.
+
 The [canonical recipe](fdroid/io.github.originalrecipe1.unfurlit.yml) is a
-byte-identical copy of fdroiddata's metadata at `167949b6`. It contains two
-builds, 1.4.1 / 14 at `c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2` and 1.4.2 / 15
-at `c29faaec30adb4fd5988f0eda42ff86723b4cd95`, sets `AutoUpdateMode: Version`,
+byte-identical copy of fdroiddata's metadata at `17896ac0`. It contains three
+builds, 1.4.1 / 14 at `c2ebe5e09f91a12457f1e73a42a3ed2a812a8fd2`, 1.4.2 / 15
+at `c29faaec30adb4fd5988f0eda42ff86723b4cd95` and 1.4.3 / 16 at
+`38581db1bff318785b50753963deb2c75be533fb`, sets `AutoUpdateMode: Version`,
 and lists only the `Online Media Player` category. `org.peek.app` was the
 historical submission branch name in the fdroiddata fork. Release 1.4.1 added
 gallery-dl built from source (#53) and audited runtime trims (#58). See the
