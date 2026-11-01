@@ -15,8 +15,7 @@ sources therefore use the same signing key, so you can switch between them and
 keep updating without uninstalling or losing History. Android only installs a
 version at least as new as the one you have, so F-Droid offers an update only
 once it has caught up with your GitHub version. F-Droid lists a release only
-after its own build, so it can lag behind GitHub. When checked on 2026-10-25,
-F-Droid listed 1.4.1; 1.4.2 was not yet available there.
+after its own build, so it can lag behind GitHub.
 
 Older **Peek** releases use `org.peek.app`. Unfurlit uses
 `io.github.originalrecipe1.unfurlit`, so it installs separately and does not
