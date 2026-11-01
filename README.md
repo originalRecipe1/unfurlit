@@ -46,7 +46,7 @@ links still opened in the 2026-10-16 run. See the
 varies by post, region and platform changes. [Sites and access](docs/usage.md#sites-and-access)
 explains extraction engines and limitations.
 
-Last checked: 1.4.4 candidate, 2026-10-28, 62 pass / 10 Reddit blocked / 1 fail of 73 fixtures; the failure, Dailymotion, was emulator-only and the site opens on devices. Extraction, not full playback.
+Last checked: 1.4.4 candidate, 2026-10-28, 62 of 63 non-Reddit fixtures passed; the one failure, Dailymotion, was emulator-only and the site opens on devices. Extraction, not full playback.
 [2026-10-28 run](docs/releases/1.4.4-phone-test.md#prep-time-checks--2026-10-28) · [Baseline](docs/social-link-baseline.md#143--2026-10-25) · [1.4.3 phone record](docs/releases/1.4.3-phone-test.md)
 
 ## Contributing
