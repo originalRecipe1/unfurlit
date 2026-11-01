@@ -2,6 +2,8 @@ package io.github.originalrecipe1.unfurlit.domain.model
 
 sealed interface ExtractionError {
     data object UnsupportedUrl : ExtractionError
+    /** A site Unfurlit refuses outright; see UnsupportedSites. */
+    data object SiteNotSupported : ExtractionError
     data object MediaUnavailable : ExtractionError
     data object AuthenticationRequired : ExtractionError
     /** The platform refused this network (bot check or IP block), not the account or post. */
@@ -14,7 +16,6 @@ sealed interface ExtractionError {
 /** Platforms whose network blocks the app recognizes; [displayName] is a brand name, not translated. */
 enum class BlockingPlatform(val displayName: String) {
     YouTube("YouTube"),
-    Reddit("Reddit"),
 }
 
 class ExtractionException(

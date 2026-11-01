@@ -56,24 +56,9 @@ class ExtractionErrorMapperTest {
             "ERROR: [youtube] eRsGyueVLvQ: Sign in to confirm you’re not a bot. Use --cookies-from-browser or " +
                 "--cookies for the authentication." to BlockingPlatform.YouTube,
             "ERROR: [youtube] eRsGyueVLvQ: Sign in to confirm you're not a bot." to BlockingPlatform.YouTube,
-            "ERROR: [Reddit] 6rrwyj: Account authentication is required. Use --cookies-from-browser or " +
-                "--cookies for the authentication." to BlockingPlatform.Reddit,
-            "gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"" to BlockingPlatform.Reddit,
-            "gallery-dl HttpError 403: '403 Blocked' for 'https://www.reddit.com/r/pics/comments/abc/'" to BlockingPlatform.Reddit,
         )
         cases.forEach { (message, platform) ->
             assertEquals(message, ExtractionError.NetworkBlocked(platform), RuntimeException(message).toDomainError())
-        }
-    }
-
-    @Test fun mapsRedditBlocksFromEitherEngineToReddit() {
-        mapOf(
-            "yt-dlp" to "ERROR: [Reddit] 6rrwyj: Account authentication is required.",
-            // GalleryDlJsonParser's detail text for the same block.
-            "gallery-dl" to "gallery-dl AbortExtraction 0: \"You've been blocked by network security.\"",
-        ).forEach { (engine, message) ->
-            val error = RuntimeException(message).toDomainError()
-            assertEquals(engine, BlockingPlatform.Reddit, (error as? ExtractionError.NetworkBlocked)?.platform)
         }
     }
 
@@ -88,13 +73,9 @@ class ExtractionErrorMapperTest {
             "ERROR: [youtube] x2zTi8aEjsA: Please sign in. Use --cookies-from-browser or --cookies for the authentication.",
             "ERROR: [youtube] abc: Sign in to confirm your age. This video may be inappropriate for some users.",
             "ERROR: [youtube] abc: Private video. Sign in if you've been granted access to this video",
-            "ERROR: [Reddit] 6rrwyj: This post is NSFW. Login required",
-            // The phrase from another extractor, or without the post ID, is not Reddit's block.
             "ERROR: [Tumblr] 172687798174: Account authentication is required.",
-            "ERROR: [Reddit]: Account authentication is required.",
             "ERROR: [vimeo] 392479337: The web client only works when logged-in.",
             "Sign in to confirm you're not a botany expert",
-            "ERROR: [Reddit] 6rrwyj: Account authentication is requiredOther",
         ).forEach { message ->
             assertEquals(message, ExtractionError.AuthenticationRequired, RuntimeException(message).toDomainError())
         }

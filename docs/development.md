@@ -240,13 +240,9 @@ also keeps the video; an eligible yt-dlp failure reuses the same gallery lookup
 for the normal fallback, with its original 60-second limit. Other sites retain
 the sequential fallback. Both processes share a locked runtime installation,
 use separate process environments, and disable disk caches; closing the request
-cancels both lookups. For Reddit posts it first
-loads `old.reddit.com` for the anonymous session cookie that Reddit's JSON pages
-expect (as yt-dlp does); if Reddit still answers with its network-security block
-page, it retries once through Reddit's OAuth API with gallery-dl's own client ID. Its pure Python logic is tested
+cancels both lookups. Its pure Python logic is tested
 by `scripts/tests/test_gallery_dl_entry.py`; `PythonRuntimeTest` also runs it on
-the device runtime without network access. Both Reddit steps are currently blocked
-for signed-out clients; see the [2026-10-14 baseline note](social-link-baseline.md#reddit-signed-out-block--2026-10-14).
+the device runtime without network access.
 
 Before the first extraction in each app process, Unfurlit verifies the app-private
 extractor copy against the bundled checksum and atomically refreshes it when it
@@ -298,7 +294,7 @@ run separately with `python3 -m unittest discover -s scripts/tests`.
 2. Paste a public URL, or share/open one from another app.
 3. Wait for extraction to complete and verify that the native media viewer appears.
 4. Confirm playback/seeking for video and audio, zoom/pan for images, swiping and the item indicator for galleries, and the new history event.
-5. Repeat with public test cases for YouTube, Reddit, X, Instagram, and TikTok.
+5. Repeat with public test cases for YouTube, X, Instagram, and TikTok.
 6. Capture whether each result is progressive, HLS/DASH, muxed, or split audio/video.
 7. Record extraction time, playback errors, and the produced APK size when investigating compatibility changes.
 
@@ -321,10 +317,8 @@ reusable checklist into a release-specific test record under
   workload difference as well as the phone, Android version and APK hash.
 - Update from the **previous release** without clearing data, extract a link to trigger
   runtime replacement, and confirm that saved History entries and thumbnails remain.
-- Open a Reddit post and confirm the Reddit block message appears; **Open link**
-  must open the Reddit app or browser rather than show a toast.
-- On a non-Reddit extraction failure, confirm **Open link** opens the default
-  app or an app chooser.
+- On an extraction failure, confirm **Open link** opens the default app or an
+  app chooser.
 - On Android 12 or later, turn on a site under **Open links in Unfurlit**, tap a
   post link for it in another app and confirm Unfurlit opens it. On an extraction
   failure, **Open link** must open the browser rather than Unfurlit or a toast.
@@ -426,14 +420,11 @@ Instagram and Pixiv photo posts, and Tumblr photos, native videos and YouTube/Vi
 `app/src/socialLinks/assets/social-links.json` are grouped by media type:
 
 - **Video:** YouTube (watch, youtu.be and Shorts links), Vimeo, Tumblr (native video, YouTube
-  and Vimeo embeds, and a native video followed by a YouTube embed), Reddit (native video
-  and external Imgur/Streamable link posts), X (including
+  and Vimeo embeds, and a native video followed by a YouTube embed), X (including
   an animated GIF), Instagram posts, Reels (including profile and share links) and video carousels, TikTok, Bluesky, an Imgur
   GIFV, PeerTube, Dailymotion, a Twitch clip and a direct WebM file.
 - **Photos and galleries:** Instagram (including share links) and TikTok photo posts (with and without a
-  soundtrack), Reddit image posts, galleries (explicit, comments, mobile share and
-  `redd.it` links), direct `i.redd.it`, `preview.redd.it`,
-  `reddit.com/media` and mirror links, X photos, Bluesky, Imgur images and albums, Flickr,
+  soundtrack), X photos, Bluesky, Imgur images and albums, Flickr,
   Tumblr, Mastodon, Pixiv, Pinterest, Wikimedia Commons and a direct JPEG file.
 - **Mixed media:** X and Tumblr posts with a photo and a video.
 - **Audio:** SoundCloud, Bandcamp, Mixcloud and a direct Ogg file.
@@ -469,12 +460,8 @@ selected case, grouped by media type, to the workflow's job summary. It reports
 
 - **BLOCKED** requires `NetworkBlocked` (or `AuthenticationRequired`, as builds
   before that error reported these blocks) and the exact upstream message
-  "Sign in to confirm you're not a bot" (including the curly-apostrophe spelling),
-  "blocked by network security", "403 Blocked", or
-  `[Reddit] <id>: Account authentication is required`. The last pattern requires
-  the Reddit extractor prefix: the pinned yt-dlp raises it when an anonymous
-  `.json` response is not JSON. The phrase alone, or a different extractor prefix,
-  does not qualify. "Please sign in" is not a runner-block pattern; it is the
+  "Sign in to confirm you're not a bot" (including the curly-apostrophe spelling).
+  "Please sign in" is not a runner-block pattern; it is the
   YouTube regression signature from 1.3.0.
   Vimeo's "The web client only works when logged-in" is BLOCKED only when an
   earlier failure log of the same case shows `HTTP Error 401: Unauthorized` for

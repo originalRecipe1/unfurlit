@@ -57,13 +57,7 @@ RUNNER_BLOCK_MESSAGES = (
     *(re.compile(r"(?<!\w)" + re.escape(message) + r"(?!\w)") for message in (
         "Sign in to confirm you're not a bot",
         "Sign in to confirm you’re not a bot",
-        "blocked by network security",
-        "403 Blocked",
     )),
-    # Pinned yt-dlp's reddit.py:307-313 raises this only when anonymous and the
-    # .json response isn't JSON. Require the Reddit extractor prefix and post ID;
-    # the same authentication phrase from another extractor is not a runner block.
-    re.compile(r"\[Reddit\] [0-9a-z]+: Account authentication is required(?!\w)"),
 )
 # Vimeo answers an unlisted video's player config with 401 on some runner addresses
 # (run 38414484055) while the same link plays from a residential connection; the app
