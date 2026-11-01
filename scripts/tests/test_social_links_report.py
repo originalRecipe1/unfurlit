@@ -60,7 +60,7 @@ class FixtureTest(unittest.TestCase):
 class ReportTest(unittest.TestCase):
     CASES = [
         {"id": "yt-video", "url": "https://y/v", "expected": "success", "media": "video", "count": 1},
-        {"id": "reddit-gallery", "url": "https://r/g", "expected": "success", "media": "image", "count": 3},
+        {"id": "imgur-album", "url": "https://r/g", "expected": "success", "media": "image", "count": 3},
         {"id": "x-mixed", "url": "https://x/m", "expected": "success", "media": ["image", "video"]},
         {"id": "slow-track", "url": "https://s/t", "expected": "success", "media": "audio"},
         {"id": "missing-page", "url": "https://m/", "expected": "MediaUnavailable"},
@@ -73,7 +73,7 @@ class ReportTest(unittest.TestCase):
     <failure>java.lang.AssertionError: yt-video: expected [success: 1 video] but observed [AuthenticationRequired] (wrong outcome)
 \tat org.junit.Assert.fail(Assert.java:89)</failure>
   </testcase>
-  <testcase name="extractsExpectedMediaOrReportsExpectedFailure[reddit-gallery]"
+  <testcase name="extractsExpectedMediaOrReportsExpectedFailure[imgur-album]"
       classname="io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest" time="4.0"/>
   <testcase name="extractsExpectedMediaOrReportsExpectedFailure[x-mixed]"
       classname="io.github.originalrecipe1.unfurlit.data.extractor.ytdlp.SocialLinksTest" time="3.0">
@@ -94,7 +94,7 @@ class ReportTest(unittest.TestCase):
 """
     LOGCAT = (
         "09-25 10:00:00.500  4242  4262 E YtDlpExtractor: Extraction failed (ExtractionException): stale\n"
-        "09-25 10:00:01.000  4242  4260 I SocialLinksTest: reddit-gallery: success: 3 images, from Reddit in 3.2 s\n"
+        "09-25 10:00:01.000  4242  4260 I SocialLinksTest: imgur-album: success: 3 images, from Imgur in 3.2 s\n"
         "09-25 10:00:01.500  4242  4262 E YtDlpExtractor: Extraction failed (YoutubeDLException): "
         "ERROR: [youtube] abc: Sign in to confirm you're not a bot\n"
         "09-25 10:00:02.000  4242  4260 I SocialLinksTest: yt-video: AuthenticationRequired in 6.9 s\n"
@@ -113,13 +113,13 @@ class ReportTest(unittest.TestCase):
 
     def test_reads_outcomes_from_junit_xml_and_logcat(self):
         outcomes, _ = self.render()
-        self.assertEqual({"yt-video", "reddit-gallery", "x-mixed", "slow-track", "missing-page"}, set(outcomes))
+        self.assertEqual({"yt-video", "imgur-album", "x-mixed", "slow-track", "missing-page"}, set(outcomes))
         self.assertEqual((False, "AuthenticationRequired", "wrong outcome", 6.9),
                          (outcomes["yt-video"].passed, outcomes["yt-video"].observed,
                           outcomes["yt-video"].problems, outcomes["yt-video"].seconds))
-        self.assertEqual((True, "success: 3 images, from Reddit", 3.2),
-                         (outcomes["reddit-gallery"].passed, outcomes["reddit-gallery"].observed,
-                          outcomes["reddit-gallery"].seconds))
+        self.assertEqual((True, "success: 3 images, from Imgur", 3.2),
+                         (outcomes["imgur-album"].passed, outcomes["imgur-album"].observed,
+                          outcomes["imgur-album"].seconds))
         self.assertEqual("missing image", outcomes["x-mixed"].problems)
         self.assertEqual("test timed out after 210000 milliseconds", outcomes["slow-track"].observed)
         self.assertEqual("MediaUnavailable", outcomes["missing-page"].observed)
@@ -127,7 +127,7 @@ class ReportTest(unittest.TestCase):
     def test_attaches_the_last_app_failure_log_to_a_failed_case(self):
         outcomes, markdown = self.render()
         self.assertEqual("ERROR: [youtube] abc: Sign in to confirm you're not a bot", outcomes["yt-video"].reason)
-        self.assertIsNone(outcomes["reddit-gallery"].reason)
+        self.assertIsNone(outcomes["imgur-album"].reason)
         self.assertIsNone(outcomes["missing-page"].reason)
         self.assertIn("- `yt-video` (BLOCKED): ERROR: [youtube] abc: Sign in to confirm you're not a bot", markdown)
 
@@ -148,7 +148,7 @@ class ReportTest(unittest.TestCase):
         self.assertIn("| Error handling | 1 | 0 | 0 | 0 | 0 |", markdown)
         self.assertIn("| BLOCKED | [yt-video](https://y/v) | 1 video | AuthenticationRequired — wrong outcome | 6.9 s |",
                       markdown)
-        self.assertIn("| PASS | [reddit-gallery](https://r/g) | 3 images | success: 3 images, from Reddit | 3.2 s |",
+        self.assertIn("| PASS | [imgur-album](https://r/g) | 3 images | success: 3 images, from Imgur | 3.2 s |",
                       markdown)
         self.assertIn("| PASS | `missing-page` | MediaUnavailable | MediaUnavailable | 1.0 s |", markdown)
         self.assertNotIn("not-selected", markdown)
@@ -162,18 +162,11 @@ REFERENCE = json.loads((Path(__file__).parent / "fixtures/social-links-374722269
 REFERENCE_OUTCOMES = {name: report.Outcome(**value) for name, value in REFERENCE["outcomes"].items()}
 REFERENCE_CASES = [case for case in report.load_cases() if case["id"] in REFERENCE_OUTCOMES]
 CASES_BY_ID = {case["id"]: case for case in REFERENCE_CASES}
-# Exact SafeLog-redacted engine message from run 37477290395, reddit-video.
-REDDIT_AUTH_REASON = (
-    "AuthenticationRequired | ERROR: [Reddit] 6rrwyj: Account authentication is required. "
-    "Use --cookies-from-browser or --cookies for the authentication. "
-    "See <url> for how to manually pass cookies"
-)
 
 
 BLOCKED_REFERENCE_CASES = {
     "youtube-video": "YouTube", "youtube-short-link": "YouTube", "youtube-big-buck-bunny": "YouTube",
-    "youtube-shorts": "YouTube", "reddit-video": "Reddit", "reddit-native-video": "Reddit",
-    "reddit-gallery-share": "Reddit", "reddit-external-streamable": "Reddit",
+    "youtube-shorts": "YouTube",
 }
 
 # Exact vimeo-unlisted failure logs from run 38414484055: the player route got 401,
@@ -216,13 +209,12 @@ class ClassifierTest(unittest.TestCase):
         return report.classify(CASES_BY_ID[name], outcome, runner=runner)
 
     def test_exact_reference_run_messages(self):
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 4},
+        self.assertEqual({"PASS": 41, "BLOCKED": 4, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 4},
                          report.counts_for(REFERENCE_CASES, REFERENCE_OUTCOMES))
         blocked = {name for name, outcome in REFERENCE_OUTCOMES.items()
                    if report.classify(CASES_BY_ID[name], outcome).status == "BLOCKED"}
         self.assertEqual({
             "youtube-video", "youtube-short-link", "youtube-big-buck-bunny", "youtube-shorts",
-            "reddit-video", "reddit-native-video", "reddit-gallery-share", "reddit-external-streamable",
         }, blocked)
         # The generic sign-in prompt remains a failure during local validation.
         self.assertIn("Please sign in.", REFERENCE_OUTCOMES["youtube-shorts-sign-in-fallback"].reason)
@@ -257,8 +249,6 @@ class ClassifierTest(unittest.TestCase):
                 outcome = as_network_blocked(REFERENCE_OUTCOMES[name], platform)
                 self.assertTrue(outcome.reason.startswith(f"NetworkBlocked(platform={platform}) | "))
                 self.assertEqual("BLOCKED", report.classify(CASES_BY_ID[name], outcome).status)
-        reddit = as_network_blocked(replace(REFERENCE_OUTCOMES["reddit-video"], reason=REDDIT_AUTH_REASON), "Reddit")
-        self.assertEqual("BLOCKED", report.classify(CASES_BY_ID["reddit-video"], reddit).status)
 
     def test_network_blocked_still_needs_a_block_message_and_an_expectation_assertion(self):
         blocked = as_network_blocked(REFERENCE_OUTCOMES["youtube-video"], "YouTube")
@@ -285,20 +275,6 @@ class ClassifierTest(unittest.TestCase):
             with self.subTest(changes=changes):
                 outcome = replace(VIMEO_RUNNER_BLOCK, **changes)
                 self.assertEqual("FAIL", report.classify(CASES_BY_ID["vimeo-unlisted"], outcome).status)
-
-    def test_exact_reddit_anonymous_non_json_error_from_run_37477290395(self):
-        self.assertEqual("BLOCKED", self.classify("reddit-video", reason=REDDIT_AUTH_REASON).status)
-
-    def test_reddit_authentication_pattern_requires_the_extractor_prefix_and_id(self):
-        for reason in [
-            REDDIT_AUTH_REASON.replace("[Reddit]", "[youtube]"),
-            REDDIT_AUTH_REASON.replace("[Reddit]", "[Tumblr]"),
-            REDDIT_AUTH_REASON.replace("[Reddit] 6rrwyj: ", ""),
-            REDDIT_AUTH_REASON.replace(" 6rrwyj:", ":"),
-            REDDIT_AUTH_REASON.replace("is required.", "is requiredOther."),
-        ]:
-            with self.subTest(reason=reason):
-                self.assertEqual("FAIL", self.classify("reddit-video", reason=reason).status)
 
     def test_local_only_case_keeps_every_outcome_non_gating_only_on_the_runner(self):
         name = "youtube-shorts-sign-in-fallback"
@@ -368,7 +344,7 @@ class ClassifierTest(unittest.TestCase):
         self.assertIn("Known issues now passing (1)", markdown)
         for number in [999]:
             self.assertIn(f"review [#{number}]({report.ISSUES_URL}{number}) for closure", markdown)
-        self.assertEqual({"PASS": 51, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 3},
+        self.assertEqual({"PASS": 42, "BLOCKED": 4, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 3},
                          report.counts_for(REFERENCE_CASES, outcomes))
 
     def test_selected_missing_case_is_a_failure(self):
@@ -438,9 +414,9 @@ class ReportGateTest(unittest.TestCase):
     def test_reference_run_reports_sign_in_and_fixed_regressions_as_failures(self):
         status, data, markdown = self.invoke(REFERENCE_OUTCOMES)
         self.assertEqual(1, status)
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 4}, data["counts"])
+        self.assertEqual({"PASS": 41, "BLOCKED": 4, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 4}, data["counts"])
         self.assertEqual([], data["run_problems"])
-        self.assertIn("**PASS 50 · BLOCKED 8 · LOCAL-ONLY 0 · KNOWN 0 · FAIL 4**", markdown)
+        self.assertIn("**PASS 41 · BLOCKED 4 · LOCAL-ONLY 0 · KNOWN 0 · FAIL 4**", markdown)
         self.assertNotIn("KNOWN (#37)", markdown)
         self.assertEqual("FAIL", next(case for case in data["cases"] if case["id"] == "x-mixed-media")["status"])
 
@@ -449,7 +425,7 @@ class ReportGateTest(unittest.TestCase):
                     for name, platform in BLOCKED_REFERENCE_CASES.items()}
         status, data, markdown = self.invoke(outcomes, selected=",".join(outcomes), runner=True)
         self.assertEqual(0, status)
-        self.assertEqual({"PASS": 0, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 0}, data["counts"])
+        self.assertEqual({"PASS": 0, "BLOCKED": 4, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 0}, data["counts"])
         self.assertEqual({"NetworkBlocked"}, {case["observed"] for case in data["cases"]})
         self.assertIn("| BLOCKED | [youtube-video]", markdown)
 
@@ -484,20 +460,19 @@ class ReportGateTest(unittest.TestCase):
                ("youtube-shorts-sign-in-fallback", "x-mixed-media", "tumblr-photo-post")]
         status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected=",".join(ids))
         self.assertEqual(0, status)
-        self.assertEqual({"PASS": 50, "BLOCKED": 8, "LOCAL-ONLY": 0, "KNOWN": 1, "FAIL": 0}, data["counts"])
+        self.assertEqual({"PASS": 41, "BLOCKED": 4, "LOCAL-ONLY": 0, "KNOWN": 1, "FAIL": 0}, data["counts"])
 
-    def test_runner_gate_accepts_reddit_auth_block_and_reports_local_only_separately(self):
+    def test_runner_gate_reports_local_only_separately(self):
         outcomes = dict(REFERENCE_OUTCOMES)
-        outcomes["reddit-video"] = replace(outcomes["reddit-video"], reason=REDDIT_AUTH_REASON)
         outcomes["x-mixed-media"] = report.Outcome(True, "success: 1 video (Progressive) + 1 image, from Twitter")
         outcomes["tumblr-photo-post"] = report.Outcome(True, "success: 4 images, from Tumblr")
         outcomes["pixiv-artwork"] = report.Outcome(True, "success: 1 image, from Pixiv")
         status, data, markdown = self.invoke(outcomes, runner=True)
         self.assertEqual(0, status)
         self.assertTrue(data["runner"])
-        self.assertEqual({"PASS": 53, "BLOCKED": 8, "LOCAL-ONLY": 1, "KNOWN": 0, "FAIL": 0}, data["counts"])
+        self.assertEqual({"PASS": 44, "BLOCKED": 4, "LOCAL-ONLY": 1, "KNOWN": 0, "FAIL": 0}, data["counts"])
         self.assertEqual([], data["run_problems"])
-        self.assertIn("**PASS 53 · BLOCKED 8 · LOCAL-ONLY 1 · KNOWN 0 · FAIL 0**", markdown)
+        self.assertIn("**PASS 44 · BLOCKED 4 · LOCAL-ONLY 1 · KNOWN 0 · FAIL 0**", markdown)
         local = next(case for case in data["cases"] if case["status"] == "LOCAL-ONLY")
         self.assertEqual("youtube-shorts-sign-in-fallback", local["id"])
         self.assertIn("Please sign in.", local["reason"])
@@ -533,19 +508,19 @@ class ReportGateTest(unittest.TestCase):
         self.assertTrue(data["run_problems"])
 
     def test_failure_without_a_case_failure_is_an_infrastructure_error(self):
-        status, data, _ = self.invoke({"reddit-gallery": REFERENCE_OUTCOMES["reddit-gallery"]}, selected="reddit-gallery")
+        status, data, _ = self.invoke({"imgur-album": REFERENCE_OUTCOMES["imgur-album"]}, selected="imgur-album")
         self.assertEqual(1, status)
         self.assertEqual(1, data["counts"]["PASS"])
         self.assertIn("failed without a recorded case failure", data["run_problems"][0])
 
     def test_selected_pass_ignores_intentionally_unselected_cases(self):
-        status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected=" reddit-gallery ", step="success")
+        status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected=" imgur-album ", step="success")
         self.assertEqual(0, status)
         self.assertEqual({"PASS": 1, "BLOCKED": 0, "LOCAL-ONLY": 0, "KNOWN": 0, "FAIL": 0}, data["counts"])
         self.assertEqual(1, len(data["cases"]))
 
     def test_missing_reports_and_incomplete_runs_fail(self):
-        for outcomes, expected_failures in [({}, 62), ({"reddit-gallery": REFERENCE_OUTCOMES["reddit-gallery"]}, 61)]:
+        for outcomes, expected_failures in [({}, 49), ({"imgur-album": REFERENCE_OUTCOMES["imgur-album"]}, 48)]:
             with self.subTest(results=len(outcomes)):
                 status, data, _ = self.invoke(outcomes)
                 self.assertEqual(1, status)
@@ -554,7 +529,7 @@ class ReportGateTest(unittest.TestCase):
     def test_skipped_or_cancelled_test_step_is_not_accepted(self):
         for step in ["", "skipped", "cancelled"]:
             with self.subTest(step=step):
-                status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected="reddit-video", step=step)
+                status, data, _ = self.invoke(REFERENCE_OUTCOMES, selected="youtube-video", step=step)
                 self.assertEqual(1, status)
                 self.assertTrue(data["run_problems"])
 
@@ -603,10 +578,10 @@ class ReportGateTest(unittest.TestCase):
         self.assertIn("`mixcloud-show` (FAIL, initial): timeout", markdown)
         self.assertIn("`mixcloud-show` (FAIL, retry): DNS lookup failed", markdown)
 
-    def test_timeout_retry_hits_reddit_block_message_and_becomes_blocked(self):
-        name = "reddit-gallery"
+    def test_timeout_retry_hits_block_message_and_becomes_blocked(self):
+        name = "youtube-video"
         initial = report.Outcome(False, "Timeout", "wrong outcome")
-        retry = REFERENCE_OUTCOMES["reddit-video"]
+        retry = REFERENCE_OUTCOMES["youtube-video"]
         self.assertEqual("FAIL", report.classify(CASES_BY_ID[name], initial, runner=True).status)
         status, data, markdown = self.invoke({name: initial}, selected=name, runner=True,
                                              retries={name: retry}, retry_step="failure")
@@ -616,11 +591,11 @@ class ReportGateTest(unittest.TestCase):
         self.assertEqual({"retried": 1, "passed": 0}, data["retries"])
         self.assertEqual(["Timeout", "AuthenticationRequired"],
                          [attempt["observed"] for attempt in data["cases"][0]["attempts"]])
-        self.assertIn("`reddit-gallery` (BLOCKED, initial): Timeout", markdown)
-        self.assertIn("blocked by network security", markdown)
+        self.assertIn("`youtube-video` (BLOCKED, initial): Timeout", markdown)
+        self.assertIn("Sign in to confirm you’re not a bot", markdown)
 
     def test_two_timeouts_remain_fail_with_both_attempts(self):
-        name = "reddit-gallery"
+        name = "imgur-album"
         timeout = report.Outcome(False, "Timeout", "wrong outcome")
         status, data, markdown = self.invoke({name: timeout}, selected=name, runner=True,
                                              retries={name: timeout}, retry_step="failure")
@@ -630,12 +605,12 @@ class ReportGateTest(unittest.TestCase):
         self.assertEqual({"retried": 1, "passed": 0}, data["retries"])
         self.assertEqual(["Timeout", "Timeout"],
                          [attempt["observed"] for attempt in data["cases"][0]["attempts"]])
-        self.assertIn("`reddit-gallery` (FAIL, initial): Timeout", markdown)
-        self.assertIn("`reddit-gallery` (FAIL, retry): Timeout", markdown)
+        self.assertIn("`imgur-album` (FAIL, initial): Timeout", markdown)
+        self.assertIn("`imgur-album` (FAIL, retry): Timeout", markdown)
 
     def test_different_retry_failure_is_classified_normally_without_counting_as_pass(self):
         for name, retry, expected in [
-            ("reddit-video", replace(REFERENCE_OUTCOMES["reddit-video"], reason=REDDIT_AUTH_REASON), "BLOCKED"),
+            ("youtube-video", REFERENCE_OUTCOMES["youtube-video"], "BLOCKED"),
             ("pixiv-artwork", REFERENCE_OUTCOMES["pixiv-artwork"], "FAIL"),
             ("mixcloud-show", report.Outcome(False, "MediaUnavailable", "wrong outcome", reason="Stream deleted"), "FAIL"),
         ]:
@@ -780,8 +755,8 @@ class RetrySelectionTest(unittest.TestCase):
         outcomes = dict(REFERENCE_OUTCOMES)
         outcomes["mixcloud-show"] = report.Outcome(False, "NetworkFailure", "wrong outcome", reason="timeout")
         outcomes["youtube-shorts-sign-in-fallback"] = report.Outcome(False, "NetworkFailure", "wrong outcome")
-        outcomes["reddit-gallery"] = report.Outcome(False, "Timeout", "wrong outcome")
-        self.assertEqual(["youtube-shorts-sign-in-fallback", "reddit-gallery", "tumblr-photo-post", "mixcloud-show"],
+        outcomes["imgur-album"] = report.Outcome(False, "Timeout", "wrong outcome")
+        self.assertEqual(["youtube-shorts-sign-in-fallback", "imgur-album", "tumblr-photo-post", "mixcloud-show"],
                          report.retry_case_ids(REFERENCE_CASES, outcomes))
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
@@ -789,13 +764,13 @@ class RetrySelectionTest(unittest.TestCase):
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
                 status = report.main(["--results", str(folder), "--retry-link-ids",
-                                      "--link-ids", "tumblr-photo-post,mixcloud-show,youtube-video,reddit-gallery"])
+                                      "--link-ids", "tumblr-photo-post,mixcloud-show,youtube-video,imgur-album"])
         self.assertEqual(0, status)
-        self.assertEqual("reddit-gallery,tumblr-photo-post,mixcloud-show\n", stdout.getvalue())
+        self.assertEqual("imgur-album,tumblr-photo-post,mixcloud-show\n", stdout.getvalue())
 
     def test_a_retry_is_never_selected_for_another_retry(self):
         for name, outcome in [("tumblr-photo-post", REFERENCE_OUTCOMES["tumblr-photo-post"]),
-                              ("reddit-gallery", report.Outcome(False, "Timeout", "wrong outcome"))]:
+                              ("imgur-album", report.Outcome(False, "Timeout", "wrong outcome"))]:
             with self.subTest(name=name):
                 original = {name: outcome}
                 merged, problems = report.merge_retries([CASES_BY_ID[name]], original, original)

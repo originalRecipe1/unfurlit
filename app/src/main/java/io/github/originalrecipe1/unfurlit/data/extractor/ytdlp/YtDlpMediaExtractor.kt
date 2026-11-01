@@ -4,7 +4,6 @@ import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlJson
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlRunner
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParser
-import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
@@ -44,15 +43,8 @@ class YtDlpMediaExtractor(
     private val urlPreflight = UrlPreflight()
     private val galleryDlRunner = GalleryDlRunner(appContext)
 
-    override suspend fun extract(url: String): ExtractionResult {
-        val result = VimeoPlayerRoute.extract(url) { sourceUrl, requestUrl -> extractMedia(sourceUrl, requestUrl) }
-        // Reddit post URLs carry the title; use it when no engine reported one.
-        return if (result.title == null) {
-            result.copy(title = RedditLinks.titleFromPostUrl(url))
-        } else {
-            result
-        }
-    }
+    override suspend fun extract(url: String): ExtractionResult =
+        VimeoPlayerRoute.extract(url) { sourceUrl, requestUrl -> extractMedia(sourceUrl, requestUrl) }
 
     /** [tumblrEmbed] runs a link from a Tumblr post, which must never reach the Tumblr adapter again. */
     private suspend fun extractMedia(
@@ -62,7 +54,6 @@ class YtDlpMediaExtractor(
     ): ExtractionResult {
         // Normalize supported wrappers/post links before the usual URL safety preflight.
         val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
-            ?.let(RedditLinks::normalize)
             ?.let { PixivArtworkParser.canonicalPage(it) ?: it }
             ?.let(UrlValidator::toHttpsUrl)
         if (secureInputUrl == null) {
@@ -76,14 +67,7 @@ class YtDlpMediaExtractor(
             tumblrPage?.let { pageUrl ->
                 tumblrExtractor(url).extract(url, pageUrl)?.let { return it }
             }
-            val resolvedUrl = urlPreflight.resolve(secureInputUrl)
-            val extractionUrl = RedditLinks.keepPostOverGate(secureInputUrl, resolvedUrl)
-            if (extractionUrl != resolvedUrl) {
-                Log.i(TAG, "Ignoring a redirect from a Reddit post to a non-post Reddit page")
-            }
-            RedditLinks.galleryUrl(secureInputUrl, extractionUrl)?.let { galleryUrl ->
-                return runGalleryDl(url, galleryUrl)
-            }
+            val extractionUrl = urlPreflight.resolve(secureInputUrl)
             PixivArtworkParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 return PixivArtworkExtractor().extract(url, pageUrl)
             }
@@ -126,7 +110,6 @@ class YtDlpMediaExtractor(
     private suspend fun extractWithYtDlp(url: String, extractionUrl: String): ExtractionResult {
         val processId = "unfurlit-${UUID.randomUUID()}"
         val request = YoutubeDLRequest(extractionUrl).apply {
-            addCommands(redditExtractorOptions(extractionUrl))
             addOption("--ignore-config")
             addOption("--skip-download")
             addOption("--playlist-end", MAX_MEDIA_ENTRIES.toString())

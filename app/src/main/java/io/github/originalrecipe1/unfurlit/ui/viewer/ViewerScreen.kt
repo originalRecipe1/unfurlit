@@ -328,10 +328,9 @@ private val ExtractionError.recoveryRes: Int
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url_recovery
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable_recovery
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
-        // YouTube's bot check depends on the IP, so another connection can help; Reddit's block doesn't.
+        // YouTube's bot check depends on the IP, so another connection can help.
         is ExtractionError.NetworkBlocked -> when (platform) {
             BlockingPlatform.YouTube -> R.string.error_network_blocked_recovery_network
-            BlockingPlatform.Reddit -> R.string.error_network_blocked_recovery_reddit
         }
         ExtractionError.NetworkFailure -> R.string.error_network_failure_recovery
         ExtractionError.Timeout -> R.string.error_timeout_recovery
@@ -425,8 +424,7 @@ internal fun FailureContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(24.dp))
-        // Reddit refuses signed-out apps on every network, so the browser is the likelier way in.
-        val openFirst = !error.canRetry || error == ExtractionError.NetworkBlocked(BlockingPlatform.Reddit)
+        val openFirst = !error.canRetry
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),

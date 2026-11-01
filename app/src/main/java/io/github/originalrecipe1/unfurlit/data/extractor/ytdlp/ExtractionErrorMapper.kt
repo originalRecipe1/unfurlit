@@ -12,7 +12,7 @@ internal fun Throwable.toDomainError(): ExtractionError {
     fun mentions(vararg phrases: String) = phrases.any(detail::contains)
 
     if (causes.any { it is UnsafeNetworkTargetException }) return ExtractionError.UnsupportedUrl
-    // Before the generic checks: Reddit's block page mentions "network", YouTube's "sign in".
+    // Before the generic checks: YouTube's bot check mentions "sign in".
     networkBlock(detail)?.let { return it }
     return when {
         causes.any { it is IOException || it is TimeoutCancellationException } ||
@@ -45,11 +45,4 @@ internal fun networkBlock(message: String): ExtractionError.NetworkBlocked? = BL
 
 private val BLOCKS = listOf(
     Regex("""\bsign in to confirm you['’]re not a bot\b""", RegexOption.IGNORE_CASE) to BlockingPlatform.YouTube,
-    // gallery-dl quotes the text of Reddit's block page.
-    Regex("""\bblocked by network security\b""", RegexOption.IGNORE_CASE) to BlockingPlatform.Reddit,
-    // gallery-dl's HttpError for the same block, which Reddit sends with reason "Blocked".
-    Regex("""'403 blocked' for 'https://(?:[\w-]+\.)*(?:reddit\.com|redd\.it)[/'?]""", RegexOption.IGNORE_CASE) to BlockingPlatform.Reddit,
-    // Pinned yt-dlp (reddit.py) raises this only when anonymous and the .json response
-    // isn't JSON, i.e. Reddit served its block page instead.
-    Regex("""\[reddit] [0-9a-z]+: account authentication is required\b""", RegexOption.IGNORE_CASE) to BlockingPlatform.Reddit,
 )

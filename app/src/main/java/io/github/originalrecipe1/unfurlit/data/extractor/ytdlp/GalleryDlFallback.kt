@@ -72,8 +72,7 @@ internal suspend fun extractWithGalleryDlFallback(
 
 /**
  * yt-dlp failures after which gallery-dl may still succeed: the post may have
- * photos only, or gallery-dl may reach the site through a different API (Reddit's
- * JSON pages often refuse yt-dlp without an account while its API still answers).
+ * photos only, or gallery-dl may reach the site through a different API.
  */
 internal fun ExtractionError.allowsGalleryDlFallback(): Boolean =
     this == ExtractionError.UnsupportedUrl ||

@@ -15,8 +15,7 @@ class GalleryDlFallbackTest {
         assertTrue(ExtractionError.UnsupportedUrl.allowsGalleryDlFallback())
         assertTrue(ExtractionError.ExtractionFailed.allowsGalleryDlFallback())
         assertTrue(ExtractionError.AuthenticationRequired.allowsGalleryDlFallback())
-        // gallery-dl may still reach Reddit through its API or OAuth retry.
-        assertTrue(ExtractionError.NetworkBlocked(BlockingPlatform.Reddit).allowsGalleryDlFallback())
+        assertTrue(ExtractionError.NetworkBlocked(BlockingPlatform.YouTube).allowsGalleryDlFallback())
         assertFalse(ExtractionError.MediaUnavailable.allowsGalleryDlFallback())
         assertFalse(ExtractionError.NetworkFailure.allowsGalleryDlFallback())
         assertFalse(ExtractionError.Timeout.allowsGalleryDlFallback())
@@ -26,7 +25,7 @@ class GalleryDlFallbackTest {
     fun galleryDlFailureWinsOnlyWhenMoreSpecific() {
         val ytDlp = ExtractionException(ExtractionError.UnsupportedUrl)
         for (specific in listOf(
-            ExtractionError.MediaUnavailable, ExtractionError.AuthenticationRequired, ExtractionError.NetworkBlocked(BlockingPlatform.Reddit),
+            ExtractionError.MediaUnavailable, ExtractionError.AuthenticationRequired, ExtractionError.NetworkBlocked(BlockingPlatform.YouTube),
         )) {
             val galleryDl = ExtractionException(specific)
             assertSame(galleryDl, preferredFailure(ytDlp, galleryDl))
@@ -34,7 +33,7 @@ class GalleryDlFallbackTest {
         for (generic in listOf(ExtractionError.UnsupportedUrl, ExtractionError.ExtractionFailed, ExtractionError.NetworkFailure)) {
             assertEquals(ExtractionError.UnsupportedUrl, preferredFailure(ytDlp, ExtractionException(generic)).error)
         }
-        val blocked = ExtractionException(ExtractionError.NetworkBlocked(BlockingPlatform.Reddit))
+        val blocked = ExtractionException(ExtractionError.NetworkBlocked(BlockingPlatform.YouTube))
         assertSame(blocked, preferredFailure(blocked, ExtractionException(ExtractionError.ExtractionFailed)))
     }
 }
