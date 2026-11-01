@@ -15,7 +15,9 @@ class GalleryDlFallbackTest {
         assertTrue(ExtractionError.UnsupportedUrl.allowsGalleryDlFallback())
         assertTrue(ExtractionError.ExtractionFailed.allowsGalleryDlFallback())
         assertTrue(ExtractionError.AuthenticationRequired.allowsGalleryDlFallback())
-        assertTrue(ExtractionError.NetworkBlocked(BlockingPlatform.YouTube).allowsGalleryDlFallback())
+        // gallery-dl can't get past YouTube's bot check.
+        assertFalse(ExtractionError.NetworkBlocked(BlockingPlatform.YouTube).allowsGalleryDlFallback())
+        assertFalse(ExtractionError.SiteNotSupported.allowsGalleryDlFallback())
         assertFalse(ExtractionError.MediaUnavailable.allowsGalleryDlFallback())
         assertFalse(ExtractionError.NetworkFailure.allowsGalleryDlFallback())
         assertFalse(ExtractionError.Timeout.allowsGalleryDlFallback())
@@ -25,7 +27,7 @@ class GalleryDlFallbackTest {
     fun galleryDlFailureWinsOnlyWhenMoreSpecific() {
         val ytDlp = ExtractionException(ExtractionError.UnsupportedUrl)
         for (specific in listOf(
-            ExtractionError.MediaUnavailable, ExtractionError.AuthenticationRequired, ExtractionError.NetworkBlocked(BlockingPlatform.YouTube),
+            ExtractionError.MediaUnavailable, ExtractionError.AuthenticationRequired,
         )) {
             val galleryDl = ExtractionException(specific)
             assertSame(galleryDl, preferredFailure(ytDlp, galleryDl))

@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.ytdlp
 
+import io.github.originalrecipe1.unfurlit.data.extractor.UnsupportedSites
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlJsonParser
 import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlRunner
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkExtractor
@@ -59,6 +60,9 @@ class YtDlpMediaExtractor(
         if (secureInputUrl == null) {
             throw ExtractionException(ExtractionError.UnsupportedUrl)
         }
+        if (UnsupportedSites.matches(secureInputUrl)) {
+            throw ExtractionException(ExtractionError.SiteNotSupported)
+        }
 
         return try {
             // The optional Tumblr GET performs the same public DNS/redirect checks as
@@ -68,6 +72,10 @@ class YtDlpMediaExtractor(
                 tumblrExtractor(url).extract(url, pageUrl)?.let { return it }
             }
             val extractionUrl = urlPreflight.resolve(secureInputUrl)
+            // A short or tracking link can redirect to a refused site.
+            if (UnsupportedSites.matches(extractionUrl)) {
+                throw ExtractionException(ExtractionError.SiteNotSupported)
+            }
             PixivArtworkParser.canonicalPage(extractionUrl)?.let { pageUrl ->
                 return PixivArtworkExtractor().extract(url, pageUrl)
             }

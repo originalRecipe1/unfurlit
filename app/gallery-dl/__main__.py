@@ -39,6 +39,7 @@ AUTHOR_KEYS = ("author", "user", "uploader", "artist", "owner", "username", "blo
 AUTHOR_NAME_KEYS = ("name", "nick", "display_name", "username", "screen_name", "handle")
 DESCRIPTION_KEYS = ("description", "content", "caption", "text")
 
+
 def media_kind(extension):
     extension = (extension or "").lower()
     if extension in IMAGE_EXTENSIONS:

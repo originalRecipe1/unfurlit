@@ -159,7 +159,10 @@ class ReportTest(unittest.TestCase):
 
 # Captured observations and complete SafeLog-redacted error strings from this run.
 REFERENCE = json.loads((Path(__file__).parent / "fixtures/social-links-37472226940.json").read_text())
-REFERENCE_OUTCOMES = {name: report.Outcome(**value) for name, value in REFERENCE["outcomes"].items()}
+# The run is kept as recorded; outcomes of cases since removed from the fixture (Reddit) are skipped.
+LIVE_CASE_IDS = {case["id"] for case in report.load_cases()}
+REFERENCE_OUTCOMES = {name: report.Outcome(**value) for name, value in REFERENCE["outcomes"].items()
+                      if name in LIVE_CASE_IDS}
 REFERENCE_CASES = [case for case in report.load_cases() if case["id"] in REFERENCE_OUTCOMES]
 CASES_BY_ID = {case["id"]: case for case in REFERENCE_CASES}
 

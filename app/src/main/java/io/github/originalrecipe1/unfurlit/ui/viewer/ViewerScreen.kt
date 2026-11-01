@@ -314,6 +314,7 @@ private fun PackageManager.defaultLinkHandler(intent: Intent): ResolveInfo? =
 private val ExtractionError.titleRes: Int
     get() = when (this) {
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url
+        ExtractionError.SiteNotSupported -> R.string.error_site_not_supported
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required
         is ExtractionError.NetworkBlocked -> R.string.error_network_blocked
@@ -326,6 +327,7 @@ private val ExtractionError.titleRes: Int
 private val ExtractionError.recoveryRes: Int
     get() = when (this) {
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url_recovery
+        ExtractionError.SiteNotSupported -> R.string.error_site_not_supported_recovery
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable_recovery
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
         // YouTube's bot check depends on the IP, so another connection can help.
@@ -424,23 +426,22 @@ internal fun FailureContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(24.dp))
-        val openFirst = !error.canRetry
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Button(
-                onClick = if (openFirst) onOpenOriginal else onRetry,
+                onClick = if (error.canRetry) onRetry else onOpenOriginal,
                 modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
             ) {
-                Text(stringResource(if (openFirst) R.string.action_open_link else R.string.action_try_again))
+                Text(stringResource(if (error.canRetry) R.string.action_try_again else R.string.action_open_link))
             }
             if (error.canRetry) {
                 OutlinedButton(
-                    onClick = if (openFirst) onRetry else onOpenOriginal,
+                    onClick = onOpenOriginal,
                     modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
                 ) {
-                    Text(stringResource(if (openFirst) R.string.action_try_again else R.string.action_open_link))
+                    Text(stringResource(R.string.action_open_link))
                 }
             }
             TextButton(

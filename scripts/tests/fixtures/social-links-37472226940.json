@@ -57,6 +57,20 @@
       "seconds": 5.1,
       "reason": null
     },
+    "reddit-video": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 11.9,
+      "reason": "AuthenticationRequired | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+    },
+    "reddit-native-video": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 12.2,
+      "reason": "AuthenticationRequired | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+    },
     "x-video": {
       "passed": true,
       "observed": "success: 1 video (Hls, separate audio), from Twitter",
@@ -195,6 +209,83 @@
       "observed": "success: 1 image, soundtrack, from TikTok",
       "problems": "",
       "seconds": 3.0,
+      "reason": null
+    },
+    "reddit-image-post": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 11.1,
+      "reason": null
+    },
+    "reddit-gallery": {
+      "passed": true,
+      "observed": "success: 3 images, from Reddit",
+      "problems": "",
+      "seconds": 8.7,
+      "reason": null
+    },
+    "reddit-gallery-comments": {
+      "passed": true,
+      "observed": "success: 3 images, from Reddit",
+      "problems": "",
+      "seconds": 12.4,
+      "reason": null
+    },
+    "reddit-gallery-share": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 5.6,
+      "reason": "AuthenticationRequired | gallery-dl HttpError 403: '403 Blocked' for '<url>"
+    },
+    "reddit-gallery-short": {
+      "passed": true,
+      "observed": "success: 3 images, from Reddit",
+      "problems": "",
+      "seconds": 12.7,
+      "reason": null
+    },
+    "reddit-external-imgur": {
+      "passed": true,
+      "observed": "success: 1 video (Progressive), from Reddit",
+      "problems": "",
+      "seconds": 12.1,
+      "reason": null
+    },
+    "reddit-external-streamable": {
+      "passed": false,
+      "observed": "AuthenticationRequired",
+      "problems": "wrong outcome",
+      "seconds": 11.4,
+      "reason": "AuthenticationRequired | gallery-dl AbortExtraction 0: \"You've been blocked by network security.\""
+    },
+    "reddit-direct-image": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 5.9,
+      "reason": null
+    },
+    "reddit-preview-image": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 5.2,
+      "reason": null
+    },
+    "reddit-image-link-wrapper": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 5.1,
+      "reason": null
+    },
+    "reddit-mirror-post": {
+      "passed": true,
+      "observed": "success: 1 image, from Reddit",
+      "problems": "",
+      "seconds": 10.6,
       "reason": null
     },
     "x-photo-post": {

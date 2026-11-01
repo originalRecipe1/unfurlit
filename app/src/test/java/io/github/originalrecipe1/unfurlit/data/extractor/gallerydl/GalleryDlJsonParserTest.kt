@@ -86,7 +86,7 @@ class GalleryDlJsonParserTest {
     @Test
     fun siteBlockPagesKeepTheSignInMapping() {
         assertError(ExtractionError.AuthenticationRequired,
-            message("AbortExtraction", 0, "\"You've been blocked by network security.\""))
+            message("AbortExtraction", 0, "Access to this page is blocked"))
         assertError(ExtractionError.AuthenticationRequired,
             message("HttpError", 403, "'403 Blocked' for 'https://example.com/post/1'"))
         assertError(ExtractionError.AuthenticationRequired, message("AbortExtraction", 0, "Blocked by the firewall"))

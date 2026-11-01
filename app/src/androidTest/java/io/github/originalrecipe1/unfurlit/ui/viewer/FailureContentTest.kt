@@ -31,6 +31,20 @@ class FailureContentTest {
         compose.runOnIdle { assertEquals("home", action) }
     }
 
+    @Test fun unsupportedSiteLeadsWithOpenLinkWithoutRetry() {
+        var action = ""
+        compose.setContent {
+            UnfurlitTheme {
+                FailureContent(ExtractionError.SiteNotSupported, { action = "retry" },
+                    { action = "original" }, { action = "home" })
+            }
+        }
+        compose.onNodeWithText("This site isn’t supported").assertIsDisplayed()
+        compose.onNodeWithText("Try again").assertDoesNotExist()
+        compose.onNodeWithText("Open link").performClick()
+        compose.runOnIdle { assertEquals("original", action) }
+    }
+
     @Test fun networkFailureOffersRetry() {
         var retries = 0
         compose.setContent {
