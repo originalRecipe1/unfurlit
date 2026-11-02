@@ -5,6 +5,9 @@ import io.github.originalrecipe1.unfurlit.data.extractor.gallerydl.GalleryDlRunn
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.pixiv.PixivArtworkParser
 import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditLinks
+import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditPostExtractor
+import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditPostParser
+import io.github.originalrecipe1.unfurlit.data.network.UnsafeNetworkTargetException
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
@@ -59,6 +62,7 @@ class YtDlpMediaExtractor(
         url: String,
         requestUrl: String,
         tumblrEmbed: Boolean = false,
+        redditExternal: Boolean = false,
     ): ExtractionResult {
         // Normalize supported wrappers/post links before the usual URL safety preflight.
         val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
@@ -74,12 +78,28 @@ class YtDlpMediaExtractor(
             // preflight. Try it first so failure can fall back to the original URL.
             val tumblrPage = TumblrPostParser.canonicalPage(secureInputUrl)?.takeUnless { tumblrEmbed }
             tumblrPage?.let { pageUrl ->
-                tumblrExtractor(url).extract(url, pageUrl)?.let { return it }
+                tumblrExtractor(url, redditExternal).extract(url, pageUrl)?.let { return it }
             }
             val resolvedUrl = urlPreflight.resolve(secureInputUrl)
             val extractionUrl = RedditLinks.keepPostOverGate(secureInputUrl, resolvedUrl)
             if (extractionUrl != resolvedUrl) {
                 Log.i(TAG, "Ignoring a redirect from a Reddit post to a non-post Reddit page")
+            }
+            if (RedditLinks.useHtmlAdapter(extractionUrl, redditExternal)) {
+                RedditPostExtractor(
+                    extractManifest = { manifest ->
+                        val checked = urlPreflight.resolve(manifest)
+                        if (!RedditPostParser.isManifestUrl(checked)) {
+                            throw ExtractionException(ExtractionError.UnsupportedUrl, UnsafeNetworkTargetException())
+                        }
+                        extractWithYtDlp(url, checked)
+                    },
+                    extractExternal = { external ->
+                        VimeoPlayerRoute.extract(external) { _, target ->
+                            extractMedia(url, target, tumblrEmbed = tumblrEmbed, redditExternal = true)
+                        }
+                    },
+                ).extract(url, extractionUrl)?.let { return it }
             }
             RedditLinks.galleryUrl(secureInputUrl, extractionUrl)?.let { galleryUrl ->
                 return runGalleryDl(url, galleryUrl)
@@ -90,7 +110,7 @@ class YtDlpMediaExtractor(
             // A non-Tumblr input can redirect to a post; never repeat a page attempt.
             if (tumblrPage == null && !tumblrEmbed) {
                 TumblrPostParser.canonicalPage(extractionUrl)?.let { pageUrl ->
-                    tumblrExtractor(url).extract(url, pageUrl)?.let { return it }
+                    tumblrExtractor(url, redditExternal).extract(url, pageUrl)?.let { return it }
                 }
             }
             TikTokPhotoParser.canonicalPage(extractionUrl)?.let { pageUrl ->
@@ -119,8 +139,8 @@ class YtDlpMediaExtractor(
     }
 
     // An embed takes the same URL checks, preflight and engines as a link the user shared.
-    private fun tumblrExtractor(url: String) = TumblrPostExtractor(extractEmbed = { embedUrl ->
-        VimeoPlayerRoute.extract(embedUrl) { _, requestUrl -> extractMedia(url, requestUrl, tumblrEmbed = true) }
+    private fun tumblrExtractor(url: String, redditExternal: Boolean = false) = TumblrPostExtractor(extractEmbed = { embedUrl ->
+        VimeoPlayerRoute.extract(embedUrl) { _, requestUrl -> extractMedia(url, requestUrl, tumblrEmbed = true, redditExternal = redditExternal) }
     })
 
     private suspend fun extractWithYtDlp(url: String, extractionUrl: String): ExtractionResult {

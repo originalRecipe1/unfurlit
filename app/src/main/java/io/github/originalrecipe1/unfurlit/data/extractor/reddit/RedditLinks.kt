@@ -59,6 +59,9 @@ internal object RedditLinks {
                 GALLERY_PATH.matches(uri.rawPath.orEmpty())
         }
 
+    /** An external handoff may redirect to Reddit but must not start this adapter again. */
+    fun useHtmlAdapter(url: String, redditExternal: Boolean): Boolean = !redditExternal && isPostUrl(url)
+
     fun isPostUrl(url: String): Boolean {
         val uri = runCatching { URI(url) }.getOrNull() ?: return false
         val host = uri.host?.lowercase()?.trimEnd('.') ?: return false
