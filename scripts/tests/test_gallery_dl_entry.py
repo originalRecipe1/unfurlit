@@ -44,23 +44,23 @@ class MetadataTest(unittest.TestCase):
 class CollectorTest(unittest.TestCase):
     def test_keeps_https_media_and_first_metadata(self):
         collector = entry.Collector()
-        collector.category = "imgur"
+        collector.category = "reddit"
         collector.add_metadata({"title": "Post", "author": "ann"})
         collector.add_item("https://i.example/a.jpg", {"extension": "jpg", "width": 10, "height": True}, {})
         collector.add_item("http://i.example/b.jpg", {"extension": "jpg"}, {})
         collector.add_item("https://i.example/c.zip", {"extension": "zip"}, {})
         collector.add_metadata({"title": "Later"})
         result = collector.result()
-        self.assertEqual("imgur", result["category"])
+        self.assertEqual("reddit", result["category"])
         self.assertEqual("Post", result["title"])
         self.assertEqual("ann", result["author"])
         self.assertEqual(1, len(result["items"]))
         item = result["items"][0]
         self.assertEqual(("image", "jpg", 10, None), (item["kind"], item["extension"], item["width"], item["height"]))
 
-    def test_post_text_becomes_the_description(self):
+    def test_reddit_post_text_becomes_the_description(self):
         collector = entry.Collector()
-        collector.add_metadata({"title": "What happened?", "description": "Long post body", "author": "ann"})
+        collector.add_metadata({"title": "What happened?", "selftext": "Long post body", "author": "ann"})
         result = collector.result()
         self.assertEqual("What happened?", result["title"])
         self.assertEqual("Long post body", result["description"])
@@ -78,6 +78,13 @@ class CollectorTest(unittest.TestCase):
             self.assertFalse(collector.full)
             collector.add_item(f"https://i.example/{index}.png", {"extension": "png"}, {})
         self.assertTrue(collector.full)
+
+
+class RedditBlockTest(unittest.TestCase):
+    def test_recognizes_reddits_network_security_page(self):
+        self.assertTrue(entry.is_reddit_block(Exception('"You\'ve been blocked by network security."')))
+        self.assertFalse(entry.is_reddit_block(Exception("HTTP request failed")))
+        self.assertFalse(entry.is_reddit_block(None))
 
 
 class ErrorResultTest(unittest.TestCase):
