@@ -29,7 +29,7 @@ Media extraction runs **on your device**, with no account, backend or ads.
 | Vimeo | ✅ page, player, unlisted | — | — | ✅ Works |
 | Instagram | ✅ posts, Reels, carousels | ✅ single, multi-photo, carousels | no photo-post soundtrack | ✅ Works |
 | TikTok | ✅ | ✅ photo posts | ✅ photo-post soundtrack | ✅ Works |
-| Reddit | — | direct image links only | — | ⚠️ Posts blocked for signed-out apps¹ |
+| Reddit | ✅ native and external | ✅ single images, supported galleries | — | ⚠️ Some posts/networks blocked¹ |
 | X/Twitter | ✅ including GIFs | ✅ including mixed posts | — | ✅ Works |
 | PeerTube | ✅ | — | — | ✅ Works |
 | Bandcamp | — | — | ✅ tracks | ✅ Works |
@@ -37,10 +37,10 @@ Media extraction runs **on your device**, with no account, backend or ads.
 | Pixiv | — | ✅ illustrations, no Ugoira | — | ✅ Works |
 | Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Dailymotion, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
 
-¹ Since 2026-10-14 Reddit blocks signed-out apps, so Unfurlit shows a Reddit message with
-**Open link** for posts. Direct `i.redd.it`, `preview.redd.it` and `reddit.com/media` image
-links still opened in the 2026-10-16 run. See the
-[dated note](docs/social-link-baseline.md#reddit-signed-out-block--2026-10-14).
+¹ Reddit posts use anonymous session HTML before the existing engine fallbacks.
+Some layouts and networks remain blocked; **Open link** is available in that
+case. See the [transport evidence](docs/reddit-transport-spike.md) and
+[adapter phone checks](docs/releases/reddit-adapter-phone-test.md).
 
 — means no test fixture covers it, not that it fails. Public posts only; availability
 varies by post, region and platform changes. [Sites and access](docs/usage.md#sites-and-access)

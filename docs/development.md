@@ -240,13 +240,38 @@ also keeps the video; an eligible yt-dlp failure reuses the same gallery lookup
 for the normal fallback, with its original 60-second limit. Other sites retain
 the sequential fallback. Both processes share a locked runtime installation,
 use separate process environments, and disable disk caches; closing the request
-cancels both lookups. For Reddit posts it first
+cancels both lookups. For Reddit posts the gallery-dl fallback first
 loads `old.reddit.com` for the anonymous session cookie that Reddit's JSON pages
 expect (as yt-dlp does); if Reddit still answers with its network-security block
 page, it retries once through Reddit's OAuth API with gallery-dl's own client ID. Its pure Python logic is tested
 by `scripts/tests/test_gallery_dl_entry.py`; `PythonRuntimeTest` also runs it on
 the device runtime without network access. Both Reddit steps are currently blocked
 for signed-out clients; see the [2026-10-14 baseline note](social-link-baseline.md#reddit-signed-out-block--2026-10-14).
+
+Reddit post URLs now try an HTML adapter after normal URL preflight and before
+those engine fallbacks. A process-wide `RedditSession` bootstraps anonymous
+cookies from `https://old.reddit.com/` using the safe OkHttp client and the
+Android Chrome headers verified in the [phone spike](reddit-transport-spike.md).
+The in-memory session expires after 30 minutes. A mutex shares creation across
+concurrent requests; a recognised challenge invalidates the lease and permits
+one rebuild per extraction. A repeated challenge raises `NetworkBlocked(Reddit)`
+without calling either engine. Cookies are scoped to HTTPS Reddit page hosts,
+never installed on playback clients or passed to an engine, and never persisted.
+No over18 preference, login, OAuth or browser component is added by this adapter.
+
+The pure HTML parser selects only the requested `shreddit-post` ID. It reads
+native v.redd.it manifests (or derives DASH from a validated native content link),
+ordered numbered gallery items, original/mappable single-image content links,
+and external providers. Media hosts are restricted to v.redd.it and i.redd.it
+(with supported preview.redd.it images normalized to originals). External HTTPS
+links use the usual public URL preflight and engines; a propagated one-hop flag
+prevents re-entering this adapter. Reddit-post targets and unrecognised layouts
+fall through to the existing engines. The generic ID-bearing shell for post
+15ko0qu also falls through; it is not treated as a challenge. Unsafe DNS,
+redirect or media targets never fall through. The source Reddit link, title and
+author are retained in the result used by History. Galleries are deduplicated,
+ordered by page-N and capped at 50 entries. Full playback and History checks are
+tracked in the [adapter phone checklist](releases/reddit-adapter-phone-test.md).
 
 Before the first extraction in each app process, Unfurlit verifies the app-private
 extractor copy against the bundled checksum and atomically refreshes it when it
@@ -321,7 +346,7 @@ reusable checklist into a release-specific test record under
   workload difference as well as the phone, Android version and APK hash.
 - Update from the **previous release** without clearing data, extract a link to trigger
   runtime replacement, and confirm that saved History entries and thumbnails remain.
-- Open a Reddit post and confirm the Reddit block message appears; **Open link**
+- For a blocked Reddit request, confirm the Reddit block message appears; **Open link**
   must open the Reddit app or browser rather than show a toast.
 - On a non-Reddit extraction failure, confirm **Open link** opens the default
   app or an app chooser.

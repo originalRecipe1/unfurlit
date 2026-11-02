@@ -62,8 +62,8 @@ automatically:
 3. Return to Unfurlit. The dialog closes once at least one site is on. If
    none is on, it stays open and shows **Not turned on yet**.
 
-Reddit isn't in the list for now, because Reddit posts aren't working (see
-the Reddit note below).
+Reddit remains outside the default-link settings list. Share or paste its links
+to use Unfurlit's anonymous session adapter; some posts remain blocked (see below).
 
 If a site's own app is installed, it may keep opening that site's links, and
 Settings may not let Unfurlit take them. Turn that site's links off under
@@ -109,11 +109,12 @@ Tap **Supported links and media** on Home for a summary in the app.
 The current extraction results are in the
 [1.4.2 baseline](social-link-baseline.md#142--2026-10-16).
 
-**Reddit — 2026-10-14:** Reddit currently blocks signed-out apps.
-1.4.2 and later show a Reddit-specific message with **Open link** for blocked posts.
-Direct `i.redd.it` and `v.redd.it` media links still opened in observations on
-2026-10-14; this is not a guarantee of continued availability. See the
-[dated Reddit note](social-link-baseline.md#reddit-signed-out-block--2026-10-14).
+**Reddit:** Public posts first use an anonymous session to discover native or
+external videos, single images and supported galleries from the page HTML.
+Some posts have unrecognised markup and use the existing engines; these can
+still be blocked. Network challenges show a Reddit-specific message with
+**Open link**. No login or imported browser cookies are needed. See the
+[device checks and remaining limitations](releases/reddit-adapter-phone-test.md).
 
 Importing login cookies, choosing quality manually, and saving media are not
 currently available. TikTok photo posts support swiping and zooming through pictures while their

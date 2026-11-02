@@ -5,6 +5,7 @@ import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
@@ -12,9 +13,12 @@ import java.io.IOException
 internal object PublicPageLoader {
     const val MAX_PAGE_BYTES = 4 * 1024 * 1024
 
-    suspend fun load(request: Request): String =
+    suspend fun load(request: Request): String = load(request, SafeHttpClient.preflight)
+
+    /** Reddit may return its challenge as 403 HTML; other callers retain status handling. */
+    suspend fun load(request: Request, client: OkHttpClient, acceptForbidden: Boolean = false): String =
         suspendCancellableCoroutine { continuation ->
-            val call = SafeHttpClient.preflight.newCall(request)
+            val call = client.newCall(request)
             continuation.invokeOnCancellation { call.cancel() }
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
@@ -28,6 +32,7 @@ internal object PublicPageLoader {
                                 404, 410 -> ExtractionError.MediaUnavailable
                                 401 -> ExtractionError.AuthenticationRequired
                                 429 -> ExtractionError.NetworkFailure
+                                403 -> if (acceptForbidden) null else ExtractionError.ExtractionFailed
                                 else -> if (it.isSuccessful) null else ExtractionError.ExtractionFailed
                             }
                             if (error != null) throw ExtractionException(error)
