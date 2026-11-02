@@ -9,7 +9,7 @@
     <string name="home_invalid_url">Enter a valid public HTTP or HTTPS URL.</string>
     <string name="home_clipboard_no_url">The clipboard does not contain a supported URL.</string>
     <string name="supported_media_title">Supported links and media</string>
-    <string name="supported_media_description">YouTube — videos\nVimeo — videos\nInstagram — videos &amp; photos\nTikTok — videos &amp; photo posts\nX/Twitter — videos, GIFs &amp; photos\nPeerTube — videos\nBandcamp — tracks\nTumblr — videos &amp; photos\nPixiv — illustrations\nImgur, Bluesky, Flickr and many other sites — photos, videos &amp; audio\n\nPublic links only. Availability varies.</string>
+    <string name="supported_media_description">YouTube — videos\nVimeo — videos\nInstagram — videos &amp; photos\nTikTok — videos &amp; photo posts\nReddit — not working right now (image links still open)\nX/Twitter — videos, GIFs &amp; photos\nPeerTube — videos\nBandcamp — tracks\nTumblr — videos &amp; photos\nPixiv — illustrations\nImgur, Bluesky, Flickr and many other sites — photos, videos &amp; audio\n\nPublic links only. Availability varies.</string>
     <string name="open_links_title">Open links in Unfurlit</string>
     <string name="open_links_description">Choose which sites open here when you tap a link in another app. In Settings, choose to open links in the app, then add the sites.</string>
     <string name="open_links_app_hint">If a site’s own app is installed, its links may still open there.</string>
@@ -60,14 +60,13 @@
 
     <string name="error_unsupported_url">No viewable media found</string>
     <string name="error_unsupported_url_recovery">This link may be a page without media, or a site Unfurlit doesn’t support. Try a direct link to a post, video, or audio track.</string>
-    <string name="error_site_not_supported">This site isn’t supported</string>
-    <string name="error_site_not_supported_recovery">Unfurlit doesn’t open links from this site. Use Open link to view it in your browser or the site’s app.</string>
     <string name="error_media_unavailable">Media unavailable</string>
     <string name="error_media_unavailable_recovery">This post may have been removed or may no longer be available. Open the original to check, or try another link.</string>
     <string name="error_authentication_required">Sign-in may be needed</string>
     <string name="error_authentication_required_recovery">This site may require sign-in or restrict access to this post. Open the original in your browser to check.</string>
     <string name="error_network_blocked">%1$s blocked this request</string>
     <string name="error_network_blocked_recovery_network">%1$s blocked this request from your network. Try again later or on a different connection.</string>
+    <string name="error_network_blocked_recovery_reddit">Reddit is currently blocking apps that aren’t signed in. Use Open link to view it on Reddit, or try again later.</string>
     <string name="error_network_failure">Couldn’t reach this site</string>
     <string name="error_network_failure_recovery">Check your connection and try again. The site may also be temporarily unavailable.</string>
     <string name="error_timeout">This took too long</string>

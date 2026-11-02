@@ -73,7 +73,7 @@ class LinkFiltersTest {
             "https://benprunty.bandcamp.com/album/fez-ost",
             "https://bandcamp.com/track/lanius-battle",
             "https://bandcamp.com/login",
-            // Unfurlit doesn't handle Reddit.
+            // Reddit stays out of Open by default while it blocks signed-out access.
             "https://www.reddit.com/r/RobloxArt/comments/15ko0qu/",
             "https://reddit.com/comments/15ko0qu",
             "https://old.reddit.com/r/RobloxArt/comments/15ko0qu/",

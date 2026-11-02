@@ -62,6 +62,9 @@ automatically:
 3. Return to Unfurlit. The dialog closes once at least one site is on. If
    none is on, it stays open and shows **Not turned on yet**.
 
+Reddit isn't in the list for now, because Reddit posts aren't working (see
+the Reddit note below).
+
 If a site's own app is installed, it may keep opening that site's links, and
 Settings may not let Unfurlit take them. Turn that site's links off under
 **Open by default** in the site app's settings, then turn them on for Unfurlit.
@@ -92,6 +95,12 @@ image links also open. See the [dated test results](social-link-baseline.md) for
 links and media checked. Pixiv artwork uses its anonymous web data; no refresh
 token is needed. Login-only artwork and Ugoira frame animations are not supported.
 
+Reddit posts shared from alternative front ends such as eddrit or Redlib, Reddit
+"copy image link" links (`reddit.com/media?url=…`), and resized
+`preview.redd.it` images are opened from the matching Reddit post or original
+`i.redd.it` image, so extraction contacts Reddit rather than the front end. The
+viewer and History keep the link you shared.
+
 Other sites may work too; audio and galleries depend on the source. Availability varies by post,
 region and platform changes. Private, login-gated or restricted posts may not
 open; signing in is not available.
@@ -100,8 +109,10 @@ Tap **Supported links and media** on Home for a summary in the app.
 The current extraction results are in the
 [1.4.2 baseline](social-link-baseline.md#142--2026-10-16).
 
-**Reddit** is not supported. Since 2026-10-14 it blocks apps that aren't signed
-in, and Unfurlit has no Reddit-specific handling; see the
+**Reddit — 2026-10-14:** Reddit currently blocks signed-out apps.
+1.4.2 and later show a Reddit-specific message with **Open link** for blocked posts.
+Direct `i.redd.it` and `v.redd.it` media links still opened in observations on
+2026-10-14; this is not a guarantee of continued availability. See the
 [dated Reddit note](social-link-baseline.md#reddit-signed-out-block--2026-10-14).
 
 Importing login cookies, choosing quality manually, and saving media are not

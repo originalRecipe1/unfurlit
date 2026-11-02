@@ -314,7 +314,6 @@ private fun PackageManager.defaultLinkHandler(intent: Intent): ResolveInfo? =
 private val ExtractionError.titleRes: Int
     get() = when (this) {
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url
-        ExtractionError.SiteNotSupported -> R.string.error_site_not_supported
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required
         is ExtractionError.NetworkBlocked -> R.string.error_network_blocked
@@ -327,12 +326,12 @@ private val ExtractionError.titleRes: Int
 private val ExtractionError.recoveryRes: Int
     get() = when (this) {
         ExtractionError.UnsupportedUrl -> R.string.error_unsupported_url_recovery
-        ExtractionError.SiteNotSupported -> R.string.error_site_not_supported_recovery
         ExtractionError.MediaUnavailable -> R.string.error_media_unavailable_recovery
         ExtractionError.AuthenticationRequired -> R.string.error_authentication_required_recovery
-        // YouTube's bot check depends on the IP, so another connection can help.
+        // YouTube's bot check depends on the IP, so another connection can help; Reddit's block doesn't.
         is ExtractionError.NetworkBlocked -> when (platform) {
             BlockingPlatform.YouTube -> R.string.error_network_blocked_recovery_network
+            BlockingPlatform.Reddit -> R.string.error_network_blocked_recovery_reddit
         }
         ExtractionError.NetworkFailure -> R.string.error_network_failure_recovery
         ExtractionError.Timeout -> R.string.error_timeout_recovery
@@ -426,22 +425,24 @@ internal fun FailureContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(24.dp))
+        // Reddit refuses signed-out apps on every network, so the browser is the likelier way in.
+        val openFirst = !error.canRetry || error == ExtractionError.NetworkBlocked(BlockingPlatform.Reddit)
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Button(
-                onClick = if (error.canRetry) onRetry else onOpenOriginal,
+                onClick = if (openFirst) onOpenOriginal else onRetry,
                 modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
             ) {
-                Text(stringResource(if (error.canRetry) R.string.action_try_again else R.string.action_open_link))
+                Text(stringResource(if (openFirst) R.string.action_open_link else R.string.action_try_again))
             }
             if (error.canRetry) {
                 OutlinedButton(
-                    onClick = onOpenOriginal,
+                    onClick = if (openFirst) onRetry else onOpenOriginal,
                     modifier = Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp),
                 ) {
-                    Text(stringResource(R.string.action_open_link))
+                    Text(stringResource(if (openFirst) R.string.action_try_again else R.string.action_open_link))
                 }
             }
             TextButton(

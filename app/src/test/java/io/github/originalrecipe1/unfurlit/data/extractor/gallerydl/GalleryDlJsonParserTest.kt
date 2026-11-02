@@ -1,5 +1,6 @@
 package io.github.originalrecipe1.unfurlit.data.extractor.gallerydl
 
+import io.github.originalrecipe1.unfurlit.domain.model.BlockingPlatform
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractedMedia
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionError
 import io.github.originalrecipe1.unfurlit.domain.model.ExtractionException
@@ -15,14 +16,14 @@ class GalleryDlJsonParserTest {
     fun parsesGalleryWithMetadataAndRequestHeaders() {
         val result = GalleryDlJsonParser.parse(
             SOURCE,
-            "[imgur][warning] a log line before the result\n" + singleLine(
+            "[reddit][warning] a log line before the result\n" + singleLine(
                 """
-            {"category": "imgur", "title": "Sunset set", "author": "someone",
+            {"category": "reddit", "title": "Sunset set", "author": "someone",
              "description": "Two photos", "items": [
-              {"url": "https://i.imgur.com/a.jpg", "kind": "image", "extension": "jpg",
-               "headers": {"Referer": "https://imgur.com/", "User-Agent": "UA",
+              {"url": "https://i.redd.it/a.jpg", "kind": "image", "extension": "jpg",
+               "headers": {"Referer": "https://www.reddit.com/", "User-Agent": "UA",
                            "Host": "evil.example", "X-Bad": "a\r\nInjected: 1"}},
-              {"url": "https://i.imgur.com/b.mp4", "kind": "video", "extension": "mp4", "headers": {}},
+              {"url": "https://v.redd.it/b.mp4", "kind": "video", "extension": "mp4", "headers": {}},
               {"url": "https://example.com/c.mp3", "kind": "audio", "extension": "mp3", "headers": {}}
             ]}
                 """,
@@ -30,14 +31,14 @@ class GalleryDlJsonParserTest {
         )
 
         assertEquals(SOURCE, result.sourceUrl)
-        assertEquals("Imgur", result.platform)
+        assertEquals("Reddit", result.platform)
         assertEquals("Sunset set", result.title)
         assertEquals("someone", result.author)
         assertEquals("Two photos", result.description)
-        assertEquals("https://i.imgur.com/a.jpg", result.thumbnailUrl)
+        assertEquals("https://i.redd.it/a.jpg", result.thumbnailUrl)
         assertEquals(3, result.media.size)
         val image = result.media[0] as ExtractedMedia.Image
-        assertEquals(mapOf("Referer" to "https://imgur.com/", "User-Agent" to "UA"), image.source.headers)
+        assertEquals(mapOf("Referer" to "https://www.reddit.com/", "User-Agent" to "UA"), image.source.headers)
         assertEquals("video/mp4", (result.media[1] as ExtractedMedia.Video).videoSource.mediaMimeType)
         assertEquals("audio/mpeg", (result.media[2] as ExtractedMedia.Audio).source.mediaMimeType)
     }
@@ -84,12 +85,22 @@ class GalleryDlJsonParserTest {
     }
 
     @Test
-    fun siteBlockPagesKeepTheSignInMapping() {
+    fun redditNetworkBlocksAreNotSignInFailures() {
+        val reddit = ExtractionError.NetworkBlocked(BlockingPlatform.Reddit)
+        // Messages from live run 38414484055; its log redacts URLs, so these URLs are examples.
+        assertError(reddit, message("AbortExtraction", 0, "\"You've been blocked by network security.\""))
+        assertError(reddit, message("HttpError", 403, "'403 Blocked' for 'https://www.reddit.com/r/pics/comments/abc/'"))
+        assertError(reddit, message("HttpError", 403, "'403 Blocked' for 'https://oauth.reddit.com/api/info'"))
+        // The same reason phrase from an unverified site, and Reddit's other refusals, are unchanged.
         assertError(ExtractionError.AuthenticationRequired,
-            message("AbortExtraction", 0, "Access to this page is blocked"))
+            message("HttpError", 403, "'403 Blocked' for 'https://reddit.com.example/x'"))
         assertError(ExtractionError.AuthenticationRequired,
-            message("HttpError", 403, "'403 Blocked' for 'https://example.com/post/1'"))
+            message("HttpError", 403, "'403 Forbidden' for 'https://www.reddit.com/r/pics/'"))
         assertError(ExtractionError.AuthenticationRequired, message("AbortExtraction", 0, "Blocked by the firewall"))
+        assertError(ExtractionError.AuthenticationRequired,
+            message("AbortExtraction", 0, "blocked by network securityOther"))
+        assertError(ExtractionError.AuthenticationRequired,
+            message("AuthorizationError", 0, "blocked by network security"))
     }
 
     @Test
@@ -128,6 +139,6 @@ class GalleryDlJsonParserTest {
     }
 
     private companion object {
-        const val SOURCE = "https://imgur.com/gallery/sunset-abc123"
+        const val SOURCE = "https://www.reddit.com/r/pics/comments/abc/sunset/"
     }
 }
