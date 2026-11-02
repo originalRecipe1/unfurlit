@@ -1,0 +1,8 @@
+// Opt-in diagnostic APK, installed beside the normal app. No normal build is changed.
+allprojects {
+    plugins.withId('com.android.application') {
+        androidComponents.finalizeDsl { androidDsl ->
+            androidDsl.buildTypes.getByName('debug').applicationIdSuffix = '.redditspike'
+        }
+    }
+}
