@@ -1,1 +1,2 @@
+Reddit posts open again without an account: videos, single images and galleries. Some posts can still be blocked; Open link opens them in the browser or Reddit app.
 Update the media extractor to yt-dlp 2026.10.26.

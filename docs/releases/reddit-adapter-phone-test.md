@@ -1,49 +1,16 @@
-# Reddit adapter: next-release phone checks
+# Reddit adapter: device checks
 
 The adapter uses anonymous Reddit HTML sessions. It has no login, imported
 browser cookies, WebView, or JSON extraction path. The `15ko0qu` fixture and its
 mirror are unchanged pending the owner's browser check; their generic page
 shell still falls through to the existing engines.
 
-## Owner release-APK verification — NOT RUN
+## Owner release-APK verification
 
-Record the final release APK revision, SHA-256, Android version, test date and
-network here before marking this checklist complete. The automated extraction
-and byte checks below use an isolated debug app; they do not establish release
-playback, seeking, rendered gallery order or History behavior.
-
-For **each row**, test Wi-Fi and mobile data with Wi-Fi off. Verify the correct
-media is displayed; videos play and seek, with sound where the original has an
-audio track. The `reddit-native-video` fixture itself has no separate audio
-track. Compare gallery order with Reddit. Confirm History retains the shared
-Reddit URL, post title and author rather than the discovered media/provider URL.
-
-| Fixture | Expected | Wi-Fi owner check | Mobile owner check |
-| --- | --- | --- | --- |
-| reddit-video | 1 native video, audio | NOT RUN | NOT RUN |
-| reddit-native-video | 1 native video | NOT RUN | NOT RUN |
-| reddit-external-imgur | 1 Imgur video | NOT RUN | NOT RUN |
-| reddit-external-streamable | 1 Streamable video | NOT RUN | NOT RUN |
-| reddit-gallery | 3 images in order | NOT RUN | NOT RUN |
-| reddit-gallery-comments | Same 3 images | NOT RUN | NOT RUN |
-| reddit-gallery-share | 4 images in order | NOT RUN | NOT RUN |
-| reddit-gallery-short | Same 3 images | NOT RUN | NOT RUN |
-| reddit-image-earthporn | 1 image, EarthPorn post 7t0swm | NOT RUN | NOT RUN |
-| reddit-image-pics | 1 image, pics post haucpf | NOT RUN | NOT RUN |
-| reddit-image-post | 15ko0qu: compare with browser; record fallback/block | NOT RUN | NOT RUN |
-| reddit-mirror-post | Same 15ko0qu post via normalized mirror link | NOT RUN | NOT RUN |
-
-- Kill the app process, reopen it, and open a supported Reddit post. Confirm a
-  fresh anonymous session succeeds without login; repeat on both networks.
-- Open several supported Reddit links in one process. Confirm there is no login
-  prompt or repeated-session delay on every link.
-- On a genuinely blocked network/case, confirm the Reddit block message and
-  **Open link** action still work. Do not label an unknown page as a challenge
-  solely because its script mentions a challenge. The unit tests cover a
-  persistent challenge and one rebuild; this UI check is NOT RUN.
-- Reopen a successful entry from History and verify the post metadata and media.
-- Confirm no regression in existing non-Reddit playback using the release's
-  normal checklist. This PR leaves those routes and format settings unchanged.
+Moved to the [1.4.5 phone test](1.4.5-phone-test.md#reddit), the first release
+with the adapter. The automated extraction and byte checks below use an isolated
+debug app; they do not establish release playback, seeking, rendered gallery
+order or History behavior.
 
 ## New single-image fixture provenance
 
