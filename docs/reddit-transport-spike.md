@@ -270,3 +270,172 @@ the normal installed app and History are left intact.
   cases, confirming that the spike makes no live requests in normal test runs.
 - No production files, dependency declarations, or social-links CI expectations
   changed. This PR ends at Step 1.
+
+
+## Follow-up: age cookie, gallery contents and native manifest — 2026-11-02
+
+Baseline: merged PR #86 at `9ec5019`. This is another spike-only iteration;
+production code, dependencies, the optional init script, and CI expectations
+remain unchanged. The original JSON comparison above is historical; this
+iteration runs HTML only and implements no adapter.
+
+The final test build ran two selected modes across all ten post fixtures on the
+same Pixel 7 (SDK 37), first Wi-Fi and then mobile data with Wi-Fi disabled:
+`session-mobile-ua` and `session-mobile-ua-over18`. Both use a new anonymous
+bootstrap session per case and the same Android Chrome User-Agent as #86. The
+second mode additionally inserts `over18=1` as a domain cookie for `.reddit.com`
+with HTTPS scope. The report confirms its presence as a boolean; neither cookie
+values nor page bodies or image/manifest URLs are logged. No login or browser
+state is imported. An initial Wi-Fi pass was used to refine error-page diagnostics;
+the tables below use the final build's complete 20-case run on each network.
+
+The active default network was checked before each case. The mobile run used
+the same detached on-device procedure as #86; Wi-Fi was restored afterward.
+Bytes and elapsed milliseconds retain the same definitions as the original
+matrix. Gallery/manifest checks below are included in the baseline mobile-UA
+cases; adding `over18` was tested separately on all ten posts.
+
+### Full HTML matrix
+
+**Wi-Fi: 16/20 discovery passes.** The four discovery failures are the image post and mirror, each with and without `over18`.
+
+| Fixture | Baseline outcome | Bytes | ms | With over18 outcome | Bytes | ms |
+| --- | --- | ---: | ---: | --- | ---: | ---: |
+| reddit-video | POST_HTML | 712,209 | 1,569 | POST_HTML | 713,553 | 1,301 |
+| reddit-native-video | POST_HTML | 761,712 | 1,415 | POST_HTML | 782,645 | 1,395 |
+| reddit-image-post | UNRECOGNISED_HTML | 374,247 | 1,413 | UNRECOGNISED_HTML | 374,273 | 1,611 |
+| reddit-gallery | POST_HTML | 710,948 | 1,447 | POST_HTML | 768,613 | 1,486 |
+| reddit-gallery-comments | POST_HTML | 710,948 | 1,133 | POST_HTML | 710,945 | 1,207 |
+| reddit-gallery-share | POST_HTML | 718,618 | 1,396 | POST_HTML | 673,555 | 1,380 |
+| reddit-gallery-short | POST_HTML | 710,986 | 1,606 | POST_HTML | 710,991 | 1,510 |
+| reddit-external-imgur | POST_HTML | 742,972 | 1,451 | POST_HTML | 710,323 | 1,206 |
+| reddit-external-streamable | POST_HTML | 772,234 | 1,219 | POST_HTML | 709,546 | 1,236 |
+| reddit-mirror-post | UNRECOGNISED_HTML | 374,275 | 1,599 | UNRECOGNISED_HTML | 374,322 | 1,474 |
+
+**Mobile data, Wi-Fi off: 16/20 discovery passes.** The four discovery failures are the image post and mirror, each with and without `over18`.
+
+| Fixture | Baseline outcome | Bytes | ms | With over18 outcome | Bytes | ms |
+| --- | --- | ---: | ---: | --- | ---: | ---: |
+| reddit-video | POST_HTML | 713,245 | 1,573 | POST_HTML | 713,085 | 1,545 |
+| reddit-native-video | POST_HTML | 740,980 | 2,180 | POST_HTML | 741,088 | 1,458 |
+| reddit-image-post | UNRECOGNISED_HTML | 374,270 | 1,825 | UNRECOGNISED_HTML | 374,228 | 1,819 |
+| reddit-gallery | POST_HTML | 711,073 | 1,953 | POST_HTML | 710,986 | 1,910 |
+| reddit-gallery-comments | POST_HTML | 710,995 | 1,604 | POST_HTML | 710,946 | 1,541 |
+| reddit-gallery-share | POST_HTML | 716,721 | 2,056 | POST_HTML | 718,673 | 1,874 |
+| reddit-gallery-short | POST_HTML | 711,037 | 1,978 | POST_HTML | 710,938 | 1,845 |
+| reddit-external-imgur | POST_HTML | 744,146 | 1,497 | POST_HTML | 710,164 | 1,381 |
+| reddit-external-streamable | POST_HTML | 708,707 | 1,325 | POST_HTML | 708,768 | 1,746 |
+| reddit-mirror-post | UNRECOGNISED_HTML | 374,254 | 1,865 | UNRECOGNISED_HTML | 374,273 | 2,001 |
+
+### Image-post diagnostics (`15ko0qu`)
+
+`over18=1` did **not** fix the image post or its mirror on either network. All
+four baseline/over18 combinations per network returned a generic Reddit page
+rather than the requested post element. The bounded title in every case was
+`Reddit - The heart of the internet`. It contains the requested `t3_15ko0qu`
+string, but no `<shreddit-post>` element at all. That string alone is not media
+or a rendered post.
+
+The production loader does not expose its final URL. Each failing HTML case
+therefore makes one separately labelled diagnostic GET with the same scoped
+request cookies and limits. These second responses were HTTP 200 and their
+final path (no query) was `/r/RobloxArt/comments/15ko0qu/` on both networks,
+with and without `over18`. They are separate observations, not captured copies
+of the loader response. The following booleans are from the first, loader-returned
+page; both page and separate diagnostic are recorded by the test.
+
+| Network | Fixture | over18 | Any post tag | Any t3 id | Age-gate | NSFW | Login prompt | Removed | Deleted | Quarantine |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Wi-Fi | reddit-image-post | false | false | true | false | true | false | false | false | false |
+| Wi-Fi | reddit-mirror-post | false | false | true | false | true | false | false | false | false |
+| Wi-Fi | reddit-image-post | true | false | true | false | true | false | false | false | false |
+| Wi-Fi | reddit-mirror-post | true | false | true | false | true | false | false | false | false |
+| Mobile | reddit-image-post | false | false | true | false | true | false | false | false | false |
+| Mobile | reddit-mirror-post | false | false | true | false | true | false | false | false | false |
+| Mobile | reddit-image-post | true | false | true | false | true | false | false | false | false |
+| Mobile | reddit-mirror-post | true | false | true | false | true | false | false | false | false |
+
+The additional checked markers for a not-found page, a forbidden container,
+a banned community and a private community were also false in every case.
+Challenge markers were true, as they also are in successful full post pages.
+NSFW text alone does not identify an age gate; it may be part of the shared site
+shell. These summaries establish an unrecognised Reddit shell response, not a
+proven login/age/removal cause. No single-image URL was demonstrated for this
+post. Keep it outside claimed adapter support; there is no demonstrated reason
+from this experiment to add `over18=1` to the proposed production session.
+
+### Ordered gallery contents
+
+The spike first finds the requested `shreddit-post` opening tag, then balances
+that exact tag's subtree to exclude other/recommended posts. Inside its
+`gallery-carousel`, it walks `li` items with numbered `slot="page-N"` attributes
+in document order. For each item it finds image `src` or `data-lazy-src`, decodes
+attribute entities, and normalizes a supported `preview.redd.it` filename using
+existing `RedditLinks.normalize`. A candidate must become an HTTPS `i.redd.it`
+image URL with a supported image filename. Responsive/blur/lazy variants within
+one item count once. The test checks contiguous slot order starting at 1,
+distinct selected images, and the fixture count. It never logs the URLs.
+
+| Network | Fixture / post | Expected | Carousel items | Images found | All i.redd.it or mappable | Sequential order | Distinct | Count matches |
+| --- | --- | ---: | ---: | ---: | --- | --- | --- | --- |
+| Wi-Fi | reddit-gallery / hrrh23 | 3 | 3 | 3 | true | true | true | true |
+| Wi-Fi | reddit-gallery-share / wjs1lb | 4 | 4 | 4 | true | true | true | true |
+| Mobile | reddit-gallery / hrrh23 | 3 | 3 | 3 | true | true | true | true |
+| Mobile | reddit-gallery-share / wjs1lb | 4 | 4 | 4 | true | true | true | true |
+
+This proves that these two requested post pages expose a complete ordered list
+of original/mappable image URLs on both networks without JavaScript. It does
+not prove image-byte fetches, app rendering, all gallery layouts, or unrelated
+single-image posts. A Step 2 parser can be scoped to this proven carousel shape.
+
+### Native-video manifest without Reddit cookies
+
+For `reddit-native-video`, the spike looks within the requested post subtree
+for an explicit HTTPS `v.redd.it` player manifest (`.m3u8` or `.mpd`). A validated
+single-ID `v.redd.it` content link is the only permitted fallback for deriving
+`DASHPlaylist.mpd`. It then creates a **new** manifest GET through
+`SafeHttpClient.preflight`, which has no cookie jar, checks that there is no
+Cookie header, and bounds the body using the production page limit. Manifest
+type is checked from the actual body signature, not just its filename.
+Only status and type are recorded for this check.
+
+| Network | Fixture | GET status | Manifest type |
+| --- | --- | ---: | --- |
+| Wi-Fi | reddit-native-video | 200 | HLS |
+| Mobile | reddit-native-video | 200 | HLS |
+
+This is manifest availability only; media-segment playback, sound and seeking
+remain future device checks. No Reddit session cookies were sent to the manifest
+host. No video URL or signed manifest query was recorded.
+
+### Validation and next boundary
+
+- Debug app and test APK builds pass. Lint passes with 0 errors and the same 28
+  project warnings; no spike warnings were added.
+- Final selected matrix: 20 cases per network, 16 passes and 4 expected/observed
+  image-post discovery failures. The gallery and manifest assertions pass.
+- Test mode selection is optional: `redditTransportModes` accepts a comma-separated
+  subset. Without it, the prior 34 cases plus ten over18 cases are enumerated;
+  all remain behind the existing opt-in guard.
+- A separate device invocation without the opt-in flag skipped all 44 cases.
+- No production code, dependencies, init-script behavior, non-Reddit routes, or
+  social-links CI expectations changed. Temporary spike packages were removed;
+  the normal installed app and History were left intact.
+
+To repeat this iteration after building/installing the isolated debug APKs,
+add the mode selector to the existing command (use `mobile` for a cellular run
+with Wi-Fi off, and keep ADB connected by USB or run detached on-device):
+
+```bash
+adb shell am instrument -w -r \
+  -e class io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditTransportSpikeTest \
+  -e redditTransport true -e redditTransportNetwork wifi \
+  -e redditTransportModes session-mobile-ua,session-mobile-ua-over18 \
+  io.github.originalrecipe1.unfurlit.redditspike.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Stop here for owner review. The evidence supports mobile-UA HTML discovery,
+the two tested carousel layouts and the native manifest route. Single-image
+support remains unproven for the supplied fixture; unproven shapes fall through
+to the existing engines. This follow-up does not implement Step 2 or add an
+age cookie to production.
