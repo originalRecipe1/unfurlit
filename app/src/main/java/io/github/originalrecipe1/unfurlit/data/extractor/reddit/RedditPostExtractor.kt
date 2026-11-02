@@ -48,7 +48,7 @@ internal class RedditPostExtractor(
         } catch (error: IOException) {
             return allowFallback(error)
         } catch (error: ExtractionException) {
-            if (error.error is ExtractionError.NetworkBlocked) throw error
+            if (error.error is ExtractionError.NetworkBlocked || error.error == ExtractionError.AuthenticationRequired) throw error
             return allowFallback(error)
         } ?: return null
         val result = when (val content = post.content) {

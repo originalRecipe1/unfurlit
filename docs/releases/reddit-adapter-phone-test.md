@@ -135,3 +135,57 @@ them. To run the post extraction matrix, use `SocialLinksTest` with
 `liveLinks=true` and `linkId` selecting the twelve IDs above. The existing CI
 fixture expectations and runner BLOCKED classification are unchanged; new image
 fixtures use the same success expectation as other public links.
+
+
+## PR review follow-up: targeted parsing and login walls — 2026-11-02
+
+The parser now locates post-tag candidates with string searches, verifies the
+requested opening tag/ID with the existing tag and attribute patterns, and
+counts nested post boundaries to select just that element. Scripts, comments
+and quoted attributes are skipped while locating boundaries. Only the selected
+slice becomes Tag objects; challenge detection scans candidates, block phrases,
+the requested ID and title without tokenizing the page. An offline regression
+test surrounds each supported post shape with approximately 1 MiB of filler on
+each side and checks unchanged results, quoted fake tags and nested boundaries.
+
+A page-loader `AuthenticationRequired` now propagates immediately from the
+Reddit extractor. A unit test verifies one page attempt, no session rebuild and
+no engine fallback. This is separate from the ID-bearing `15ko0qu` shell, which
+still deliberately falls through; no live login-wall fixture was added or run.
+The README footnote now uses plain user wording and retains both documentation
+links.
+
+### Pixel 7 Wi-Fi: before/after extraction seconds
+
+Before: the original adapter run at `17e7835`, recorded above. After: the same
+12 selected cases, existing isolated debug package and Pixel 7 (SDK 37), with
+Wi-Fi confirmed as the active default network. These are single full-extraction
+samples, including preflight, network requests, session setup where needed and
+engine time; they do not isolate parser CPU time or establish a statistical
+benchmark. No mobile-data rerun was requested for this review follow-up.
+
+| Fixture | Observation (unchanged) | Before seconds | After seconds |
+| --- | --- | ---: | ---: |
+| reddit-video | success: 1 video (Hls, separate audio), from Reddit | 8.2 | 7.8 |
+| reddit-native-video | success: 1 video (Hls), from Reddit | 7.1 | 4.5 |
+| reddit-image-earthporn | success: 1 image, from Reddit | 3.3 | 1.0 |
+| reddit-image-pics | success: 1 image, from Reddit | 4.1 | 0.8 |
+| reddit-image-post | NetworkBlocked | 9.9 | 9.6 |
+| reddit-gallery | success: 3 images, from Reddit | 3.7 | 1.2 |
+| reddit-gallery-comments | success: 3 images, from Reddit | 2.8 | 0.7 |
+| reddit-gallery-share | success: 4 images, from Reddit | 3.7 | 1.0 |
+| reddit-gallery-short | success: 3 images, from Reddit | 3.6 | 1.3 |
+| reddit-external-imgur | success: 1 video (Progressive), from Reddit | 7.8 | 4.9 |
+| reddit-external-streamable | success: 1 video (Progressive), from Reddit | 6.1 | 4.1 |
+| reddit-mirror-post | NetworkBlocked | 9.8 | 9.6 |
+
+All ten supported cases still pass; the two unchanged `15ko0qu` cases still
+report NetworkBlocked through the existing fallback. The matrix again enumerated
+75 cases, skipped 63, and reported those two existing assertion failures.
+The six successful single-image/gallery cases changed from **2.8–4.1 s** to
+**0.7–1.3 s** in these samples.
+
+Validation: **224 JVM tests passed**, including all existing tests and the new
+large-page and login-wall cases. Lint and both debug APK builds passed. The
+normal installed app and History were left intact; temporary test packages were
+removed after the run. The owner release-playback checklist above remains NOT RUN.

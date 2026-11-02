@@ -42,6 +42,18 @@ class RedditPostExtractorTest {
         assertEquals(1, bootstraps)
     }
 
+    @Test fun loginWallIsReportedImmediatelyWithoutRebuildOrEngineFallback() {
+        val login = ExtractionException(ExtractionError.AuthenticationRequired)
+        var pages = 0
+        val extractor = RedditPostExtractor(session, { error("No video") }, { error("No external") }) {
+            pages++
+            throw login
+        }
+        assertSame(login, assertThrows(ExtractionException::class.java) { runBlocking { extractor.extract(page, page) } })
+        assertEquals(1, pages)
+        assertEquals(1, bootstraps)
+    }
+
     @Test fun challengeRebuildsExactlyOnceAndNeverCallsEngines() {
         var pages = 0
         val extractor = RedditPostExtractor(session, { error("No engine fallback") }, { error("No external") }) { pages++; fixture("challenge") }

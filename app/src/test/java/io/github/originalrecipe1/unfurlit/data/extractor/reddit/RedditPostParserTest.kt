@@ -19,6 +19,19 @@ class RedditPostParserTest {
         assertNull(parse("<!-- ${fixture("image")} -->"))
     }
 
+    @Test fun largeSurroundingPageDoesNotChangeTheRequestedPost() {
+        val filler = "<div data-text='>'>" + "x".repeat(1024 * 1024) + "</div>"
+        for (name in listOf("native", "gallery", "image", "external")) {
+            val post = fixture(name)
+            val fake = "<div data-text='" + fixture("image").replace("\"", "&quot;") + "'></div>"
+            assertEquals(parse(post), parse(filler + fake + post + filler))
+        }
+        val nested = "<shreddit-post id='t3_post123' post-type='image' content-href='https://i.redd.it/parent.jpg'>" +
+            "<shreddit-post id='t3_child' content-href='https://i.redd.it/wrong.jpg'></shreddit-post></shreddit-post>"
+        assertEquals(RedditContent.Images(listOf("https://i.redd.it/parent.jpg")), parse(filler + nested + filler)!!.content)
+        assertNull(parse(filler + nested.removeSuffix("</shreddit-post>")))
+    }
+
     @Test fun derivesDashOnlyFromValidatedNativeContentLink() {
         val html = fixture("native").replace(Regex("<shreddit-player.*?</shreddit-player>"), "")
         assertEquals(RedditContent.Video("https://v.redd.it/video123/DASHPlaylist.mpd"), parse(html)!!.content)
@@ -68,6 +81,8 @@ class RedditPostParserTest {
     @Test fun distinguishesChallengeFromIdBearingShellAndUnknownMarkup() {
         assertNull(parse(fixture("challenge")))
         assertTrue(RedditPostParser.isChallenge(page, fixture("challenge")))
+        assertFalse(RedditPostParser.isChallenge(page, "<title>Reddit</title><script>${fixture("image")}</script>"))
+        assertTrue(RedditPostParser.isChallenge(page, "<title>Reddit</title><script>${fixture("image").replace("post123", "other")}</script>"))
         assertNull(parse(fixture("shell")))
         assertFalse(RedditPostParser.isChallenge(page, fixture("shell")))
         assertFalse(RedditPostParser.isChallenge(page, "<html>new layout</html>"))

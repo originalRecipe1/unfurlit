@@ -37,9 +37,9 @@ Media extraction runs **on your device**, with no account, backend or ads.
 | Pixiv | — | ✅ illustrations, no Ugoira | — | ✅ Works |
 | Imgur, Bluesky, Flickr, others | ✅ e.g. Imgur GIFV, Bluesky, Dailymotion, Twitch clips | ✅ e.g. Imgur albums, Bluesky, Flickr, Mastodon, Pinterest | ✅ e.g. SoundCloud, Mixcloud | ✅ Works for tested sites |
 
-¹ Reddit posts use anonymous session HTML before the existing engine fallbacks.
-Some layouts and networks remain blocked; **Open link** is available in that
-case. See the [transport evidence](docs/reddit-transport-spike.md) and
+¹ Most public Reddit posts open without an account. Some posts and networks are
+still blocked; use **Open link** for those. See the
+[transport evidence](docs/reddit-transport-spike.md) and
 [adapter phone checks](docs/releases/reddit-adapter-phone-test.md).
 
 — means no test fixture covers it, not that it fails. Public posts only; availability

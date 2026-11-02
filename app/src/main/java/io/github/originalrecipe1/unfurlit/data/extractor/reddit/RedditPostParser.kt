@@ -21,9 +21,9 @@ internal object RedditPostParser {
     fun parse(pageUrl: String, html: String): RedditPost? {
         val id = postId(pageUrl) ?: return null
         if (html.length > PublicPageLoader.MAX_PAGE_BYTES) return null
-        val tags = tags(html)
-        val start = tags.indexOfFirst { !it.closing && it.name == "shreddit-post" && it.attributes["id"] == "t3_$id" }
-        if (start < 0) return null
+        val slice = requestedPost(html, id) ?: return null
+        val tags = tags(slice)
+        val start = 0
         val own = mutableListOf<Tag>()
         var depth = 0
         var closed = false
@@ -46,13 +46,98 @@ internal object RedditPostParser {
 
     fun isChallenge(pageUrl: String, html: String): Boolean {
         val id = postId(pageUrl) ?: return false
-        if (tags(html).any { it.name == "shreddit-post" && !it.closing }) return false
+        // Candidate-only string scanning also ignores post-like text in scripts/comments.
+        var candidate = nextPostTag(html, 0)
+        while (candidate != null) {
+            if (!candidate.value.startsWith("</")) return false
+            candidate = nextPostTag(html, candidate.range.last + 1)
+        }
         if (listOf("blocked by network security", "your request has been blocked", "whoa there, pardner")
                 .any { html.contains(it, ignoreCase = true) }) return true
         if (html.contains("t3_$id")) return false // Generic post shell, including 15ko0qu: fall through.
-        val title = Regex("""<title\b[^>]*>([^<]*)</title>""", RegexOption.IGNORE_CASE)
-            .find(html)?.groupValues?.get(1)?.let(::unescape)?.trim()
+        val titleStart = html.indexOf("<title", ignoreCase = true)
+        val title = if (titleStart < 0) null else TITLE.matchAt(html, titleStart)
+            ?.groupValues?.get(1)?.let(::unescape)?.trim()
         return html.length <= 64 * 1024 && title.equals("Reddit", ignoreCase = true)
+    }
+
+    /** Find/verify post boundaries without allocating tags for the surrounding page. */
+    private fun requestedPost(html: String, id: String): String? {
+        var cursor = 0
+        while (true) {
+            val opening = nextPostTag(html, cursor) ?: return null
+            cursor = opening.range.last + 1
+            if (opening.value.startsWith("</") || attributes(opening.groupValues[3])["id"] != "t3_$id") continue
+            val start = opening.range.first
+            var depth = 1
+            while (depth > 0) {
+                val tag = nextPostTag(html, cursor) ?: return null
+                depth += if (tag.value.startsWith("</")) -1 else 1
+                cursor = tag.range.last + 1
+            }
+            return html.substring(start, cursor)
+        }
+    }
+
+    private fun nextPostTag(html: String, from: Int): MatchResult? {
+        var cursor = from
+        while (cursor < html.length) {
+            val opening = html.indexOf("<shreddit-post", cursor, ignoreCase = true)
+            val closing = html.indexOf("</shreddit-post", cursor, ignoreCase = true)
+            val candidate = when {
+                opening < 0 -> closing
+                closing < 0 -> opening
+                else -> minOf(opening, closing)
+            }
+            if (candidate < 0) return null
+            // An apparent post inside a script, comment or quoted attribute is not markup.
+            val boundary = markupBoundary(html, cursor, candidate)
+            if (boundary > candidate) { cursor = boundary; continue }
+            val match = TOKENS.matchAt(html, candidate)
+            if (match != null && match.groupValues[2].equals("shreddit-post", ignoreCase = true)) return match
+            cursor = match?.range?.last?.plus(1) ?: (candidate + 1)
+        }
+        return null
+    }
+
+    private fun markupBoundary(html: String, from: Int, candidate: Int): Int {
+        var cursor = from
+        while (cursor < candidate) {
+            val start = html.indexOf('<', cursor)
+            if (start < 0 || start >= candidate) return candidate
+            if (html.startsWith("<!--", start)) {
+                val end = html.indexOf("-->", start + 4)
+                cursor = if (end < 0) html.length else end + 3
+                continue
+            }
+            val end = tagEnd(html, start)
+            val rawText = RAW_TEXT_TAGS.firstOrNull { name ->
+                val after = start + name.length + 1
+                html.regionMatches(start + 1, name, 0, name.length, ignoreCase = true) &&
+                    after < html.length && (html[after].isWhitespace() || html[after] == '>')
+            }
+            if (rawText != null) {
+                val close = html.indexOf("</$rawText", end, ignoreCase = true)
+                cursor = if (close < 0) html.length else tagEnd(html, close)
+            } else cursor = end
+        }
+        return cursor
+    }
+
+    private fun tagEnd(html: String, start: Int): Int {
+        var cursor = start + 1
+        while (cursor < html.length) {
+            when (val char = html[cursor]) {
+                '>' -> return cursor + 1
+                '\'', '"' -> {
+                    val end = html.indexOf(char, cursor + 1)
+                    if (end < 0) return html.length
+                    cursor = end
+                }
+            }
+            cursor++
+        }
+        return html.length
     }
 
     fun postId(url: String): String? {
@@ -150,10 +235,12 @@ internal object RedditPostParser {
     private data class Tag(val name: String, val attributes: Map<String, String>, val closing: Boolean)
     private fun tags(html: String): List<Tag> = TOKENS.findAll(html).mapNotNull { match ->
         val name = match.groupValues[2].lowercase().takeIf(String::isNotEmpty) ?: return@mapNotNull null
-        Tag(name, ATTRIBUTES.findAll(match.groupValues[3]).associate {
-            it.groupValues[1].lowercase() to unescape(it.groupValues[2].ifEmpty { it.groupValues[3] })
-        }, match.value.startsWith("</"))
+        Tag(name, attributes(match.groupValues[3]), match.value.startsWith("</"))
     }.toList()
+
+    private fun attributes(text: String): Map<String, String> = ATTRIBUTES.findAll(text).associate {
+        it.groupValues[1].lowercase() to unescape(it.groupValues[2].ifEmpty { it.groupValues[3] })
+    }
 
     private fun unescape(text: String): String = ENTITY.replace(text) { match ->
         val name = match.groupValues[1]
@@ -166,6 +253,8 @@ internal object RedditPostParser {
         else ENTITIES[name] ?: match.value
     }
 
+    private val TITLE = Regex("""<title\b[^>]*>([^<]*)</title>""", RegexOption.IGNORE_CASE)
+    private val RAW_TEXT_TAGS = listOf("script", "style")
     private val TOKENS = Regex("""<!--.*?-->|<(script|style)\b[^>]*>.*?</\1\s*>|</?([a-zA-Z][\w:-]*)((?:"[^"]*"|'[^']*'|[^'">])*)>""",
         setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
     private val ATTRIBUTES = Regex("""\s([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')""")
