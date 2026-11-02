@@ -210,8 +210,8 @@ android {
         applicationId = "io.github.originalrecipe1.unfurlit"
         minSdk = 24
         targetSdk = 36
-        versionCode = 18
-        versionName = "1.4.5"
+        versionCode = 17
+        versionName = "1.4.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField(
