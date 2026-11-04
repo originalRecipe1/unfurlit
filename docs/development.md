@@ -339,6 +339,16 @@ optimized. It cannot verify behavior after release optimization. Copy this
 reusable checklist into a release-specific test record under
 [`docs/releases/`](releases/) and record the APK revision, test date and outcomes there.
 
+`scripts/device_link_check.py` drives the release-check links on a device over adb:
+it shares each link to the installed app, then checks playback, sound (a started
+`AudioTrack`), seeking, gallery pages and error screens, and saves screenshots and a
+Markdown table. Check the screenshots too: it cannot tell whether an image is the
+right one.
+
+```bash
+python3 -I scripts/device_link_check.py --serial SERIAL --out OUTPUT_DIR --force-stop
+```
+
 - On a fresh release-build install, perform one extraction and record user data
   excluding cache and app size. Compare with the owner-reported [1.4.1 release
   baseline](releases/1.4.1-phone-test.md) of **44.76 MB user data excluding cache /
