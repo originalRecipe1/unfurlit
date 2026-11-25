@@ -49,7 +49,7 @@ Unfurlit streams media rather than saving a permanent copy of the video or audio
 ### Open links directly in Unfurlit
 
 Unfurlit can open post and video links tapped in other apps, such as YouTube
-and Vimeo videos, X, Instagram, TikTok, Tumblr and Bluesky posts, Pixiv artwork
+and Vimeo videos, X, Instagram, TikTok, Tumblr and Bluesky posts, Facebook Reels and videos, Pixiv artwork
 and Bandcamp tracks. Profiles, search and home pages keep opening in your
 browser.
 
@@ -82,7 +82,7 @@ Unfurlit.
 #### Device-specific issues
 
 On some Samsung phones, hidden Meta system apps can hold
-Instagram links even when those apps aren't installed (reported on a
+Instagram and Facebook links even when those apps aren't installed (reported on a
 Galaxy S24 FE):
 
 1. Open **Settings → Apps**, tap **Filter and sort** and turn on **Show
