@@ -29,6 +29,7 @@ Media extraction runs **on your device**, with no account, backend or ads.
 | Vimeo | ✅ page, player, unlisted | — | — | ✅ Works |
 | Instagram | ✅ posts, Reels, carousels | ✅ single, multi-photo, carousels | no photo-post soundtrack | ✅ Works |
 | TikTok | ✅ | ✅ photo posts | ✅ photo-post soundtrack | ✅ Works |
+| Facebook | ✅ public Reels and videos, `fb.watch` | — | — | ✅ Works for public posts |
 | Reddit | ✅ native and external | ✅ single images, supported galleries | — | ⚠️ Some posts/networks blocked¹ |
 | X/Twitter | ✅ including GIFs | ✅ including mixed posts | — | ✅ Works |
 | PeerTube | ✅ | — | — | ✅ Works |

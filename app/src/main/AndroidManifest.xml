@@ -115,6 +115,37 @@
                 <data android:pathPattern="/.*/reel/..*" />
             </intent-filter>
 
+            <!--
+                Facebook reels and videos only: reel and video share links, /reel/ pages and
+                /watch?v=. Profiles, posts (/share/p/), groups and the rest of Facebook keep
+                opening in the browser. Filters can't match the query, so the bare /watch
+                feed page is claimed too.
+            -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="facebook.com" />
+                <data android:host="www.facebook.com" />
+                <data android:host="m.facebook.com" />
+                <data android:host="web.facebook.com" />
+                <data android:pathPrefix="/share/r/" />
+                <data android:pathPrefix="/share/v/" />
+                <data android:pathPrefix="/reel/" />
+                <data android:path="/watch" />
+                <data android:pathPrefix="/watch/" />
+            </intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="fb.watch" />
+            </intent-filter>
+
             <!-- TikTok videos and redirect links. -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
