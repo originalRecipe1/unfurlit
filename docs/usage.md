@@ -79,6 +79,18 @@ the link to Unfurlit instead.
 **Open link** in the viewer still opens your browser for a site turned on for
 Unfurlit.
 
+#### Device-specific issues
+
+On some Samsung phones, hidden Meta system apps can hold
+Instagram links even when those apps aren't installed (reported on a
+Galaxy S24 FE):
+
+1. Open **Settings → Apps**, tap **Filter and sort** and turn on **Show
+   system apps**.
+2. Open **Meta App Installer**, then **Meta App Manager**, and turn off
+   **Open supported links** for each.
+3. Turn the links on for Unfurlit as described above.
+
 ## Sites and access
 
 The [compatibility table](../README.md#compatibility) lists which sites and media
