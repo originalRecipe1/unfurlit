@@ -9,6 +9,7 @@ import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditPostExtrac
 import io.github.originalrecipe1.unfurlit.data.extractor.reddit.RedditPostParser
 import io.github.originalrecipe1.unfurlit.data.network.UnsafeNetworkTargetException
 import io.github.originalrecipe1.unfurlit.data.extractor.vimeo.VimeoPlayerRoute
+import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokLinks
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoExtractor
 import io.github.originalrecipe1.unfurlit.data.extractor.tiktok.TikTokPhotoParser
 import io.github.originalrecipe1.unfurlit.data.extractor.tumblr.TumblrPostExtractor
@@ -67,6 +68,7 @@ class YtDlpMediaExtractor(
         // Normalize supported wrappers/post links before the usual URL safety preflight.
         val secureInputUrl = UrlValidator.toHttpsUrl(requestUrl)
             ?.let(RedditLinks::normalize)
+            ?.let(TikTokLinks::normalize)
             ?.let { PixivArtworkParser.canonicalPage(it) ?: it }
             ?.let(UrlValidator::toHttpsUrl)
         if (secureInputUrl == null) {
